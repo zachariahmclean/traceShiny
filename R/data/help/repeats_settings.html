@@ -1,0 +1,79 @@
+<div id="repeat-calling" class="section level2">
+<div id="repeat-calling" class="section level2">
+<h2>Repeat calling</h2>
+<p>These settings are for how the base pair level data should be converted into repeat length.</p>
+<table class="table table-condensed"><colgroup><col width="12%" /><col width="87%" /></colgroup>
+<thead>
+<tr class="header">
+<th>Setting</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Fragment type</td>
+<td>
+<p>The overall class in which the data belongs.</p>
+<p>At the moment, there is only a single class that encompasses just HTT trinucleotide repeats. This may expand in the future to include other types of repeats.</p>
+</td>
+</tr>
+<tr class="even">
+<td>Assay size without repeat</td>
+<td>The number of nucleotides on either side of the repeat for the assay used. This is then used to calculate the repeat number if the repeat is not being called from positive controls.</td>
+</tr>
+<tr class="odd">
+<td>Repeat calling algorithm</td>
+<td>
+<p>The algorithm used to call repeat length for all peaks in each sample.</p>
+<p><em>nearest_peak</em><span>&nbsp;</span>jumps from peak to peak, using the small distance between peaks to incrementally call repeat size. The resulting called repeats are exactly 1 repeat unit apart.</p>
+<p>arithmetic_repeat directly calculates the repeat length from base pair size, or corrected base pair size if controls are used to call the repeat. The resulting repeats are not exactly 1 repeat unit apart.</p>
+</td>
+</tr>
+<tr class="even">
+<td>Correct repeats using metadata</td>
+<td>To indicate whether the known repeat length of the expanded allele in control samples should be used to build a model and correct the repeat length across samples. This requires metadata and will only be an option if metadata are correctly supplied.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="allele-calling" class="section level2">
+<h2>Allele calling</h2>
+<p>These settings are for how the modal alleles in the samples should be selected.</p>
+<p>The alleles in the sample are broken down into clusters of peaks that we have called &ldquo;peak regions&rdquo;. The tallest peak within peak regions are then picked out to be the modal allele. Peak regions are identified by two criteria, i) consecutive peaks within a user defined distance from each other (&ldquo;Gap threshold&rdquo;), and ii) consecutive peaks above a user defined height threshold (&ldquo;Peak region height threshold multiplier&rdquo;).</p>
+<table class="table table-condensed"><colgroup><col width="9%" /><col width="90%" /></colgroup>
+<thead>
+<tr class="header">
+<th>Setting</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Alleles expected</td>
+<td>The number of alleles to pick out. Either one or two.</td>
+</tr>
+<tr class="even">
+<td>Selection method</td>
+<td>
+<p>How should the peak region for the expanded allele be selected?</p>
+<p>If two alleles are expected, the shorter allele will be selected as the first peak region. This setting decides how the expanded allele will then be picked out. In the case of one expected allele, this setting decides how the single allele will be selected.</p>
+<p><em>Tallest</em><span>&nbsp;</span>picks the peak region that has the tallest modal peak (excluding the shorter normal allele).</p>
+<p><em>Largest</em><span>&nbsp;</span>picks the peak region with the largest sized repeat.</p>
+</td>
+</tr>
+<tr class="odd">
+<td>Gap threshold</td>
+<td>The size between peaks to include within a peak region. For example, with a gap threshold of 6, only peaks within 6 base pairs of the adjacent peak will be included in a peak region.</td>
+</tr>
+<tr class="even">
+<td>Peak region height threshold multiplier</td>
+<td>A multiplier for the height threshold for peaks to be included in the peak region. The height threshold is calculated by finding the mean peak height per sample and multiplying it by this multiplier. Therefore, to make the height threshold more stringent, increase the number. To make the threshold less stringent, decrease the number. For example, to make it 4x less stringent, make the number 0.25 (1/4).</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>

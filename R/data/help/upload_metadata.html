@@ -1,0 +1,63 @@
+<!-- Edit the HTML source here -->
+<div id="how-to-upload-data" class="section level2">
+<div id="metadata" class="section level2">
+<h2>Metadata</h2>
+<p>Metadata are required for certain functions of this app:</p>
+<ol>
+<li>
+<p>Grouping samples that will share an index peak (e.g.&nbsp;for mice, using the modal peak from a tail sample to assign the index peak for the striatum from the same animal )</p>
+</li>
+<li>
+<p>Correcting the repeat length using positive controls run concurrently with samples. This allows you to compare samples across different fragment analysis runs.</p>
+</li>
+</ol>
+<p>The metadata file must be a .csv or .tsv file with one row per sample. The metadata will then be assigned to the samples using the unique sample id (eg the sample file name). The required metadata are described below.</p>
+</div>
+<div id="data-fields" class="section level2">
+<h2>Data fields</h2>
+<p>Data fields will automatically populate if the column name is the same as what is given in the square brackets.</p>
+<table class="table table-condensed"><colgroup><col width="19%" /><col width="80%" /></colgroup>
+<thead>
+<tr class="header">
+<th>Data field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Unique sample id</td>
+<td>Column which gives the unique sample id. This is often the sample file name and it is absolutely critical that each sample has a unique id. [sample_file_name]</td>
+</tr>
+<tr class="even">
+<td>Ladder id</td>
+<td>[ladder_id]</td>
+</tr>
+<tr class="odd">
+<td>Batch run id</td>
+<td>Give a code to the fragment analysis run for each sample (e.g.&nbsp;the time and date the samples were run on the fragment analyser). [plate_id]</td>
+</tr>
+<tr class="even">
+<td>Sample group id</td>
+<td>Give a unique code to the samples that should be grouped (e.g.&nbsp;a tissues all from the same mouse or the same cell line in a time-course experiment). It can be a numeric or character code. [sample_group_id]</td>
+</tr>
+<tr class="odd">
+<td>Sample group baseline repeat</td>
+<td>Indicating samples to be used to set the index repeat within sample groups. The value for baseline samples should be &ldquo;TRUE&rdquo; or 1. [indices_baseline_control_TF]</td>
+</tr>
+<tr class="even">
+<td>Repeat positive control</td>
+<td>Samples to be used for correcting repeat length. The value for control samples should be &ldquo;TRUE&rdquo; or 1. [repeat_positive_control_TF]</td>
+</tr>
+<tr class="odd">
+<td>Repeat positive control length</td>
+<td>Modal repeat length of expanded allele for repeat positive controls. Provide the known repeat length for the control samples. [repeat_positive_control_length]</td>
+</tr>
+<tr class="even">
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="data-fields" class="section level2"></div>

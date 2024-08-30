@@ -1,0 +1,32 @@
+---
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Metadata
+
+Metadata are required for certain functions of this app:
+
+1.  Grouping samples that will share an index peak (e.g. for mice, using the modal peak from a tail sample to assign the index peak for the striatum from the same animal )
+
+2.  Correcting the repeat length using positive controls run concurrently with samples. This allows you to compare samples across different fragment analysis runs.
+
+The metadata file must be a .csv or .tsv file with one row per sample. The metadata will then be assigned to the samples using the unique sample id (eg the sample file name). The required metadata are described below.
+
+## Data fields
+
+Data fields will automatically populate if the column name is the same as what is given in the square brackets.
+
+| Data field                     | Description                                                                                                                                                                                                   |
+|--------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Unique sample id               | Column which gives the unique sample id. This is often the sample file name and it is absolutely critical that each sample has a unique id. [sample_file_name]                                                |
+| Ladder id                      | [ladder_id]                                                                                                                                                                                                   |
+| Batch run id                       | Give a code to the fragment analysis run for each sample (e.g. the time and date the samples were run on the fragment analyser). [batch_run_id]                                                                   |
+| Sample group id                | Give a unique code to the samples that should be grouped (e.g. a tissues all from the same mouse or the same cell line in a time-course experiment). It can be a numeric or character code. [sample_group_id] |
+| Sample group baseline repeat   | Indicating samples to be used to set the index repeat within sample groups. The value for baseline samples should be "TRUE" or 1. [indices_baseline_control_TF]                                               |
+| Repeat positive control        | Samples to be used for correcting repeat length. The value for control samples should be "TRUE" or 1. [repeat_positive_control_TF]                                                                            |
+| Repeat positive control length | Modal repeat length of expanded allele for repeat positive controls. Provide the known repeat length for the control samples. [repeat_positive_control_length]                                                |
+|                                |                                                                                                                                                                                                               |

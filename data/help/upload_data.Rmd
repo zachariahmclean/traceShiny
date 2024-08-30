@@ -1,0 +1,59 @@
+---
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## How to upload data
+
+Select the data to upload. There are three steps:
+
+1.  Select the "Data upload type" (see table below).
+
+2.  Select the file(s) to upload.
+
+3.  Go to the right-hand side of the screen and made sure that the uploaded data has been correctly parsed. See below for descriptions of each of the fields.
+
+## Data upload type
+
+| Data upload type | Description                                                                                                                                                                                                                           |
+|------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| fsa              | The raw file from the fragment analyzer machine. Must be .fsa file format.                                                                                                                                                            |
+| peak_table       | A table with base pair level data (for example genemapper output). Must be a .csv or .tsv file. Each row must be a called peak and must have three essential columns, i) unique sample id, ii) peak base pair size, iii) peak height. |
+| repeat_table     | A table with repeat level data (for example summarized sequencing data). Each row must be a called repeat and must have three essential columns, i) unique sample id, ii) repeat size, iii) repeat count/height/frequency.            |
+
+## Data fields
+
+### fsa
+
+### peak_table
+
++------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Data field                         | Description                                                                                                                                                                                                                                                                           |
++====================================+=======================================================================================================================================================================================================================================================================================+
+| Data format                        | What is the original source of of the peak table. For example, "genemapper5" means that the data was processed in genemapper and the called peaks were exported. Within the app, there are functions for tidying up the genemapper data, so it's important that it is the raw output. |
+|                                    |                                                                                                                                                                                                                                                                                       |
+|                                    | "generic" is the most basic format possible where there are only three elements: i) unique sample id, ii) peak base pair size, iii) peak height. It must only be from the channel containing the data.                                                                                |
++------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Unique sample id                   | Column which gives the unique sample id. This is often the sample file name and it is absolutely critical that each sample has a unique id.                                                                                                                                           |
++------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Peak size                          | Column with the peak size information.                                                                                                                                                                                                                                                |
++------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Height                             | Column for the peak height                                                                                                                                                                                                                                                            |
++------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Dye channel column (if applicable) | Column that contains the dye information. In the case of genemapper this is "Dye/Sample Peak", which unhelpfully, is a concatenation of the the dye channel and the peak number.                                                                                                      |
++------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Dye                                | A string character to indicate the dye channel used to subset the data. For example, when a 6-FAM dye is used it is often assigned as "B".                                                                                                                                            |
++------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                    |                                                                                                                                                                                                                                                                                       |
++------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+### repeat_table
+
+| Data field             | Description                                                                                                                                 |
+|------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| Unique sample id       | Column which gives the unique sample id. This is often the sample file name and it is absolutely critical that each sample has a unique id. |
+| Repeat size            | Column with the repeat size information.                                                                                                    |
+| Height/reads/frequency | Column for the count of the repeat number. For example the number of reads.                                                                 |

@@ -1,0 +1,8 @@
+## Structuring custom ladder files
+
+To use the default ladders included in the package, simply keep the 'use default ladders' option ticked.
+
+To create a custom ladder file, you will want to have .csv file with a header and two columns. Column 1 is the ladder ID (which can be anything, but should match the corresponding ladder ID on the sample manifest file). Column 2 is the expected bp peaks, which should be seperated by commas, i.e.: 15,25,50,60 etc.
+
+~~~~~ Add example table ~~~~~~
+
