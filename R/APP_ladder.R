@@ -167,8 +167,8 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
 
                      if (input$spikeswitch == T) {
                        reactive_ladder$ladder <- find_ladders(upload_data$fsa_list(),
-                                                              ladder_channel = input$LadderChannel,
-                                                              signal_channel = input$SignalChannel,
+                                                              # ladder_channel = input$LadderChannel, TOODO need to move to read_fsa!
+                                                              # signal_channel = input$SignalChannel, TOODO need to move to read_fsa!
                                                               ladder_sizes = as.numeric(strsplit(input$LadderSizes, split = ",")[[1]]),
                                                               spike_location = NULL,
                                                               zero_floor = input$zerofloor,

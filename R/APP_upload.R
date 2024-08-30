@@ -172,11 +172,10 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                      reactive$metadata_table <- read.csv(input$MetadataUpload$datapath)
 
                      if (any(grepl("unique_id", colnames(reactive$metadata_table))) &&
-                         any(grepl("batch_run_id", colnames(reactive$metadata_table))) &&
                          any(grepl("metrics_group_id", colnames(reactive$metadata_table))) &&
                          any(grepl("metrics_baseline_control", colnames(reactive$metadata_table))) &&
-                         any(grepl("size_standard", colnames(reactive$metadata_table))) &&
-                         any(grepl("size_standard_repeat_length", colnames(reactive$metadata_table)))
+                         any(grepl("batch_run_id", colnames(reactive$metadata_table))) &&
+                         any(grepl("batch_sample_id", colnames(reactive$metadata_table))) 
                      )
                      {
                        if (all(names(reactive$fsa_list) == reactive$metadata_table$unique_id)) {

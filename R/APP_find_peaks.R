@@ -290,7 +290,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                      }
 
                      if (input$force_whole_repeat_units == "YES") {
-                       if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
+                       if (any(grepl("TRUE", upload_data$metadata_table()$batch_sample_id))) {
                        reactive_peaks$repeats_list <- call_repeats(fragments_list = reactive_peaks$allele_list,
                                                                    assay_size_without_repeat = input$assay_size_without_repeat,
                                                                    repeat_size = input$repeat_size,
@@ -299,7 +299,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                                                                    repeat_calling_algorithm_peak_assignment_scan_window = input$repeat_calling_algorithm_peak_assignment_scan_window,
                                                                    repeat_calling_algorithm_size_period = input$repeat_calling_algorithm_size_period,
                                                                    force_whole_repeat_units = TRUE,
-                                                                   repeat_length_correction = "from_metadata")
+                                                                   batch_correction = TRUE)
                        }
                        else {
                          reactive_peaks$repeats_list <- call_repeats(fragments_list = reactive_peaks$allele_list,
@@ -310,7 +310,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                                                                      repeat_calling_algorithm_peak_assignment_scan_window = input$repeat_calling_algorithm_peak_assignment_scan_window,
                                                                      repeat_calling_algorithm_size_period = input$repeat_calling_algorithm_size_period,
                                                                      force_whole_repeat_units = TRUE,
-                                                                     repeat_length_correction = "none")
+                                                                     batch_correction = FALSE)
                        }
                      }
                      else if (input$force_whole_repeat_units == "NO") {
@@ -323,7 +323,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                                                                    repeat_calling_algorithm_peak_assignment_scan_window = input$repeat_calling_algorithm_peak_assignment_scan_window,
                                                                    repeat_calling_algorithm_size_period = input$repeat_calling_algorithm_size_period,
                                                                    force_whole_repeat_units = FALSE,
-                                                                   repeat_length_correction = "from_metadata"
+                                                                   batch_correction = TRUE
                        )
                        }
                        else {
@@ -335,7 +335,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                                                                      repeat_calling_algorithm_peak_assignment_scan_window = input$repeat_calling_algorithm_peak_assignment_scan_window,
                                                                      repeat_calling_algorithm_size_period = input$repeat_calling_algorithm_size_period,
                                                                      force_whole_repeat_units = FALSE,
-                                                                     repeat_length_correction = "none"
+                                                                     batch_correction = FALSE
                          )
                        }
                      }
