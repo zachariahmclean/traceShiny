@@ -542,7 +542,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
 
   output$downloadDataSave <- downloadHandler(
     filename = function() {
-      paste0(format(Sys.time(), "%Y-%m-%d_%H%M%S"), "_SAVED_OBJECT", ".Rdata")
+      paste0(format(Sys.time(), "%Y-%m-%d_%H%M%S"), "_SAVED_OBJECT_", sessionInfo()$otherPkgs$traceShiny$Version, ".Rdata")
     },
     content = function(file) {
 
@@ -599,6 +599,9 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
       window_around_index_peak_min <- input$window_around_index_peak_min
       window_around_index_peak_max <- input$window_around_index_peak_max
 
+      #Package Version
+      Package_version <- sessionInfo()$otherPkgs$traceShiny$Version
+
 
       save("laddertable", "fsa_list", "metadata_table", "DataUpload", "DataUploadMeta", "Ladder_switch",
            "ladders", "scan", "size", "LadderChannel", "SignalChannel", "LadderSizes", "spikeswitch", "spikelocation", "zerofloor", "ladderselectionwindow", "smoothingwindow", "maxcombinations",
@@ -606,6 +609,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
            "peak_region_height_threshold_multiplier", "assay_size_without_repeat", "repeat_size", "force_whole_repeat_units", "repeat_calling_algorithm", "repeat_calling_algorithm_size_window_around_allele",
            "repeat_calling_algorithm_size_period", "repeat_calling_algorithm_peak_assignment_scan_window", "sample_traces_size", "sample_traces_repeats",
            "instability_metrics", "peak_threshold", "window_around_index_peak_min", "window_around_index_peak_max", "repeat_range1", "repeat_range2", "repeat_range3", "percentile_range1", "percentile_range2", "percentile_range3",
+           "Package_version",
            file = file)
     }
   )
