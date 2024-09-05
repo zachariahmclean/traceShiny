@@ -16,6 +16,8 @@ metrics_box_ui2 <- function(id) {
   box(id = "MetricsBox1", title = p("Settings", help_button("Peaks_Upload")), status = "warning", solidHeader = F,
       collapsible = T, width = NULL,
 
+      materialSwitch("advancesettings_Metrics", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Show Advanced Settings')), value = FALSE, status = "primary"),
+
       fluidRow(
         column(12,
                h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Calculate Repeat Instability Metrics</b>')),
@@ -34,6 +36,45 @@ metrics_box_ui2 <- function(id) {
                                      value = 40, step = 1))
                )
         )
+      ),
+      conditionalPanel(
+        condition = 'input.advancesettings_Metrics == true',
+      fluidRow(
+        column(12,
+               h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Instability Metrics Table Output</b><br>')),
+               h4(HTML('<h4 style = "text-align:justify;color:#000000"><br>Percentile Range')),
+               fluidRow(
+                 column(4,
+                        numericInput("percentile_range1", label = h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">From')),
+                                     value = 0.5,
+                                     min = 0,
+                                     step = 0.1)),
+                 column(4,
+                        numericInput("percentile_range2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">To')),
+                                     min = 0,
+                                     value = 0.95, step = 0.1)),
+                 column(4,
+                        numericInput("percentile_range3", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Interval')),
+                                     min = 0,
+                                     value = 0.05, step = 0.1))
+               ),
+               h4(HTML('<h4 style = "text-align:justify;color:#000000">Repeat Range')),
+               fluidRow(
+                 column(4,
+                        numericInput("repeat_range1", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">From')),
+                                     min = 0,
+                                     value = 0, step = 1)),
+                 column(4,
+                        numericInput("repeat_range2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">To')),
+                                     min = 0,
+                                     value = 20, step = 1)),
+                 column(4,
+                        numericInput("repeat_range3", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Interval')),
+                                     min = 0,
+                                     value = 5, step = 1))
+               ),
+        )
+      )
       ),
       p(style="text-align: center;", actionBttn("startbuttonMetrics", "APPLY", size = "lg"))
   )
@@ -157,16 +198,10 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                           "unique_id = 'unique_id'",
                           "metrics_baseline_control = 'metrics_baseline_control')")
 
-      strAlleles <- ifelse (input$number_of_peaks_to_return == "1",
-                            paste("<h4>Find Alleles </h4>",
-                                  "allele_list <- find_alleles(metadata_added_list, number_of_peaks_to_return = 1, ",
-                                  "peak_region_size_gap_threshold = ", paste(input$peak_region_size_gap_threshold), ", ",
-                                  "peak_region_height_threshold_multiplier = ", paste(input$peak_region_height_threshold_multiplier), ")"),
-                            paste("<h4>Find Alleles </h4>",
-                                  "allele_list <- find_alleles(metadata_added_list, number_of_peaks_to_return = 2, ",
-                                  "peak_region_size_gap_threshold = ", paste(input$peak_region_size_gap_threshold), ", ",
-                                  "peak_region_height_threshold_multiplier = ", paste(input$peak_region_height_threshold_multiplier), ")")
-      )
+      strAlleles <- paste("<h4>Find Alleles </h4>",
+                          "allele_list <- find_alleles(metadata_added_list, ",
+                          "peak_region_size_gap_threshold = ", paste(input$peak_region_size_gap_threshold), ", ",
+                          "peak_region_height_threshold_multiplier = ", paste(input$peak_region_height_threshold_multiplier), ")")
 
       strRepeats <- ifelse (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control)),
                             paste("<h4>Find Repeats </h4>",
@@ -239,7 +274,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
 
       if (input$show_peaks == "YES") {
       for (i in 1:length(names(peaks_module$index_list()))) {
-        plot_traces(peaks_module$index_list()[i],
+        trace::plot_traces(peaks_module$index_list()[i],
                     show_peaks = T,
                     xlim = c(input$xlim1, input$xlim2),
                     ylim = c(input$ylim1, input$ylim2))
@@ -247,7 +282,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
       }
       else {
         for (i in 1:length(names(peaks_module$index_list()))) {
-          plot_traces(peaks_module$index_list()[i],
+          trace::plot_traces(peaks_module$index_list()[i],
                       show_peaks = F,
                       xlim = c(input$xlim1, input$xlim2),
                       ylim = c(input$ylim1, input$ylim2))
@@ -279,6 +314,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
   observeEvent(input$MetricsBoxSTART, {
 
     shinyjs::hide("NextButtonPeaks")
+    reactive_metrics$df <- NULL
 
     if(input$MetricsBoxIntro$collapsed == FALSE) {
       js$collapse("MetricsBoxIntro")
@@ -298,7 +334,11 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
   })
 
   observe({
-    if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
+    if (is.null(upload_data$metadata_table())) {
+      updatePickerInput(session, "sample_subset_metrics", choices = names(upload_data$fsa_list()))
+    }
+
+    else if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
       updatePickerInput(session, "sample_subset_metrics", choices = upload_data$metadata_table()[-which(upload_data$metadata_table()$metrics_baseline_control == TRUE),]$unique_id)
     }
     else {
@@ -315,7 +355,9 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                      reactive_metrics$df <- calculate_instability_metrics(
                        fragments_list = peaks_module$index_list(),
                        peak_threshold = input$peak_threshold,
-                       window_around_index_peak = c(input$window_around_index_peak_min, input$window_around_index_peak_max)
+                       window_around_index_peak = c(input$window_around_index_peak_min, input$window_around_index_peak_max),
+                       percentile_range = seq(input$percentile_range1, input$percentile_range2, input$percentile_range3),
+                       repeat_range = seq(input$repeat_range1 , input$repeat_range2, input$repeat_range3)
                      )
                    })
     },
@@ -445,7 +487,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                        xend = peak_table$calculated_repeats,
                        yend = peak_table$height,
                        line = list(dash = "dash")) %>%
-          add_lines(x=c(peaks_module$index_list()[[input$sample_subset_metrics]]$index_repeat, peaks_module$index_list()[[input$sample_subset_metrics]]$index_repeat),
+          add_lines(x=c(peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_repeat, peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_repeat),
                     y=c(0,1),
                     mode="lines", hoverinfo="text", text="hello") %>%
           layout(title = ifelse(is.null(plot_title), fragments$unique_id, plot_title),
@@ -453,16 +495,16 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                               range = xlim),
                  yaxis = list("Signal",
                               range = ylim),
-                 shapes = list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$index_height),
+                 shapes = list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_height),
                                list(type = "line",
-                                    x0 = peaks_module$index_list()[[input$sample_subset_metrics]]$index_repeat,
-                                    x1 = peaks_module$index_list()[[input$sample_subset_metrics]]$index_repeat,
+                                    x0 = peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_repeat,
+                                    x1 = peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_repeat,
                                     y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")),
                                list(type = "rect",
                                     fillcolor = "red", line = list(color = "red"), opacity = 0.2,
                                     y0 = 0, y1 = 2000,
-                                    x0 = peaks_module$index_list()[[input$sample_subset_metrics]]$index_repeat + input$window_around_index_peak_min,
-                                    x1 = input$window_around_index_peak_max + peaks_module$index_list()[[input$sample_subset_metrics]]$index_repeat))
+                                    x0 = peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_repeat + input$window_around_index_peak_min,
+                                    x1 = input$window_around_index_peak_max + peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_repeat))
           )
       }
     }
@@ -473,7 +515,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
               mode = "lines",
               source = "plot_metrics",
               height = 300 + input$HeightPeaks_metrics*20) %>%
-        add_trace(x=c(peaks_module$index_list()[[input$sample_subset_metrics]]$index_repeat, peaks_module$index_list()[[input$sample_subset_metrics]]$index_repeat),
+        add_trace(x=c(peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_repeat, peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_repeat),
                   y=c(0,1),
                   mode="lines", hoverinfo="text", text="hello") %>%
         layout(title = ifelse(is.null(plot_title), fragments$unique_id, plot_title),
@@ -481,16 +523,16 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                             range = xlim),
                yaxis = list("Signal",
                             range = ylim),
-               shapes = list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$index_height),
+               shapes = list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_height),
                              list(type = "line",
-                                  x0 = peaks_module$index_list()[[input$sample_subset_metrics]]$index_repeat,
-                                  x1 = peaks_module$index_list()[[input$sample_subset_metrics]]$index_repeat,
+                                  x0 = peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_repeat,
+                                  x1 = peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_repeat,
                                   y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")),
                              list(type = "rect",
                                   fillcolor = "red", line = list(color = "red"), opacity = 0.2,
                                   y0 = 0, y1 = 2000,
-                                  x0 = peaks_module$index_list()[[input$sample_subset_metrics]]$index_repeat + input$window_around_index_peak_min,
-                                  x1 = input$window_around_index_peak_max + peaks_module$index_list()[[input$sample_subset_metrics]]$index_repeat))
+                                  x0 = peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_repeat + input$window_around_index_peak_min,
+                                  x1 = input$window_around_index_peak_max + peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_repeat))
         )
     }
   })
@@ -532,7 +574,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
       max_bp_size <- peaks_module$max_bp_size()
       smoothing_window_peaks <- peaks_module$smoothing_window()
       minimum_peak_signal <- peaks_module$minimum_peak_signal()
-      number_of_peaks_to_return <- peaks_module$number_of_peaks_to_return()
+      batchcorrectionswitch <- peaks_module$batchcorrectionswitch()
       peak_region_size_gap_threshold <- peaks_module$peak_region_size_gap_threshold()
       peak_region_height_threshold_multiplier <- peaks_module$peak_region_height_threshold_multiplier()
       assay_size_without_repeat <- peaks_module$assay_size_without_repeat()
@@ -542,20 +584,28 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
       repeat_calling_algorithm_size_window_around_allele <- peaks_module$repeat_calling_algorithm_size_window_around_allele()
       repeat_calling_algorithm_size_period <- peaks_module$repeat_calling_algorithm_size_period()
       repeat_calling_algorithm_peak_assignment_scan_window <- peaks_module$repeat_calling_algorithm_peak_assignment_scan_window()
+      sample_traces_size <- peaks_module$sample_traces_size()
+      sample_traces_repeats <- peaks_module$sample_traces_repeats()
 
       #Investigate
       instability_metrics <- reactive_metrics$df
       peak_threshold <- input$peak_threshold
+      repeat_range1 <- input$repeat_range1
+      repeat_range2 <- input$repeat_range2
+      repeat_range3 <- input$repeat_range3
+      percentile_range1 <- input$percentile_range1
+      percentile_range2 <- input$percentile_range2
+      percentile_range3 <- input$percentile_range3
       window_around_index_peak_min <- input$window_around_index_peak_min
       window_around_index_peak_max <- input$window_around_index_peak_max
 
 
       save("laddertable", "fsa_list", "metadata_table", "DataUpload", "DataUploadMeta", "Ladder_switch",
            "ladders", "scan", "size", "LadderChannel", "SignalChannel", "LadderSizes", "spikeswitch", "spikelocation", "zerofloor", "ladderselectionwindow", "smoothingwindow", "maxcombinations",
-           "index_list", "min_bp_size", "max_bp_size", "smoothing_window_peaks", "minimum_peak_signal", "number_of_peaks_to_return", "peak_region_size_gap_threshold",
+           "index_list", "min_bp_size", "max_bp_size", "smoothing_window_peaks", "minimum_peak_signal", "batchcorrectionswitch", "peak_region_size_gap_threshold",
            "peak_region_height_threshold_multiplier", "assay_size_without_repeat", "repeat_size", "force_whole_repeat_units", "repeat_calling_algorithm", "repeat_calling_algorithm_size_window_around_allele",
-           "repeat_calling_algorithm_size_period", "repeat_calling_algorithm_peak_assignment_scan_window",
-           "instability_metrics", "peak_threshold", "window_around_index_peak_min", "window_around_index_peak_max",
+           "repeat_calling_algorithm_size_period", "repeat_calling_algorithm_peak_assignment_scan_window", "sample_traces_size", "sample_traces_repeats",
+           "instability_metrics", "peak_threshold", "window_around_index_peak_min", "window_around_index_peak_max", "repeat_range1", "repeat_range2", "repeat_range3", "percentile_range1", "percentile_range2", "percentile_range3",
            file = file)
     }
   )

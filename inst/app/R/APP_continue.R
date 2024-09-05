@@ -22,7 +22,7 @@ continue_server <- function(input, output, session) {
 
   # Load function
   observeEvent(input$fileinputLOAD, {
-    #tryCatch({
+    tryCatch({
       withProgress(message = 'Loading previously saved enviroment...', style = "old",
                    value = 0, {
                      incProgress(1/20, detail = "Loading Packages")
@@ -32,7 +32,7 @@ continue_server <- function(input, output, session) {
                        return(NULL)
                      }
 
-                     library(instability)
+                     library(trace)
 
                      removeModal()
 
@@ -85,6 +85,8 @@ continue_server <- function(input, output, session) {
                      reactive_continue$index_list <- index_list
                      reactive_continue$scan <- scan
                      reactive_continue$size <- size
+                     reactive_continue$sample_traces_size <- sample_traces_size
+                     reactive_continue$sample_traces_repeats <- sample_traces_repeats
 
                      updateRadioGroupButtons(session, "DataUpload", selected = DataUpload)
                      updateMaterialSwitch(session, "DataUploadMeta", value = DataUploadMeta)
@@ -110,7 +112,7 @@ continue_server <- function(input, output, session) {
                      updateNumericInput(session, "max_bp_size", value = max_bp_size)
                      updateNumericInput(session, "smoothing_window", value = smoothing_window_peaks)
                      updateNumericInput(session, "minimum_peak_signal", value = minimum_peak_signal)
-                     updateRadioGroupButtons(session, "number_of_peaks_to_return", selected = number_of_peaks_to_return)
+                     updateMaterialSwitch(session, "batchcorrectionswitch", value = batchcorrectionswitch)
                      updateNumericInput(session, "peak_region_size_gap_threshold", value = peak_region_size_gap_threshold)
                      updateNumericInput(session, "peak_region_height_threshold_multiplier", value = peak_region_height_threshold_multiplier)
                      updateNumericInput(session, "assay_size_without_repeat", value = assay_size_without_repeat)
@@ -126,6 +128,12 @@ continue_server <- function(input, output, session) {
                      updateNumericInput(session, "peak_threshold", value = peak_threshold)
                      updateNumericInput(session, "window_around_index_peak_min", value = window_around_index_peak_min)
                      updateNumericInput(session, "window_around_index_peak_max", value = window_around_index_peak_max)
+                     updateNumericInput(session, "percentile_range1", value = percentile_range1)
+                     updateNumericInput(session, "percentile_range2", value = percentile_range2)
+                     updateNumericInput(session, "percentile_range3", value = percentile_range3)
+                     updateNumericInput(session, "repeat_range1", value = repeat_range1)
+                     updateNumericInput(session, "repeat_range2", value = repeat_range2)
+                     updateNumericInput(session, "repeat_range3", value = repeat_range3)
 
                      output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
                                                                       menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = F),
@@ -134,10 +142,10 @@ continue_server <- function(input, output, session) {
                                                                       menuItem("Instability Metrics", icon = icon("water-ladder"), tabName = "InstabilityMetrics", selected = T)))
 
                    })
-    # },
-    # error = function(e) {
-    #   shinyalert("ERROR!", "File is not in correct format.", type = "error", confirmButtonCol = "#337ab7")
-    # })
+    },
+    error = function(e) {
+      shinyalert("ERROR!", "File is not in correct format.", type = "error", confirmButtonCol = "#337ab7")
+    })
   })
 
   return(list(

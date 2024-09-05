@@ -54,27 +54,11 @@ peaks_box_ui2 <- function(id) {
         )
       ),
 
-      fluidRow(
-        column(12,
-               h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Find Alleles</b>')),
-               fluidRow(
-                 column(6,
-                        radioGroupButtons(
-                          inputId = "number_of_peaks_to_return",
-                          label = h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Number of Peaks to Return')),
-                          choices = c("1",
-                                      "2"),
-                          individual = TRUE,
-                          checkIcon = list(
-                            yes = tags$i(class = "fa fa-circle",
-                                         style = "color: steelblue"),
-                            no = tags$i(class = "fa fa-circle-o",
-                                        style = "color: steelblue")),
-                          selected = "1"
-                        ))
-               ),
-               conditionalPanel(
-                 condition = 'input.advancesettings_Peaks == true',
+      conditionalPanel(
+        condition = 'input.advancesettings_Peaks == true',
+        fluidRow(
+          column(12,
+                 h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Find Alleles</b>')),
                  fluidRow(
                    column(6,
                           numericInput("peak_region_size_gap_threshold", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Peak Region Size Gap Threshold')),
@@ -87,7 +71,7 @@ peaks_box_ui2 <- function(id) {
                                        value = 1, step = 1)
                    )
                  )
-               )
+          )
         )
       ),
 
@@ -108,6 +92,12 @@ peaks_box_ui2 <- function(id) {
                ),
 
                fluidRow(
+                 column(12,
+                 materialSwitch("batchcorrectionswitch", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Apply Batch Correction')), value = FALSE, status = "primary")
+                 )
+               ),
+
+               fluidRow(
                  column(6,
                         radioGroupButtons(
                           inputId = "force_whole_repeat_units",
@@ -121,6 +111,13 @@ peaks_box_ui2 <- function(id) {
                                         style = "color: steelblue")),
                           selected = "YES"
                         )
+                 ),
+                 column(6,
+                        conditionalPanel(
+                          condition = 'input.advancesettings_Peaks == true',
+                          pickerInput("repeat_calling_algorithm", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Repeat Calling Algorithm')),
+                                      choices = c("simple", "fft", "size_period"), selected = "simple")
+                        )
                  )
                ),
 
@@ -128,23 +125,19 @@ peaks_box_ui2 <- function(id) {
                  condition = 'input.advancesettings_Peaks == true',
                  fluidRow(
                    column(6,
-                          pickerInput("repeat_calling_algorithm", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Repeat Calling Algorithm')),
-                                      choices = c("simple", "fft", "size_period"), selected = "simple")
-                   ),
-                   column(6,
                           numericInput("repeat_calling_algorithm_size_window_around_allele", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Size Window Around Allele')),
                                        min = 1,
                                        value = 15, step = 1)
+                   ),
+                   column(6,
+                          numericInput("repeat_calling_algorithm_peak_assignment_scan_window", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Peak Assignment Scan Window')),
+                                       min = 1,
+                                       value = 3, step = 1)
                    )
                  ),
                  fluidRow(
                    column(6,
                           numericInput("repeat_calling_algorithm_size_period", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Size Period')),
-                                       min = 1,
-                                       value = 3, step = 1)
-                   ),
-                   column(6,
-                          numericInput("repeat_calling_algorithm_peak_assignment_scan_window", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Peak Assignment Scan Window')),
                                        min = 1,
                                        value = 3, step = 1)
                    )
@@ -212,6 +205,33 @@ peaks_box_ui3 <- function(id) {
   )
 }
 
+peaks_box_ui4 <- function(id) {
+  box(id = "PeaksBox3", title = strong("Batch Correction Trace"), status = "warning", solidHeader = F,
+      collapsible = T, collapsed = T, width = 12,
+
+      fluidRow(
+        column(3,
+               pickerInput("sample_subset_Batch", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Batch')),
+                           choices = NULL)),
+        column(3,
+               sliderInput("HeightBatch", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Plot Height')),
+                           min = 1, max = 100,
+                           value = 20, step = 1)
+        )
+      ),
+
+      htmlOutput("BatchWarning"),
+
+      fluidRow(
+        column(6,
+               h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Before Batch Correction</b>'))),
+        column(6,
+               h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>After Batch Correction</b>')))
+      ),
+      htmlOutput("plot_traces_BatchUI")
+  )
+}
+
 peaks_server <- function(input, output, session, continue_module, upload_data, ladder_module) {
 
   reactive_peaks <- reactiveValues()
@@ -220,6 +240,8 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
   observe({
     if(!is.null(continue_module$index_list())) {
       reactive_peaks$index_list <- continue_module$index_list()
+      reactive_peaks$sample_traces_size <- continue_module$sample_traces_size
+      reactive_peaks$sample_traces_repeats <- continue_module$sample_traces_repeats
     }
   })
 
@@ -227,11 +249,30 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
     shinyjs::hide("NextButtonLadder")
 
+    reactive_peaks$index_list <- NULL
+
     if(input$PeaksBoxIntro$collapsed == FALSE) {
       js$collapse("PeaksBoxIntro")
     }
     shinyjs::show("PeaksBox1")
     shinyjs::show("PeaksBox2")
+
+    if (is.null(upload_data$metadata_table())) {
+      shinyjs::hide("PeaksBox3")
+      shinyjs::hide("batchcorrectionswitch")
+    }
+    else if (!is.null(upload_data$metadata_table())) {
+      if (any(!is.na(upload_data$metadata_table()$batch_sample_id))) {
+        js$collapse("PeaksBox3")
+        shinyjs::show("PeaksBox3")
+        shinyjs::show("batchcorrectionswitch")
+        updatePickerInput(session, "sample_subset_Batch", choices = na.omit(unique(upload_data$metadata_table()$batch_sample_id)))
+      }
+      else {
+        shinyjs::hide("PeaksBox3")
+        shinyjs::hide("batchcorrectionswitch")
+      }
+    }
   })
 
   observeEvent(input$NextButtonPeaks, {
@@ -268,38 +309,34 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                                                             max_bp_size = input$max_bp_size
                      )
 
-                     reactive_peaks$metadata_added_list <- add_metadata(
-                       fragments_list = reactive_peaks$peaks,
-                       metadata_data.frame = upload_data$metadata_table(),
-                       unique_id = "unique_id",
-                       metrics_baseline_control = "metrics_baseline_control"
-                     )
+                     if (!is.null(upload_data$metadata_table())) {
 
-                     if (input$number_of_peaks_to_return == "1") {
-
-                       reactive_peaks$allele_list <- find_alleles(reactive_peaks$metadata_added_list,
-                                                                  number_of_peaks_to_return = 1,
-                                                                  peak_region_size_gap_threshold = input$peak_region_size_gap_threshold,
-                                                                  peak_region_height_threshold_multiplier = input$peak_region_height_threshold_multiplier)
+                       reactive_peaks$metadata_added_list <- add_metadata(
+                         fragments_list = reactive_peaks$peaks,
+                         metadata_data.frame = upload_data$metadata_table(),
+                         unique_id = "unique_id",
+                         metrics_baseline_control = "metrics_baseline_control"
+                       )
                      }
                      else {
-                       reactive_peaks$allele_list <- find_alleles(reactive_peaks$metadata_added_list,
-                                                                  number_of_peaks_to_return = 2,
-                                                                  peak_region_size_gap_threshold = input$peak_region_size_gap_threshold,
-                                                                  peak_region_height_threshold_multiplier = input$peak_region_height_threshold_multiplier)
+                       reactive_peaks$metadata_added_list <- reactive_peaks$peaks
                      }
+
+                     reactive_peaks$allele_list <- find_alleles(reactive_peaks$metadata_added_list,
+                                                                peak_region_size_gap_threshold = input$peak_region_size_gap_threshold,
+                                                                peak_region_height_threshold_multiplier = input$peak_region_height_threshold_multiplier)
 
                      if (input$force_whole_repeat_units == "YES") {
                        if (any(grepl("TRUE", upload_data$metadata_table()$batch_sample_id))) {
-                       reactive_peaks$repeats_list <- call_repeats(fragments_list = reactive_peaks$allele_list,
-                                                                   assay_size_without_repeat = input$assay_size_without_repeat,
-                                                                   repeat_size = input$repeat_size,
-                                                                   repeat_calling_algorithm = input$repeat_calling_algorithm,
-                                                                   repeat_calling_algorithm_size_window_around_allele = input$repeat_calling_algorithm_size_window_around_allele,
-                                                                   repeat_calling_algorithm_peak_assignment_scan_window = input$repeat_calling_algorithm_peak_assignment_scan_window,
-                                                                   repeat_calling_algorithm_size_period = input$repeat_calling_algorithm_size_period,
-                                                                   force_whole_repeat_units = TRUE,
-                                                                   batch_correction = TRUE)
+                         reactive_peaks$repeats_list <- call_repeats(fragments_list = reactive_peaks$allele_list,
+                                                                     assay_size_without_repeat = input$assay_size_without_repeat,
+                                                                     repeat_size = input$repeat_size,
+                                                                     repeat_calling_algorithm = input$repeat_calling_algorithm,
+                                                                     repeat_calling_algorithm_size_window_around_allele = input$repeat_calling_algorithm_size_window_around_allele,
+                                                                     repeat_calling_algorithm_peak_assignment_scan_window = input$repeat_calling_algorithm_peak_assignment_scan_window,
+                                                                     repeat_calling_algorithm_size_period = input$repeat_calling_algorithm_size_period,
+                                                                     force_whole_repeat_units = TRUE,
+                                                                     batch_correction = input$batchcorrectionswitch)
                        }
                        else {
                          reactive_peaks$repeats_list <- call_repeats(fragments_list = reactive_peaks$allele_list,
@@ -310,21 +347,21 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                                                                      repeat_calling_algorithm_peak_assignment_scan_window = input$repeat_calling_algorithm_peak_assignment_scan_window,
                                                                      repeat_calling_algorithm_size_period = input$repeat_calling_algorithm_size_period,
                                                                      force_whole_repeat_units = TRUE,
-                                                                     batch_correction = FALSE)
+                                                                     batch_correction = input$batchcorrectionswitch)
                        }
                      }
                      else if (input$force_whole_repeat_units == "NO") {
                        if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
-                       reactive_peaks$repeats_list <- call_repeats(fragments_list = reactive_peaks$allele_list,
-                                                                   assay_size_without_repeat = input$assay_size_without_repeat,
-                                                                   repeat_size = input$repeat_size,
-                                                                   repeat_calling_algorithm = input$repeat_calling_algorithm,
-                                                                   repeat_calling_algorithm_size_window_around_allele = input$repeat_calling_algorithm_size_window_around_allele,
-                                                                   repeat_calling_algorithm_peak_assignment_scan_window = input$repeat_calling_algorithm_peak_assignment_scan_window,
-                                                                   repeat_calling_algorithm_size_period = input$repeat_calling_algorithm_size_period,
-                                                                   force_whole_repeat_units = FALSE,
-                                                                   batch_correction = TRUE
-                       )
+                         reactive_peaks$repeats_list <- call_repeats(fragments_list = reactive_peaks$allele_list,
+                                                                     assay_size_without_repeat = input$assay_size_without_repeat,
+                                                                     repeat_size = input$repeat_size,
+                                                                     repeat_calling_algorithm = input$repeat_calling_algorithm,
+                                                                     repeat_calling_algorithm_size_window_around_allele = input$repeat_calling_algorithm_size_window_around_allele,
+                                                                     repeat_calling_algorithm_peak_assignment_scan_window = input$repeat_calling_algorithm_peak_assignment_scan_window,
+                                                                     repeat_calling_algorithm_size_period = input$repeat_calling_algorithm_size_period,
+                                                                     force_whole_repeat_units = FALSE,
+                                                                     batch_correction = input$batchcorrectionswitch
+                         )
                        }
                        else {
                          reactive_peaks$repeats_list <- call_repeats(fragments_list = reactive_peaks$allele_list,
@@ -335,7 +372,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                                                                      repeat_calling_algorithm_peak_assignment_scan_window = input$repeat_calling_algorithm_peak_assignment_scan_window,
                                                                      repeat_calling_algorithm_size_period = input$repeat_calling_algorithm_size_period,
                                                                      force_whole_repeat_units = FALSE,
-                                                                     batch_correction = FALSE
+                                                                     batch_correction = input$batchcorrectionswitch
                          )
                        }
                      }
@@ -355,6 +392,14 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
                      shinyjs::show("NextButtonPeaks")
 
+                     if(input$MetricsBoxIntro$collapsed == TRUE) {
+                       js$collapse("MetricsBoxIntro")
+                     }
+                     shinyjs::hide("MetricsBox1")
+                     shinyjs::hide("MetricsBox2")
+                     shinyjs::hide("MetricsBox3")
+                     shinyjs::hide("MetricsBox4")
+
                      output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
                                                                       menuItem("Upload", icon = icon("spinner"), tabName = "Upload"),
                                                                       menuItem("Find Ladders", icon = icon("water-ladder"), tabName = "FindLadders", selected = F),
@@ -369,8 +414,38 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
   })
 
   observe({
-    if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
-    updatePickerInput(session, "sample_subset", choices = upload_data$metadata_table()[-which(upload_data$metadata_table()$metrics_baseline_control == TRUE),]$unique_id)
+    if (input$repeat_calling_algorithm == "simple") {
+      shinyjs::hide("repeat_calling_algorithm_size_window_around_allele")
+      shinyjs::hide("repeat_calling_algorithm_size_period")
+      shinyjs::hide("repeat_calling_algorithm_peak_assignment_scan_window")
+    }
+    else if (input$repeat_calling_algorithm == "fft") {
+      shinyjs::show("repeat_calling_algorithm_size_window_around_allele")
+      shinyjs::hide("repeat_calling_algorithm_size_period")
+      shinyjs::show("repeat_calling_algorithm_peak_assignment_scan_window")
+    }
+    else if (input$repeat_calling_algorithm == "size_period") {
+      shinyjs::show("repeat_calling_algorithm_size_window_around_allele")
+      shinyjs::show("repeat_calling_algorithm_size_period")
+      shinyjs::show("repeat_calling_algorithm_peak_assignment_scan_window")
+    }
+
+  })
+
+  observe({
+    if (is.null(upload_data$metadata_table())) {
+      updatePickerInput(session, "sample_subset", choices = names(upload_data$fsa_list()))
+      shinyjs::hide("sample_subset2")
+      shinyjs::show("text_coordinates1")
+      shinyjs::hide("text_coordinates2")
+      shinyjs::hide("plot_traces_INDEX_UI")
+    }
+
+    else if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
+      updatePickerInput(session, "sample_subset", choices = upload_data$metadata_table()[-which(upload_data$metadata_table()$metrics_baseline_control == TRUE),]$unique_id)
+
+      updatePickerInput(session, "sample_subset2", choices = upload_data$metadata_table()[which(upload_data$metadata_table()$metrics_group_id == upload_data$metadata_table()[which(upload_data$metadata_table()$unique_id == input$sample_subset),]$metrics_group_id),][which(upload_data$metadata_table()[which(upload_data$metadata_table()$metrics_group_id == upload_data$metadata_table()[which(upload_data$metadata_table()$unique_id == input$sample_subset),]$metrics_group_id),]$metrics_baseline_control == "TRUE"),]$unique_id)
+
 
       shinyjs::show("sample_subset2")
       shinyjs::show("text_coordinates1")
@@ -385,11 +460,6 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
       shinyjs::hide("text_coordinates2")
       shinyjs::hide("plot_traces_INDEX_UI")
     }
-  })
-
-  observeEvent(input$sample_subset, {
-    updatePickerInput(session, "sample_subset2", choices = upload_data$metadata_table()[which(upload_data$metadata_table()$metrics_group_id == upload_data$metadata_table()[which(upload_data$metadata_table()$unique_id == input$sample_subset),]$metrics_group_id),][which(upload_data$metadata_table()[which(upload_data$metadata_table()$metrics_group_id == upload_data$metadata_table()[which(upload_data$metadata_table()$unique_id == input$sample_subset),]$metrics_group_id),]$metrics_baseline_control == "TRUE"),]$unique_id)
-
   })
 
   ## export ladder fixes
@@ -416,30 +486,39 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
   })
 
   output$text_coordinates1 <- renderUI({
-    if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
-    if (!is.null(relayout_data_peak()) && !is.null(reactive_peaks$index_list)) {
-      h3(HTML(paste0("Index Peak: ", reactive_peaks$index_list[[input$sample_subset]]$index_repeat)))
+    if (is.null(upload_data$metadata_table())) {
+      if (!is.null(relayout_data_peak()) && !is.null(reactive_peaks$index_list)) {
+        h3(HTML(paste0("Index Peak: ", reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat, " (You can drag the red line to change the index peak)")))
       }
-    else {
-      h3(HTML(paste0("Index Peak: ", reactive_peaks$index_list[[input$sample_subset]]$index_repeat)))
+      else {
+        h3(HTML(paste0("Index Peak: ", reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat, " (You can drag the red line to change the index peak)")))
+      }
     }
+
+    else if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
+      if (!is.null(relayout_data_peak()) && !is.null(reactive_peaks$index_list)) {
+        h3(HTML(paste0("Index Peak: ", reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat)))
+      }
+      else {
+        h3(HTML(paste0("Index Peak: ", reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat)))
+      }
     }
     else {
       if (!is.null(relayout_data_peak()) && !is.null(reactive_peaks$index_list)) {
-        h3(HTML(paste0("Index Peak: ", reactive_peaks$index_list[[input$sample_subset]]$index_repeat, " (You can drag the red line to change the index peak)")))
+        h3(HTML(paste0("Index Peak: ", reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat, " (You can drag the red line to change the index peak)")))
       }
       else {
-        h3(HTML(paste0("Index Peak: ", reactive_peaks$index_list[[input$sample_subset]]$index_repeat, " (You can drag the red line to change the index peak)")))
+        h3(HTML(paste0("Index Peak: ", reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat, " (You can drag the red line to change the index peak)")))
       }
     }
   })
 
   output$text_coordinates2 <- renderUI({
     if (!is.null(relayout_data_peak()) && !is.null(reactive_peaks$index_list)) {
-      h3(HTML(paste0("Index Peak: ", reactive_peaks$index_list[[input$sample_subset]]$index_repeat, " (You can drag the red line to change the index peak)")))
+      h3(HTML(paste0("Index Peak: ", reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat, " (You can drag the red line to change the index peak)")))
     }
     else {
-      h3(HTML(paste0("Index Peak: ", reactive_peaks$index_list[[input$sample_subset]]$index_repeat, " (You can drag the red line to change the index peak)")))
+      h3(HTML(paste0("Index Peak: ", reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat, " (You can drag the red line to change the index peak)")))
     }
   })
 
@@ -521,17 +600,17 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
         tallest_peak_height <- peak_table[which(peak_table$height == max(peak_table$height)), "height"]
         tallest_peak_x <- peak_table[which(peak_table$height == tallest_peak_height), "x"]
-        if (!is.null(fragments$get_alleles()$allele_1_height) && !is.na(fragments$get_alleles()$allele_1_height)) {
-          tallest_peak_height <- fragments$get_alleles()$allele_1_height
+        if (!is.null(fragments$allele_1_height) && !is.na(fragments$allele_1_height)) {
+          tallest_peak_height <- fragments$allele_1_height
           #find the tallest peak x axis position
-          if (is.null(x_axis) && is.na(fragments$get_alleles()$allele_1_repeat)) {
-            tallest_peak_x <- fragments$get_alleles()$allele_1_size
-          } else if (is.null(x_axis) && !is.na(fragments$get_alleles()$allele_1_repeat)) {
-            tallest_peak_x <- fragments$get_alleles()$allele_1_repeat
+          if (is.null(x_axis) && is.na(fragments$allele_1_repeat)) {
+            tallest_peak_x <- fragments$allele_1_size
+          } else if (is.null(x_axis) && !is.na(fragments$allele_1_repeat)) {
+            tallest_peak_x <- fragments$allele_1_repeat
           } else if (x_axis == "size") {
-            tallest_peak_x <- fragments$get_alleles()$allele_1_size
+            tallest_peak_x <- fragments$allele_1_size
           } else {
-            tallest_peak_x <- fragments$get_alleles()$allele_1_repeat
+            tallest_peak_x <- fragments$allele_1_repeat
           }
         }
 
@@ -541,29 +620,50 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
       }
     }
 
-    if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
-
-    if (show_peaks == TRUE) {
-      if (!is.null(peak_table$repeats) && !is.null(peak_table$calculated_repeats)) {
+    if (is.null(upload_data$metadata_table())) {
+      if (show_peaks == TRUE) {
+        if (!is.null(peak_table$repeats) && !is.null(peak_table$calculated_repeats)) {
+          plot_ly(data = data,
+                  x = ~x, y = ~signal,
+                  type = "scatter",
+                  mode = "lines",
+                  source = "plot_peak",
+                  height = (300 + input$HeightPeaks*20)) %>%
+            add_markers(x = peaks_above$x,
+                        y = peaks_above$height,
+                        colors = "blue") %>%
+            add_markers(x = peaks_below$x,
+                        y = peaks_below$height,
+                        colors = "purple") %>%
+            add_markers(x = tallest_peak_x,
+                        y = tallest_peak_height,
+                        colors = "green") %>%
+            add_segments(x = peak_table$repeats,
+                         y = peak_table$height,
+                         xend = peak_table$calculated_repeats,
+                         yend = peak_table$height,
+                         line = list(dash = "dash")) %>%
+            layout(title = ifelse(is.null(plot_title), fragments$unique_id, plot_title),
+                   xaxis = list("Repeats",
+                                range = xlim),
+                   yaxis = list("Signal",
+                                range = ylim),
+                   shapes = list(
+                     #vertical line
+                     list(type = "line", x0 = reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat,
+                          x1 = reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat,
+                          y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")))
+            ) %>%
+            config(edits = list(shapePosition = TRUE))
+        }
+      }
+      else {
         plot_ly(data = data,
                 x = ~x, y = ~signal,
                 type = "scatter",
                 mode = "lines",
+                source = "plot_peak",
                 height = (300 + input$HeightPeaks*20)) %>%
-          add_markers(x = peaks_above$x,
-                      y = peaks_above$height,
-                      colors = "blue") %>%
-          add_markers(x = peaks_below$x,
-                      y = peaks_below$height,
-                      colors = "purple") %>%
-          add_markers(x = tallest_peak_x,
-                      y = tallest_peak_height,
-                      colors = "green") %>%
-          add_segments(x = peak_table$repeats,
-                       y = peak_table$height,
-                       xend = peak_table$calculated_repeats,
-                       yend = peak_table$height,
-                       line = list(dash = "dash")) %>%
           layout(title = ifelse(is.null(plot_title), fragments$unique_id, plot_title),
                  xaxis = list("Repeats",
                               range = xlim),
@@ -571,30 +671,68 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                               range = ylim),
                  shapes = list(
                    #vertical line
-                   list(type = "line", x0 = ifelse(!is.null(relayout_data_peak()), reactive_peaks$index_list[[input$sample_subset]]$index_repeat, reactive_peaks$index_list[[input$sample_subset2]]$index_repeat),
-                        x1 = ifelse(!is.null(relayout_data_peak()), reactive_peaks$index_list[[input$sample_subset]]$index_repeat, reactive_peaks$index_list[[input$sample_subset2]]$index_repeat),
+                   list(type = "line", x0 = reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat,
+                        x1 = reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat,
+                        y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")))
+          ) %>%
+          config(edits = list(shapePosition = TRUE))
+      }
+    }
+
+    else if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
+
+      if (show_peaks == TRUE) {
+        if (!is.null(peak_table$repeats) && !is.null(peak_table$calculated_repeats)) {
+          plot_ly(data = data,
+                  x = ~x, y = ~signal,
+                  type = "scatter",
+                  mode = "lines",
+                  height = (300 + input$HeightPeaks*20)) %>%
+            add_markers(x = peaks_above$x,
+                        y = peaks_above$height,
+                        colors = "blue") %>%
+            add_markers(x = peaks_below$x,
+                        y = peaks_below$height,
+                        colors = "purple") %>%
+            add_markers(x = tallest_peak_x,
+                        y = tallest_peak_height,
+                        colors = "green") %>%
+            add_segments(x = peak_table$repeats,
+                         y = peak_table$height,
+                         xend = peak_table$calculated_repeats,
+                         yend = peak_table$height,
+                         line = list(dash = "dash")) %>%
+            layout(title = ifelse(is.null(plot_title), fragments$unique_id, plot_title),
+                   xaxis = list("Repeats",
+                                range = xlim),
+                   yaxis = list("Signal",
+                                range = ylim),
+                   shapes = list(
+                     #vertical line
+                     list(type = "line", x0 = ifelse(!is.null(relayout_data_peak()), reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat, reactive_peaks$index_list[[input$sample_subset2]]$.__enclos_env__$private$index_repeat),
+                          x1 = ifelse(!is.null(relayout_data_peak()), reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat, reactive_peaks$index_list[[input$sample_subset2]]$.__enclos_env__$private$index_repeat),
+                          y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")))
+            )
+        }
+      }
+      else {
+        plot_ly(data = data,
+                x = ~x, y = ~signal,
+                type = "scatter",
+                mode = "lines",
+                height = (300 + input$HeightPeaks*20)) %>%
+          layout(title = ifelse(is.null(plot_title), fragments$unique_id, plot_title),
+                 xaxis = list("Repeats",
+                              range = xlim),
+                 yaxis = list("Signal",
+                              range = ylim),
+                 shapes = list(
+                   #vertical line
+                   list(type = "line", x0 = ifelse(!is.null(relayout_data_peak()), reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat, reactive_peaks$index_list[[input$sample_subset2]]$.__enclos_env__$private$index_repeat),
+                        x1 = ifelse(!is.null(relayout_data_peak()), reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat, reactive_peaks$index_list[[input$sample_subset2]]$.__enclos_env__$private$index_repeat),
                         y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")))
           )
       }
-    }
-    else {
-      plot_ly(data = data,
-              x = ~x, y = ~signal,
-              type = "scatter",
-              mode = "lines",
-              height = (300 + input$HeightPeaks*20)) %>%
-        layout(title = ifelse(is.null(plot_title), fragments$unique_id, plot_title),
-               xaxis = list("Repeats",
-                            range = xlim),
-               yaxis = list("Signal",
-                            range = ylim),
-               shapes = list(
-                 #vertical line
-                 list(type = "line", x0 = ifelse(!is.null(relayout_data_peak()), reactive_peaks$index_list[[input$sample_subset]]$index_repeat, reactive_peaks$index_list[[input$sample_subset2]]$index_repeat),
-                      x1 = ifelse(!is.null(relayout_data_peak()), reactive_peaks$index_list[[input$sample_subset]]$index_repeat, reactive_peaks$index_list[[input$sample_subset2]]$index_repeat),
-                      y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")))
-        )
-    }
     }
     else {
       if (show_peaks == TRUE) {
@@ -626,8 +764,8 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                                 range = ylim),
                    shapes = list(
                      #vertical line
-                     list(type = "line", x0 = reactive_peaks$index_list[[input$sample_subset]]$index_repeat,
-                          x1 = reactive_peaks$index_list[[input$sample_subset]]$index_repeat,
+                     list(type = "line", x0 = reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat,
+                          x1 = reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat,
                           y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")))
             ) %>%
             config(edits = list(shapePosition = TRUE))
@@ -647,8 +785,8 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                               range = ylim),
                  shapes = list(
                    #vertical line
-                   list(type = "line", x0 = reactive_peaks$index_list[[input$sample_subset]]$index_repeat,
-                        x1 = reactive_peaks$index_list[[input$sample_subset]]$index_repeat,
+                   list(type = "line", x0 = reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat,
+                        x1 = reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat,
                         y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")))
           ) %>%
           config(edits = list(shapePosition = TRUE))
@@ -785,8 +923,8 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                               range = ylim),
                  shapes = list(
                    #vertical line
-                   list(type = "line", x0 = reactive_peaks$index_list[[input$sample_subset2]]$index_repeat,
-                        x1 = reactive_peaks$index_list[[input$sample_subset2]]$index_repeat,
+                   list(type = "line", x0 = reactive_peaks$index_list[[input$sample_subset2]]$.__enclos_env__$private$index_repeat,
+                        x1 = reactive_peaks$index_list[[input$sample_subset2]]$.__enclos_env__$private$index_repeat,
                         y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")))
           ) %>%
           config(edits = list(shapePosition = TRUE))
@@ -806,8 +944,8 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                             range = ylim),
                shapes = list(
                  #vertical line
-                 list(type = "line", x0 = reactive_peaks$index_list[[input$sample_subset2]]$index_repeat,
-                      x1 = reactive_peaks$index_list[[input$sample_subset2]]$index_repeat,
+                 list(type = "line", x0 = reactive_peaks$index_list[[input$sample_subset2]]$.__enclos_env__$private$index_repeat,
+                      x1 = reactive_peaks$index_list[[input$sample_subset2]]$.__enclos_env__$private$index_repeat,
                       y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")))
         ) %>%
         config(edits = list(shapePosition = TRUE))
@@ -827,13 +965,129 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     h3(HTML('<b><h3 style = "text-align:justify;color:#FF0000">Please select your inputs and press apply to start analysis.</b>'))
   })
 
+  output$plot_traces_BatchUI <- renderUI({
+    plotlyOutput("plot_traces_Batch", height = (300 + input$HeightBatch*20))
+  })
+
+  output$plot_traces_Batch <- renderPlotly({
+
+    validate(
+      need(!is.null(reactive_peaks$index_list), 'Please Run The Analysis First'))
+
+    fragments_list = reactive_peaks$index_list
+    sample_subset = NULL
+    x_axis = "repeats"
+    n_facet_col  = 1
+    xlim = NULL
+
+    size_standard_fragments <- sapply(fragments_list, function(x) x$batch_sample_id)
+    controls_fragments_list <- fragments_list[which(!is.na(size_standard_fragments))]
+
+    if (length(unique(na.omit(size_standard_fragments))) == 0) {
+      stop(
+        call. = FALSE,
+        "There are no samples with batch_sample_id assigned. Check that the batch_sample_id has been added to the samples via add_metadata()."
+      )
+    }
+
+    if (!is.null(sample_subset)) {
+      sample_subset <- sapply(controls_fragments_list, function(x) x$batch_sample_id %in% sample_subset)
+      controls_fragments_list <- controls_fragments_list[which(sample_subset)]
+
+      if (length(controls_fragments_list) == 0) {
+        stop(
+          call. = FALSE,
+          "After subsetting the samples with the provided id, no samples were left. Check that you provided the correct id or that the batch_sample_id has been added to the samples."
+        )
+      }
+    }
+
+    size_standard_fragments_sample_groups <- sapply(controls_fragments_list, function(x) x$batch_sample_id)
+
+    split_by_sample <- split(controls_fragments_list, size_standard_fragments_sample_groups)
+
+    sample_fragments <- split_by_sample[[input$sample_subset_Batch]]
+
+    sample_traces_size <- lapply(sample_fragments, function(y) {
+      df <- y$trace_bp_df
+      df$x <- df$size
+      return(df)
+    })
+
+    sample_traces_repeats <- lapply(sample_fragments, function(y) {
+      df <- y$trace_bp_df
+      df$x <- df$calculated_repeats
+      return(df)
+    })
+
+    # Generate colors dynamically
+    n_dfs <- length(sample_traces_size)
+
+    # normalize signal to samples have the same maximum
+    sample_traces_size <- lapply(sample_traces_size, function(x){
+      x$signal <- x$signal - min(x$signal)
+      x$rel_signal <- x$signal / max(x$signal)
+      return(x)
+    })
+
+    sample_traces_repeats <- lapply(sample_traces_repeats, function(x){
+      x$signal <- x$signal - min(x$signal)
+      x$rel_signal <- x$signal / max(x$signal)
+      return(x)
+    })
+
+    reactive_peaks$sample_traces_size <- sample_traces_size
+    reactive_peaks$sample_traces_repeats <- sample_traces_repeats
+
+    #Size
+    p1 <- plot_ly(height = (300 + input$HeightBatch*20)) %>%
+      layout(title = sample_traces_size[[1]]$batch_sample_id,
+             xaxis = list(title = "Size"),
+             yaxis = list(title = "Signal")
+      )
+
+    ## Add the traces one at a time
+    for (i in 1:n_dfs) {
+      p1 <- p1 %>% add_trace(y = sample_traces_size[[i]]$rel_signal, x = ((sample_traces_size[[i]]$x - input$assay_size_without_repeat)/input$repeat_size), name = gsub(".fsa", "", unique(sample_traces_size[[i]]$unique_id)),
+                           mode="lines")
+    }
+
+    #Repeats
+    p2 <- plot_ly(height = (300 + input$HeightBatch*20)) %>%
+      layout(title = sample_traces_repeats[[1]]$batch_sample_id,
+             xaxis = list(title = "Repeat"),
+             yaxis = list(title = "Signal")
+      )
+
+    ## Add the traces one at a time
+    for (i in 1:n_dfs) {
+      p2 <- p2 %>% add_trace(y = sample_traces_repeats[[i]]$rel_signal, x = sample_traces_repeats[[i]]$x, name = gsub(".fsa", "", unique(sample_traces_repeats[[i]]$unique_id)),
+                           mode="lines")
+    }
+
+    subplot(p1, p2)
+
+  })
+
+  output$BatchWarning <- renderUI({
+    if (all(((reactive_peaks$sample_traces_size[[1]]$x - input$assay_size_without_repeat)/input$repeat_size) == reactive_peaks$sample_traces_repeats[[1]]$x)) {
+      h4(HTML('<h4 style = "text-align:justify;color:#FF0000"><b>Warning: Batch correction not performed the before and after plots will look the same. </b>'))
+    }
+    else{
+      return()
+    }
+  })
+
+
   return(list(
     index_list = reactive(reactive_peaks$index_list),
+    sample_traces_size = reactive(reactive_peaks$sample_traces_size),
+    sample_traces_repeats = reactive(reactive_peaks$sample_traces_repeats),
     min_bp_size = reactive(input$min_bp_size),
     max_bp_size = reactive(input$max_bp_size),
     smoothing_window = reactive(input$smoothing_window),
     minimum_peak_signal = reactive(input$minimum_peak_signal),
-    number_of_peaks_to_return = reactive(input$number_of_peaks_to_return),
+    batchcorrectionswitch = reactive(input$batchcorrectionswitch),
     peak_region_size_gap_threshold = reactive(input$peak_region_size_gap_threshold),
     peak_region_height_threshold_multiplier = reactive(input$peak_region_height_threshold_multiplier),
     assay_size_without_repeat = reactive(input$assay_size_without_repeat),

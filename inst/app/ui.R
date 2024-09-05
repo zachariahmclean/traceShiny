@@ -217,6 +217,7 @@ body <- dashboardBody(
             fluidRow(upload_data_box_ui1("fe")),
             fluidRow(
               column(12,
+                     upload_data_box_ui2("fe"),
                      upload_data_box_ui3("fe"),
                      upload_data_box_ui4("fe"),
                      upload_data_box_ui5("fe"),
@@ -253,7 +254,10 @@ body <- dashboardBody(
               column(9,
                      peaks_box_ui3("fe")
               )
-            )
+            ),
+            fluidRow(
+              column(12,
+                     peaks_box_ui4("fe")))
     ),
     tabItem(tabName = "InstabilityMetrics",
             fluidRow(metrics_box_ui1("fe")),

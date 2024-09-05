@@ -13,7 +13,7 @@ upload_data_box_ui1 <- function(id) {
       ))
 }
 
-upload_data_box_ui3 <- function(id) {
+upload_data_box_ui2 <- function(id) {
   box(id = "LoadBox2", title = p("Data Upload", help_button("Data_Upload")), status = "warning", solidHeader = F,
       collapsible = T, width = NULL,
       radioGroupButtons(
@@ -46,6 +46,34 @@ upload_data_box_ui3 <- function(id) {
   )
 }
 
+upload_data_box_ui3 <- function(id) {
+  box(id = "LoadBox5", title = p("Select Data Channels", help_button("Data_Channels")), status = "warning", solidHeader = F,
+      collapsible = T, width = NULL,
+
+      fluidRow(
+        column(3,
+               pickerInput("sample_subset_upload", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Samples')),
+                           choices = NULL)),
+        column(3,
+               sliderInput("HeightDataChannels", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Plot Height')),
+                           min = 1, max = 100,
+                           value = 20, step = 1))
+      ),
+
+      htmlOutput("plot_data_channels_UI"),
+
+      fluidRow(
+        column(3,
+               pickerInput("LadderChannel", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Ladder Channel')),
+                           choices = NULL)),
+        column(3,
+               pickerInput("SignalChannel", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Signal Channel')),
+                           choices = NULL))
+        ),
+      p(style="text-align: center;", actionBttn("SelectionButton", "APPLY", size = "lg"))
+  )
+}
+
 upload_data_box_ui4 <- function(id) {
   box(
     id = "LoadBox3", title = p("Metadata Upload", help_button("MetaData")), status = "warning", solidHeader = F,
@@ -70,7 +98,6 @@ upload_data_box_ui4 <- function(id) {
 }
 
 upload_data_box_ui5 <- function(id) {
-  ns = NS(id)
   box(
     id = "LoadBox4", title = p("Ladder Selection", help_button("ladder")), status = "warning", solidHeader = F,
     collapsible = T, width = NULL,
@@ -112,32 +139,61 @@ upload_data_box_server <- function(input, output, session, continue_module) {
       js$collapse("LoadBoxIntro")
     }
     shinyjs::show("LoadBox2")
+    shinyjs::hide("LoadBox5")
     shinyjs::hide("LoadBox3")
     shinyjs::hide("LoadBox4")
     shinyjs::hide("NextButtonLoad")
+
+    updateRadioGroupButtons(session, "DataUpload", selected = "fsa")
+
+    reactive$laddertable <- NULL
+    reactive$fsa_list <- NULL
+    reactive$metadata_table <- NULL
   })
 
   observe({
     if(input$DataUpload == "Use Example"){
-      reactive$fsa_list <- instability::cell_line_fsa_list[1:72]
+      reactive$fsa_list <- trace::cell_line_fsa_list
 
       shinyjs::show("LoadBox2")
-      shinyjs::show("LoadBox3")
+      shinyjs::show("LoadBox5")
+      shinyjs::hide("LoadBox3")
+      shinyjs::hide("LoadBox4")
+      shinyjs::hide("NextButtonLoad")
+    }
+    else {
+      updateMaterialSwitch(session, "DataUploadMeta", value = F)
+      shinyjs::show("LoadBox2")
+      shinyjs::hide("LoadBox5")
+      shinyjs::hide("LoadBox3")
       shinyjs::hide("LoadBox4")
       shinyjs::hide("NextButtonLoad")
     }
 
     if(input$DataUploadMeta == T) {
-      reactive$metadata_table <- instability::metadata
+      reactive$metadata_table <- trace::metadata
       shinyjs::show("LoadBox2")
+      shinyjs::show("LoadBox5")
       shinyjs::show("LoadBox3")
       shinyjs::show("LoadBox4")
       shinyjs::show("NextButtonLoad")
     }
-    else {
-      reactive$metadata_table <- NULL
+    else if(input$DataUploadMeta == F) {
+      shinyjs::hide("LoadBox4")
       shinyjs::hide("NextButtonLoad")
+      reactive$metadata_table <- NULL
     }
+  })
+
+
+  observeEvent(input$SelectionButton, {
+    updateMaterialSwitch(session, "DataUploadMeta", value = F)
+    shinyjs::show("LoadBox2")
+    shinyjs::show("LoadBox5")
+    shinyjs::show("LoadBox3")
+    shinyjs::show("LoadBox4")
+    shinyjs::show("NextButtonLoad")
+    shinyalert("SUCCESS!", "Channels Selected!", type = "success", confirmButtonCol = "#337ab7")
   })
 
   observeEvent(input$DataFSA, {
@@ -152,7 +208,8 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                      shinyalert("SUCCESS!", "File uploaded successfully.", type = "success", confirmButtonCol = "#337ab7")
 
                      shinyjs::show("LoadBox2")
-                     shinyjs::show("LoadBox3")
+                     shinyjs::show("LoadBox5")
+                     shinyjs::hide("LoadBox3")
                      shinyjs::hide("LoadBox4")
                      shinyjs::hide("NextButtonLoad")
                    })
@@ -162,6 +219,44 @@ upload_data_box_server <- function(input, output, session, continue_module) {
       shinyjs::hide("NextButtonLoad")
     })
   })
+
+  observe({
+    if (!is.null(reactive$fsa_list)) {
+      updatePickerInput(session, "sample_subset_upload", choices = names(reactive$fsa_list))
+      updatePickerInput(session, "LadderChannel", choices = names(reactive$fsa_list[[1]]$fsa$Data)[grep("DATA.", names(reactive$fsa_list[[1]]$fsa$Data))], selected = "DATA.105")
+      updatePickerInput(session, "SignalChannel", choices = names(reactive$fsa_list[[1]]$fsa$Data)[grep("DATA.", names(reactive$fsa_list[[1]]$fsa$Data))], selected = "DATA.1")
+    }
+  })
+
+  output$plot_data_channels_UI <- renderUI({
+    plotlyOutput("plot_data_channels", height = (300 + input$HeightDataChannels*20))
+  })
+
+  output$plot_data_channels <- renderPlotly({
+
+    # Extract the names of the data channels that match "DATA."
+    data_channels <- names(reactive$fsa_list[[input$sample_subset_upload]]$fsa$Data)[grep("DATA.", names(reactive$fsa_list[[input$sample_subset_upload]]$fsa$Data))]
+    raw_data_list <- reactive$fsa_list[[input$sample_subset_upload]]$fsa$Data[data_channels]
+
+    df <- as.data.frame(do.call(cbind.fill, raw_data_list))
+    colnames(df) <- names(raw_data_list)
+    df <- tibble::rowid_to_column(df, "ID")
+
+    p <- plot_ly(height = (300 + input$HeightDataChannels*20)) %>%
+      layout(title = input$sample_subset_upload,
+             xaxis = list(title = "Scan"),
+             yaxis = list(title = "Signal")
+      )
+
+    ## Add the traces one at a time
+    for(i in 2:ncol(df)){
+      p <- p %>%  add_trace(y = df[,i], x = df[,1], name = colnames(df)[i],
+                            mode="lines")
+    }
+
+    p
+  })
+
 
   observeEvent(input$MetadataUpload, {
     tryCatch({
@@ -175,10 +270,10 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                          any(grepl("metrics_group_id", colnames(reactive$metadata_table))) &&
                          any(grepl("metrics_baseline_control", colnames(reactive$metadata_table))) &&
                          any(grepl("batch_run_id", colnames(reactive$metadata_table))) &&
-                         any(grepl("batch_sample_id", colnames(reactive$metadata_table))) 
+                         any(grepl("batch_sample_id", colnames(reactive$metadata_table)))
                      )
                      {
-                       if (all(names(reactive$fsa_list) == reactive$metadata_table$unique_id)) {
+                       if (all(names(reactive$fsa_list) %in% reactive$metadata_table$unique_id)) {
 
                          if (any(grepl("TRUE", reactive$metadata_table$metrics_baseline_control))) {
 
@@ -188,6 +283,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                              shinyalert("SUCCESS!", "File uploaded successfully.", type = "success", confirmButtonCol = "#337ab7")
 
                              shinyjs::show("LoadBox2")
+                             shinyjs::show("LoadBox5")
                              shinyjs::show("LoadBox3")
                              shinyjs::show("LoadBox4")
                              shinyjs::show("NextButtonLoad")
@@ -205,6 +301,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                          else {
                            shinyalert("WARNING!", "Control samples not detected in uploaded dataframe, please check your column metrics_baseline_control. You may proceed but some functions may not be avaliable.", type = "warning", confirmButtonCol = "#337ab7")
                            shinyjs::show("LoadBox2")
+                           shinyjs::show("LoadBox5")
                            shinyjs::show("LoadBox3")
                            shinyjs::show("LoadBox4")
                            shinyjs::show("NextButtonLoad")
@@ -263,6 +360,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                        shinyalert("SUCCESS!", "File uploaded successfully.", type = "success", confirmButtonCol = "#337ab7")
 
                        shinyjs::show("LoadBox2")
+                       shinyjs::show("LoadBox5")
                        shinyjs::show("LoadBox3")
                        shinyjs::show("LoadBox4")
                        shinyjs::show("NextButtonLoad")

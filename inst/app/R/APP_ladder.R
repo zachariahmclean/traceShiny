@@ -23,17 +23,11 @@ ladder_box_ui2 <- function(id) {
 
       materialSwitch("advancesettings_Ladder", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Show Advanced Settings')), value = FALSE, status = "primary"),
 
-      pickerInput("LadderChannel", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Ladder Channel')),
-                  choices = c("DATA.105"),
-                  selected = "DATA.105"),
-      pickerInput("SignalChannel", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Signal Channel')),
-                  choices = c("DATA.1"),
-                  selected = "DATA.1"),
       pickerInput("LadderSizes", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Ladder Sizes')), choices = NULL),
 
-      materialSwitch("spikeswitch", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Use Default Ladder Peak')), value = TRUE, status = "primary"),
+      materialSwitch("spikeswitch", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Use Default Ladder Scan Position')), value = TRUE, status = "primary"),
 
-      numericInput("spikelocation", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-60px;">Input Custom Ladder Peak')),
+      numericInput("spikelocation", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-60px;">Input Ladder Starting Scan Position')),
                    min = 1,
                    value = 1, step = 1),
 
@@ -41,7 +35,7 @@ ladder_box_ui2 <- function(id) {
         condition = 'input.advancesettings_Ladder == true',
         materialSwitch("zerofloor", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Apply Zero Floor')), value = TRUE, status = "primary"),
 
-        numericInput("ladderselectionwindow", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Spike Location')),
+        numericInput("ladderselectionwindow", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Ladder Selection Window')),
                      min = 1,
                      value = 5, step = 1),
 
@@ -99,6 +93,7 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
   manual_ladder_list <- shiny::reactiveValues()
   reactive_ladder <- reactiveValues()
   relayout_data <- shiny::reactiveVal(NULL)
+  fragment_ladder_trigger <- shiny::reactiveVal(0)
 
   # Initialize ladders as NULL
   ladders <- shiny::reactiveValues(scan = NULL, size = NULL)
@@ -116,6 +111,10 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
   })
 
   observeEvent(input$NextButtonLoad, {
+
+    if (is.null(upload_data$metadata_table())) {
+      shinyalert("WARNING!", "No metadata was loaded!", type = "warning", confirmButtonCol = "#337ab7")
+    }
 
     shinyjs::hide("NextButtonLoad")
 
@@ -145,6 +144,10 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
     shinyjs::show("LadderBox2")
     shinyjs::hide("NextButtonLadder")
 
+    reactive_ladder$ladder <- NULL
+    ladders$scan <- NULL
+    ladders$size <- NULL
+
     updatePickerInput(session, 'LadderSizes', choices = upload_data$laddertable()$Expected_ladder_peaks)
     updatePickerInput(session, "unique_id_selection", choices = names(upload_data$fsa_list()))
   })
@@ -166,11 +169,11 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
                      incProgress(0.1)
 
                      if (input$spikeswitch == T) {
-                       reactive_ladder$ladder <- find_ladders(upload_data$fsa_list(),
-                                                              # ladder_channel = input$LadderChannel, TOODO need to move to read_fsa!
-                                                              # signal_channel = input$SignalChannel, TOODO need to move to read_fsa!
+                       reactive_ladder$ladder <- trace::find_ladders(upload_data$fsa_list(),
+                                                              ladder_channel = input$LadderChannel,
+                                                              signal_channel = input$SignalChannel,
                                                               ladder_sizes = as.numeric(strsplit(input$LadderSizes, split = ",")[[1]]),
-                                                              spike_location = NULL,
+                                                              ladder_start_scan = NULL,
                                                               zero_floor = input$zerofloor,
                                                               ladder_selection_window = input$ladderselectionwindow,
                                                               smoothing_window = input$smoothingwindow,
@@ -178,11 +181,11 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
                                                               show_progress_bar = FALSE)
                      }
                      else {
-                       reactive_ladder$ladder <- find_ladders(upload_data$fsa_list(),
+                       reactive_ladder$ladder <- trace::find_ladders(upload_data$fsa_list(),
                                                               ladder_channel = input$LadderChannel,
                                                               signal_channel = input$SignalChannel,
                                                               ladder_sizes = as.numeric(strsplit(input$LadderSizes, split = ",")[[1]]),
-                                                              spike_location = input$spikelocation,
+                                                              ladder_start_scan = input$spikelocation,
                                                               zero_floor = input$zerofloor,
                                                               ladder_selection_window = input$ladderselectionwindow,
                                                               smoothing_window = input$smoothingwindow,
@@ -192,6 +195,14 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
 
                      shinyjs::show("NextButtonLadder")
 
+                     if(input$PeaksBoxIntro$collapsed == TRUE) {
+                       js$collapse("PeaksBoxIntro")
+                     }
+                     shinyjs::hide("PeaksBox1")
+                     shinyjs::hide("PeaksBox2")
+                     shinyjs::hide("PeaksBox3")
+                     shinyjs::hide("NextButtonPeaks")
+
                      output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
                                                                       menuItem("Upload", icon = icon("spinner"), tabName = "Upload"),
                                                                       menuItem("Find Ladders", icon = icon("water-ladder"), tabName = "FindLadders", selected = T),
@@ -200,7 +211,7 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
                    })
     },
     error = function(e) {
-      shinyalert("ERROR!", "Analysis Failed", type = "error", confirmButtonCol = "#337ab7")
+      shinyalert("ERROR!", "Analysis Failed, check if you have the right channels selected in the previous UPLOAD tab.", type = "error", confirmButtonCol = "#337ab7")
     })
   })
 
@@ -213,6 +224,7 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
     }
     shinyjs::hide("PeaksBox1")
     shinyjs::hide("PeaksBox2")
+    shinyjs::hide("PeaksBox3")
     shinyjs::hide("NextButtonPeaks")
 
     output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
@@ -348,8 +360,10 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
   })
 
   rsq_table <- shiny::reactive({
-    rsq <- sapply(reactive_ladder$ladder[[input$unique_id_selection]]$mod_parameters, function(y) suppressWarnings(summary(y$mod)$r.squared))
-    size_ranges <- sapply(reactive_ladder$ladder[[input$unique_id_selection]]$mod_parameters, function(y) y$mod$model$yi)
+    fragment_ladder_trigger()  # Trigger reactivity with fragment_ladder_trigger
+
+    rsq <- sapply(reactive_ladder$ladder[[input$unique_id_selection]]$local_southern_mod, function(y) suppressWarnings(summary(y$mod)$r.squared))
+    size_ranges <- sapply(reactive_ladder$ladder[[input$unique_id_selection]]$local_southern_mod, function(y) y$mod$model$yi)
     size_ranges_vector <- vector("numeric", ncol(size_ranges))
     for (j in seq_along(size_ranges_vector)) {
       size_ranges_vector[j] <- paste0(size_ranges[1, j], ", ", size_ranges[2, j], ", ", size_ranges[3, j])
@@ -359,6 +373,7 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
       sizes = size_ranges_vector,
       r_squared = as.character(round(rsq, digits = 4))
     )
+
   })
 
   output$rsq_table <- shiny::renderTable({
@@ -389,6 +404,8 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
         reactive_ladder$ladder[[sample_unique_id]],
         shiny::reactiveValuesToList(manual_ladder_list)[[sample_unique_id]]
       )
+
+      fragment_ladder_trigger(fragment_ladder_trigger() + 1)
     }
   })
 

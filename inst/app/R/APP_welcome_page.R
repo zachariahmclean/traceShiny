@@ -32,7 +32,7 @@ observeEvent(input$startbuttonintro, {
 
                  incProgress(0.2, detail = "Loading Packages")
 
-                 library(instability)
+                 library(trace)
 
                  incProgress(0.8)
 
@@ -43,9 +43,11 @@ observeEvent(input$startbuttonintro, {
                  }
                  shinyjs::show("startbuttonLoad")
                  shinyjs::hide(id = "LoadBox2")
+                 shinyjs::hide(id = "LoadBox5")
                  shinyjs::hide(id = "LoadBox3")
                  shinyjs::hide(id = "LoadBox4")
                  shinyjs::hide(id = "NextButtonLoad")
+                 updateRadioGroupButtons(session, "DataUpload", selected = "fsa")
 
                  output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
                                                                   menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = T,
