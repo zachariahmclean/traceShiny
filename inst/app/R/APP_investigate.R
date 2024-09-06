@@ -445,17 +445,17 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
 
         tallest_peak_height <- peak_table[which(peak_table$height == max(peak_table$height)), "height"]
         tallest_peak_x <- peak_table[which(peak_table$height == tallest_peak_height), "x"]
-        if (!is.null(fragments$get_alleles()$allele_1_height) && !is.na(fragments$get_alleles()$allele_1_height)) {
-          tallest_peak_height <- fragments$get_alleles()$allele_1_height
+        if (!is.null(fragments$get_allele_peak()$allele_1_height) && !is.na(fragments$get_allele_peak()$allele_1_height)) {
+          tallest_peak_height <- fragments$get_allele_peak()$allele_1_height
           #find the tallest peak x axis position
-          if (is.null(x_axis) && is.na(fragments$get_alleles()$allele_1_repeat)) {
-            tallest_peak_x <- fragments$get_alleles()$allele_1_size
-          } else if (is.null(x_axis) && !is.na(fragments$get_alleles()$allele_1_repeat)) {
-            tallest_peak_x <- fragments$get_alleles()$allele_1_repeat
+          if (is.null(x_axis) && is.na(fragments$get_allele_peak()$allele_repeat)) {
+            tallest_peak_x <- fragments$get_allele_peak()$allele_size
+          } else if (is.null(x_axis) && !is.na(fragments$get_allele_peak()$allele_repeat)) {
+            tallest_peak_x <- fragments$get_allele_peak()$allele_repeat
           } else if (x_axis == "size") {
-            tallest_peak_x <- fragments$get_alleles()$allele_1_size
+            tallest_peak_x <- fragments$get_allele_peak()$allele_size
           } else {
-            tallest_peak_x <- fragments$get_alleles()$allele_1_repeat
+            tallest_peak_x <- fragments$get_allele_peak()$allele_repeat
           }
         }
 

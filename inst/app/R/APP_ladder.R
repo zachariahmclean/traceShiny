@@ -262,6 +262,13 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
     }
   })
 
+  # Reset ladders and relayout_data when unique_id_selection changes
+  shiny::observeEvent(input$unique_id_selection, {
+    ladders$scan <- NULL
+    ladders$size <- NULL
+    relayout_data(NULL) # Initialize relayout_data
+  })
+
   shiny::observe({
     if (is.null(reactive_ladder$ladder)) {
       if (input$warning_checkbox == T) {
@@ -273,14 +280,16 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
 
   shiny::observe({
     if (!is.null(input$unique_id_selection)) {
+      if (!is.null(reactive_ladder$ladder)) {
       ladders$scan <- reactive_ladder$ladder[[input$unique_id_selection]]$ladder_df$scan
       ladders$size <- reactive_ladder$ladder[[input$unique_id_selection]]$ladder_df$size
+      }
     }
   })
 
   # Reset relayout_data when plot is clicked or dragged
-  relayout_data <- reactive({
-    event_data(event = "plotly_relayout", source = "plot_graph")
+  shiny::observeEvent(plotly::event_data("plotly_relayout"), {
+    relayout_data(plotly::event_data("plotly_relayout"))
   })
 
   output$plotUI <- renderUI({
@@ -328,7 +337,7 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
       )
     }
 
-    p <- plotly::plot_ly(reactive_ladder$ladder[[input$unique_id_selection]]$trace_bp_df, x = ~scan, y = ~ladder_signal, type = "scatter", mode = "lines", source = "plot_graph",
+    p <- plotly::plot_ly(reactive_ladder$ladder[[input$unique_id_selection]]$trace_bp_df, x = ~scan, y = ~ladder_signal, type = "scatter", mode = "lines",
                          height = 300 + input$HeightLadder*20)
     p <- plotly::layout(p, shapes = shapes_with_labels, annotations = text_annotations, title = reactive_ladder$ladder[[input$unique_id_selection]]$unique_id)
     # allow to edit plot by dragging lines
@@ -397,7 +406,7 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
         return()
       }
       manual_ladder_list[[sample_unique_id]] <- as.data.frame(shiny::reactiveValuesToList(ladders))
-      reactive_ladder$ladder[[sample_unique_id]] <- ladder_fix_helper(
+      reactive_ladder$ladder[[sample_unique_id]] <- trace:::ladder_fix_helper(
         reactive_ladder$ladder[[sample_unique_id]],
         shiny::reactiveValuesToList(manual_ladder_list)[[sample_unique_id]]
       )
