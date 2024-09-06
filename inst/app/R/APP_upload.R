@@ -183,6 +183,13 @@ upload_data_box_server <- function(input, output, session, continue_module) {
       shinyjs::hide("NextButtonLoad")
       reactive$metadata_table <- NULL
     }
+
+    if(input$DataUpload == "fsa"){
+      shinyjs::hide("DataUploadMeta")
+    }
+    else {
+      shinyjs::show("DataUploadMeta")
+    }
   })
 
 
@@ -202,8 +209,13 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                    value = 0, {
                      incProgress(0.1)
 
-                     reactive$fsa_list <- read_fsa(input$DataFSA$datapath)
-                     names(reactive$fsa_list) <- input$DataFSA$name
+                     filesdir = dirname(input$DataFSA[[1, 'datapath']])
+
+                     for (i in 1:length(input$DataFSA$name)) {
+                       file.rename(input$DataFSA[[i, 'datapath']], paste0(filesdir,'/',input$DataFSA$name[i]))
+                     }
+
+                     reactive$fsa_list <- read_fsa(list.files(full.names = TRUE, filesdir))
 
                      shinyalert("SUCCESS!", "File uploaded successfully.", type = "success", confirmButtonCol = "#337ab7")
 
@@ -273,7 +285,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                          any(grepl("batch_sample_id", colnames(reactive$metadata_table)))
                      )
                      {
-                       if (all(names(reactive$fsa_list) %in% reactive$metadata_table$unique_id)) {
+                       if (all(reactive$metadata_table$unique_id %in% names(reactive$fsa_list))) {
 
                          if (any(grepl("TRUE", reactive$metadata_table$metrics_baseline_control))) {
 
@@ -313,8 +325,9 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                          }
                        }
                        else {
-                         shinyalert("ERROR!", "fsa filenames does not match the unique ID names in the metadata.", type = "error", confirmButtonCol = "#337ab7")
-                       }
+                         shinyalert("ERROR!", "fsa filenames does not match the unique ID names in the metadata (or is not complete). Please check your loaded fsa files and corresponding metadata names.", type = "error", confirmButtonCol = "#337ab7")
+                         shinyjs::hide("NextButtonLoad")
+                         }
                      }
                      else {
                        shinyalert("ERROR!", "File is not in correct format. Please check if your column names, make sure it is in the correct format.", type = "error", confirmButtonCol = "#337ab7")
@@ -340,7 +353,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
     },
 
     content = function(file) {
-      Example <- read.csv("example_data/example_metadata.csv")
+      Example <- read.csv("data/example_metadata.csv")
       write.csv(Example, file, row.names = F, col.names = T)
     }
   )

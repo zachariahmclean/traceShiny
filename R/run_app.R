@@ -1,4 +1,4 @@
-#' Run the rabbit shiny app
+#' Run the traceShiny shiny app
 #'
 #' @export
 run_traceShiny <- function() {

@@ -35,11 +35,12 @@ includeHTML("./data/help/Updates.html"),
   })
 }
 
-ladder_rsq_warning_helper <- function(framents_trace,
-                                     rsq_threshold) {
-  rsq <- sapply(framents_trace$mod_parameters, function(x) suppressWarnings(summary(x$mod)$r.squared))
+ladder_rsq_warning_helper <- function(
+    framents_trace,
+    rsq_threshold) {
+  rsq <- sapply(framents_trace$local_southern_mod, function(x) suppressWarnings(summary(x$mod)$r.squared))
   if (any(rsq < rsq_threshold)) {
-    size_ranges <- sapply(framents_trace$mod_parameters, function(x) x$mod$model$yi)
+    size_ranges <- sapply(framents_trace$local_southern_mod, function(x) x$mod$model$yi)
     size_ranges <- size_ranges[, which(rsq < rsq_threshold), drop = FALSE]
     size_ranges_vector <- vector("numeric", ncol(size_ranges))
     for (j in seq_along(size_ranges_vector)) {
@@ -48,8 +49,9 @@ ladder_rsq_warning_helper <- function(framents_trace,
     warning(
       call. = FALSE,
       paste(
-        framents_trace$unique_id)
+        framents_trace$unique_id
       )
+    )
   }
 }
 

@@ -60,25 +60,25 @@ ladder_box_ui3 <- function(id) {
       fluidRow(
         column(6,
                pickerInput("unique_id_selection", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Sample Selection')), choices = NULL)
-               )
-        ),
+        )
+      ),
       fluidRow(
         column(6,
                prettySwitch("warning_checkbox", "Select only samples with ladder warnings",
                             value = FALSE, fill = T, status = "success", inline = T),
-               )
+        )
       ),
       fluidRow(
         column(6,
                sliderInput("find_scan_max", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Snap to tallest scan window')),
                            min = 1, max = 50,
                            value = 10, step = 1)
-               ),
+        ),
         column(6,
                sliderInput("HeightLadder", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Plot Height')),
                            min = 1, max = 100,
                            value = 20, step = 1)
-               )
+        )
       ),
       htmlOutput("text_no_data1"),
       withSpinner(htmlOutput("plotUI")),
@@ -100,14 +100,9 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
 
   #Load saved objects if applicable
   observe({
-      reactive_ladder$ladder <- continue_module$ladders()
-      ladders$scan <- continue_module$scan()
-      ladders$size <- continue_module$size()
-  })
-
-  observe({
-    updatePickerInput(session, 'LadderSizes', choices = upload_data$laddertable()$Expected_ladder_peaks)
-    updatePickerInput(session, "unique_id_selection", choices = names(upload_data$fsa_list()))
+    reactive_ladder$ladder <- continue_module$ladders()
+    ladders$scan <- continue_module$scan()
+    ladders$size <- continue_module$size()
   })
 
   observeEvent(input$NextButtonLoad, {
@@ -170,27 +165,27 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
 
                      if (input$spikeswitch == T) {
                        reactive_ladder$ladder <- trace::find_ladders(upload_data$fsa_list(),
-                                                              ladder_channel = input$LadderChannel,
-                                                              signal_channel = input$SignalChannel,
-                                                              ladder_sizes = as.numeric(strsplit(input$LadderSizes, split = ",")[[1]]),
-                                                              ladder_start_scan = NULL,
-                                                              zero_floor = input$zerofloor,
-                                                              ladder_selection_window = input$ladderselectionwindow,
-                                                              smoothing_window = input$smoothingwindow,
-                                                              max_combinations = input$maxcombinations,
-                                                              show_progress_bar = FALSE)
+                                                                     ladder_channel = input$LadderChannel,
+                                                                     signal_channel = input$SignalChannel,
+                                                                     ladder_sizes = as.numeric(strsplit(input$LadderSizes, split = ",")[[1]]),
+                                                                     ladder_start_scan = NULL,
+                                                                     zero_floor = input$zerofloor,
+                                                                     ladder_selection_window = input$ladderselectionwindow,
+                                                                     smoothing_window = input$smoothingwindow,
+                                                                     max_combinations = input$maxcombinations,
+                                                                     show_progress_bar = FALSE)
                      }
                      else {
                        reactive_ladder$ladder <- trace::find_ladders(upload_data$fsa_list(),
-                                                              ladder_channel = input$LadderChannel,
-                                                              signal_channel = input$SignalChannel,
-                                                              ladder_sizes = as.numeric(strsplit(input$LadderSizes, split = ",")[[1]]),
-                                                              ladder_start_scan = input$spikelocation,
-                                                              zero_floor = input$zerofloor,
-                                                              ladder_selection_window = input$ladderselectionwindow,
-                                                              smoothing_window = input$smoothingwindow,
-                                                              max_combinations = input$maxcombinations,
-                                                              show_progress_bar = FALSE)
+                                                                     ladder_channel = input$LadderChannel,
+                                                                     signal_channel = input$SignalChannel,
+                                                                     ladder_sizes = as.numeric(strsplit(input$LadderSizes, split = ",")[[1]]),
+                                                                     ladder_start_scan = input$spikelocation,
+                                                                     zero_floor = input$zerofloor,
+                                                                     ladder_selection_window = input$ladderselectionwindow,
+                                                                     smoothing_window = input$smoothingwindow,
+                                                                     max_combinations = input$maxcombinations,
+                                                                     show_progress_bar = FALSE)
                      }
 
                      shinyjs::show("NextButtonLadder")
@@ -278,8 +273,8 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
 
   shiny::observe({
     if (!is.null(input$unique_id_selection)) {
-    ladders$scan <- reactive_ladder$ladder[[input$unique_id_selection]]$ladder_df$scan
-    ladders$size <- reactive_ladder$ladder[[input$unique_id_selection]]$ladder_df$size
+      ladders$scan <- reactive_ladder$ladder[[input$unique_id_selection]]$ladder_df$scan
+      ladders$size <- reactive_ladder$ladder[[input$unique_id_selection]]$ladder_df$size
     }
   })
 
@@ -298,45 +293,45 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
       return(plotly::plot_ly())
     }
 
-      shapes_with_labels <- list()
-      text_annotations <- list()
-      for (i in 1:length(ladders$scan)) {
-        shapes_with_labels[[i]] <- list(
-          type = "line",
-          x0 = ladders$scan[i], # Adjust as needed for the positions of your shapes
-          x1 = ladders$scan[i], # Adjust as needed for the positions of your shapes
-          y0 = 0.05,
-          y1 = 0.45,
-          yref = "paper",
-          fillcolor = "rgba(0,0,0,0)", # Transparent fill
-          line = list(
-            color = "black",
-            width = 1
-          ),
-          editable = TRUE # Allow shape editing
-        )
+    shapes_with_labels <- list()
+    text_annotations <- list()
+    for (i in 1:length(ladders$scan)) {
+      shapes_with_labels[[i]] <- list(
+        type = "line",
+        x0 = ladders$scan[i], # Adjust as needed for the positions of your shapes
+        x1 = ladders$scan[i], # Adjust as needed for the positions of your shapes
+        y0 = 0.05,
+        y1 = 0.45,
+        yref = "paper",
+        fillcolor = "rgba(0,0,0,0)", # Transparent fill
+        line = list(
+          color = "black",
+          width = 1
+        ),
+        editable = TRUE # Allow shape editing
+      )
 
-        # Add text annotation
-        text_annotations[[i]] <- list(
-          x = ladders$scan[i], # X-position of the text
-          y = max(reactive_ladder$ladder[[input$unique_id_selection]]$trace_bp_df$ladder_signal) / 2, # Adjust Y-position as needed
-          text = ladders$size[i],
-          showarrow = FALSE, # Remove arrow if not desired
-          textanchor = "end", # Horizontal text alignment
-          yanchor = "middle", # Vertical text alignment
-          font = list(
-            color = "black",
-            size = 10
-          ),
-          textangle = 270
-        )
-      }
+      # Add text annotation
+      text_annotations[[i]] <- list(
+        x = ladders$scan[i], # X-position of the text
+        y = max(reactive_ladder$ladder[[input$unique_id_selection]]$trace_bp_df$ladder_signal) / 2, # Adjust Y-position as needed
+        text = ladders$size[i],
+        showarrow = FALSE, # Remove arrow if not desired
+        textanchor = "end", # Horizontal text alignment
+        yanchor = "middle", # Vertical text alignment
+        font = list(
+          color = "black",
+          size = 10
+        ),
+        textangle = 270
+      )
+    }
 
-      p <- plotly::plot_ly(reactive_ladder$ladder[[input$unique_id_selection]]$trace_bp_df, x = ~scan, y = ~ladder_signal, type = "scatter", mode = "lines", source = "plot_graph",
-                           height = 300 + input$HeightLadder*20)
-      p <- plotly::layout(p, shapes = shapes_with_labels, annotations = text_annotations, title = reactive_ladder$ladder[[input$unique_id_selection]]$unique_id)
-      # allow to edit plot by dragging lines
-      plotly::config(p, edits = list(shapePosition = TRUE))
+    p <- plotly::plot_ly(reactive_ladder$ladder[[input$unique_id_selection]]$trace_bp_df, x = ~scan, y = ~ladder_signal, type = "scatter", mode = "lines", source = "plot_graph",
+                         height = 300 + input$HeightLadder*20)
+    p <- plotly::layout(p, shapes = shapes_with_labels, annotations = text_annotations, title = reactive_ladder$ladder[[input$unique_id_selection]]$unique_id)
+    # allow to edit plot by dragging lines
+    plotly::config(p, edits = list(shapePosition = TRUE))
   })
 
   # Capture relayout_data
@@ -385,20 +380,20 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
   #have a reactive list that gets updated when you change the stuff
   shiny::observe({
     if (!is.null(input$unique_id_selection)) {
-    sample_unique_id <- reactive_ladder$ladder[[input$unique_id_selection]]$unique_id
+      sample_unique_id <- reactive_ladder$ladder[[input$unique_id_selection]]$unique_id
 
-    selected_ladder_df <- reactive_ladder$ladder[[input$unique_id_selection]]$ladder_df
-    selected_sample_scans <- selected_ladder_df[which(!is.na(selected_ladder_df$size)), "scan"]
+      selected_ladder_df <- reactive_ladder$ladder[[input$unique_id_selection]]$ladder_df
+      selected_sample_scans <- selected_ladder_df[which(!is.na(selected_ladder_df$size)), "scan"]
 
-    plot_ladder_df <- as.data.frame(shiny::reactiveValuesToList(ladders))
-    plot_scans <- plot_ladder_df[which(!is.na(plot_ladder_df$size)), "scan"]
+      plot_ladder_df <- as.data.frame(shiny::reactiveValuesToList(ladders))
+      plot_scans <- plot_ladder_df[which(!is.na(plot_ladder_df$size)), "scan"]
 
-    # skip if ladder info hasn't been updated
-    if (identical(selected_sample_scans, plot_scans)) {
-      return()
-    } else if (nrow(as.data.frame(shiny::reactiveValuesToList(ladders))) == 0) {
-      return()
-    }
+      # skip if ladder info hasn't been updated
+      if (identical(selected_sample_scans, plot_scans)) {
+        return()
+      } else if (nrow(as.data.frame(shiny::reactiveValuesToList(ladders))) == 0) {
+        return()
+      }
       manual_ladder_list[[sample_unique_id]] <- as.data.frame(shiny::reactiveValuesToList(ladders))
       reactive_ladder$ladder[[sample_unique_id]] <- ladder_fix_helper(
         reactive_ladder$ladder[[sample_unique_id]],
@@ -421,7 +416,7 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
   })
 
   output$text_no_data1 <- renderUI({
-        h3(HTML('<b><h3 style = "text-align:justify;color:#FF0000">Please select your inputs and press apply to start analysis.</b>'))
+    h3(HTML('<b><h3 style = "text-align:justify;color:#FF0000">Please select your inputs and press apply to start analysis.</b>'))
   })
 
   return(list(
