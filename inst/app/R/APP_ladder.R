@@ -96,7 +96,7 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
   fragment_ladder_trigger <- shiny::reactiveVal(0)
 
   # Initialize ladders as NULL
-  ladders <- shiny::reactiveValues(scan = NULL, size = NULL)
+  ladders <- shiny::reactiveValues()
 
   #Load saved objects if applicable
   observe({
@@ -163,6 +163,9 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
                    value = 0, {
                      incProgress(0.1)
 
+                     ladders$scan <- NULL
+                     ladders$size <- NULL
+
                      if (input$spikeswitch == T) {
                        reactive_ladder$ladder <- trace::find_ladders(upload_data$fsa_list(),
                                                                      ladder_channel = input$LadderChannel,
@@ -188,6 +191,9 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
                                                                      show_progress_bar = FALSE)
                      }
 
+                     ladders$scan <- reactive_ladder$ladder[[input$unique_id_selection]]$ladder_df$scan
+                     ladders$size <- reactive_ladder$ladder[[input$unique_id_selection]]$ladder_df$size
+
                      shinyjs::show("NextButtonLadder")
 
                      if(input$PeaksBoxIntro$collapsed == TRUE) {
@@ -206,7 +212,7 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
                    })
     },
     error = function(e) {
-      shinyalert("ERROR!", "Analysis Failed, check if you have the right channels selected in the previous UPLOAD tab.", type = "error", confirmButtonCol = "#337ab7")
+      shinyalert("ERROR!", "Fewer ladder peaks than reference ladder sizes were identified for 20230413_A03.fsa. Adjust settings/ladder sizes to ensure the expected number of peaks are found.", type = "error", confirmButtonCol = "#337ab7")
     })
   })
 
@@ -265,12 +271,6 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
     }
   })
 
-  # Reset ladders and relayout_data when unique_id_selection changes
-  shiny::observeEvent(input$unique_id_selection, {
-    ladders$scan <- NULL
-    ladders$size <- NULL
-  })
-
   shiny::observe({
     if (!is.null(input$unique_id_selection)) {
       ladders$scan <- reactive_ladder$ladder[[input$unique_id_selection]]$ladder_df$scan
@@ -292,6 +292,7 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
       # Return a blank plot if ladders are not initialized
       return(plotly::plot_ly())
     }
+
 
     shapes_with_labels <- list()
     text_annotations <- list()
@@ -380,6 +381,7 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
   #have a reactive list that gets updated when you change the stuff
   shiny::observe({
     if (!is.null(input$unique_id_selection)) {
+      if (!is.null(ladders$size)) {
       sample_unique_id <- reactive_ladder$ladder[[input$unique_id_selection]]$unique_id
 
       selected_ladder_df <- reactive_ladder$ladder[[input$unique_id_selection]]$ladder_df
@@ -401,6 +403,7 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
       )
 
       fragment_ladder_trigger(fragment_ladder_trigger() + 1)
+      }
     }
   })
 
