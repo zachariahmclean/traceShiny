@@ -1,5 +1,0 @@
-1. Select the alleles and determine CAGs"), e.g. nearest peak (Riccardo), linear model or from BP size (need to correct).
-2. Try to keep it somewhat modular, could have a drop down box w/ different algorithms/models for getting peaks in future
-
-Ideas:
-- allow selection of plot type. Add the option of bars instead of points/lines

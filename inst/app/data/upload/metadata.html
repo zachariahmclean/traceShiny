@@ -1,0 +1,94 @@
+
+
+
+<p>Metadata can be incorporated to allow additional functionality in
+repeat calling (correcting batch effects across fragment analysis runs)
+and index peak assignment (assigning index peak from another
+sample).</p>
+<p>There are several important factors to a successful repeat
+instability experiment and things to consider when using this tool:</p>
+<ul>
+<li><p>(required) Each sample has a unique id, usually the file
+name</p></li>
+<li><p>(optional) Baseline control for your experiment. For example,
+specifying a sample where the modal allele is the inherited repeat
+length (eg a mouse tail sample) or a sample at the start of a
+time-course experiment. This is indicated with a <code>TRUE</code> in
+the <code>metrics_baseline_control</code> column of the metadata.
+Samples are then grouped together with the <code>metrics_group_id</code>
+column of the metadata. Multiple samples can be
+<code>metrics_baseline_control</code>, which can be helpful for the
+average repeat gain metric to have a more accurate representation of the
+average repeat at the start of the experiment.</p></li>
+<li><p>(optional) Using common sample(s) across fragment analysis runs
+to correct systematic batch effects that occur with repeat-containing
+amplicons in capillary electrophoresis. There are slight fluctuations of
+size across runs for amplicons containing repeats that result in
+systematic differences around 1-3 base pairs. So, if samples are to be
+analyzed for different runs, the absolute bp size is not comparable
+unless this batch effect is corrected. This is only relevant when the
+absolute size of a amplicons are compared for grouping metrics as
+described above (otherwise instability metrics are all relative and it
+doesn’t matter that there’s systematic batch effects across runs) or
+when plotting traces from different runs. This correction can be
+achieved by running a couple of samples in every fragment analysis run,
+or having a single run that takes a couple of samples from every run
+together, thereby linking them. These samples are then indicated in the
+metadata with <code>batch_run_id</code> (to group samples by fragment
+analysis run) and <code>batch_sample_id</code> (to enable linking
+samples across batches).</p></li>
+</ul>
+<p>Prepare a file (eg spreadsheet saved as .csv) with the following
+columns. Use the specified column names below:</p>
+<table>
+<colgroup>
+<col width="29%" />
+<col width="25%" />
+<col width="45%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Metadata table column</th>
+<th>Functionality metadata is associated with</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>unique_id</td>
+<td>Required for adding metadata</td>
+<td>The unique identifier for the fsa file. Usually the sample file
+name. This must be unique, including across runs.</td>
+</tr>
+<tr class="even">
+<td>metrics_group_id</td>
+<td><code>assign_index_peaks</code>, allows grouping samples</td>
+<td>This groups the samples for instability metric calculations. Provide
+a group id value for each sample. For example, in a mouse experiment and
+using the expansion index, you need to group the samples since they have
+the same metrics baseline control (eg inherited repeat length), so
+provide the mouse id.</td>
+</tr>
+<tr class="odd">
+<td>metrics_baseline_control</td>
+<td><code>assign_index_peaks</code>, allows grouping samples</td>
+<td>This is related to metrics_group_id. Indicate with ‘TRUE’ to specify
+which sample is the baseline control (eg mouse tail for inherited repeat
+length, or day-zero sample in cell line experiments)</td>
+</tr>
+<tr class="even">
+<td>batch_run_id</td>
+<td><code>call_repeats</code>, allows setting
+<code>batch_correction</code></td>
+<td>This groups the samples by batch. Provide a value for each fragment
+analysis run (eg date).</td>
+</tr>
+<tr class="odd">
+<td>batch_sample_id</td>
+<td><code>call_repeats</code>, allows setting
+<code>batch_correction</code></td>
+<td>This groups the samples across batches. Give a unique sample id to
+each different sample.</td>
+</tr>
+</tbody>
+</table>

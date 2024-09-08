@@ -1,12 +1,10 @@
 ###UI
 welcome_message_ui <- function(id) {
   fluidRow(
-  box(id = "intro", title = h2(HTML('<h2 style = "text-align:justify; margin-top:-50px; margin-bottom:-10px; ">Welcome')), status = "warning", solidHeader = F,
-      collapsible = T, width = 12,
+  box(id = "intro", status = "warning", solidHeader = F, collapsible = T, width = 12,
+      title = h1(HTML('<h2 style = "text-align:justify; margin-top:-50px; margin-bottom:-10px; ">Welcome to the TRACE')),
 
-      h4(HTML('<h4 style = "text-align:justify;"> Write something here')),
-
-      h4(HTML('<h4 style = "text-align:justify;color:#FF0000">Please refer to the "Help" tab on the sidebar menu for troubleshooting.')),
+      includeHTML("data/welcome_page/welcome_page.html"),
       br(),
       fluidRow(column(3,
                       valueBox("NEW", actionBttn("startbuttonintro", "START",

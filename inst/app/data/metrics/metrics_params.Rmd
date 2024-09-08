@@ -1,0 +1,27 @@
+---
+output: html_fragment
+---
+
+# Settings
+
+See the [calculate_instability_metrics() documentation](https://zachariahmclean.github.io/trace/reference/calculate_instability_metrics.html) in the trace package for a detailed explanation of each metric returned.
+
+### peak threshold	
+The threshold for peak heights to be considered in the calculations, relative to the modal peak height of the expanded allele.
+
+### window around index peak	
+A numeric vector (length = 2) defining the range around the index peak. First number specifies repeats before the index peak, second after. For example, c(-5, 40) around an index peak of 100 would analyze repeats 95 to 140. The sign of the numbers does not matter (The absolute value is found).
+
+### (advanced) percentile range	
+Generate a number sequence for computation of repeat expansion_percentile_*. e.g. from 0.5 to 0.95 by interval 0.05 enables computation of percentiles 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95.
+
+### (advanced) repeat range	
+A numeric vector specifying ranges of repeats for expansion_percentile_for_repeat_* computation. e.g. from 0.5 to 0.95 by interval 0.05 enables computation of percentiles 0 5 10 15 20.
+
+
+```{r, include=FALSE}
+#TOODO
+
+
+
+```

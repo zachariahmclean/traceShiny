@@ -2,9 +2,8 @@ upload_data_box_ui1 <- function(id) {
   box(id = "LoadBoxIntro", title = strong("Load your data"), status = "warning", solidHeader = F,
       collapsible = T, collapsed = T, width = 12,
 
-      h4(HTML('<h4 style="text-align:justify">This adjusts the app settings to be optimal for different types of samples. For example, “mouse” expects only one allele.
-              “Custom” allows you to upload a .json file from previous app exports. This allows you to use the exact same parameters for the app as previously used.<br>')),
-      br(), br(),
+      includeHTML("data/upload/upload.html"),
+      br(),
 
       fluidRow(column(3,
                       valueBox("NEW", actionBttn("LoadBoxSTART", "START",
@@ -67,7 +66,7 @@ upload_data_box_ui3 <- function(id) {
                pickerInput("LadderChannel", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Ladder Channel')),
                            choices = NULL)),
         column(3,
-               pickerInput("SignalChannel", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Signal Channel')),
+               pickerInput("SignalChannel", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Sample Channel')),
                            choices = NULL))
         ),
       p(style="text-align: center;", actionBttn("SelectionButton", "APPLY", size = "lg"))
@@ -130,9 +129,10 @@ upload_data_box_server <- function(input, output, session, continue_module) {
   })
 
   # #help files
-  help_click("Data_Upload", helpfile = "data/help/upload_data.html")
-  help_click("MetaData", helpfile = "data/help/upload_metadata.html")
-  help_click("ladder", helpfile = "data/help/LadderHelp.html")
+  help_click("Data_Upload", helpfile = "data/upload/upload_data.html")
+  help_click("Data_Channels", helpfile = "data/upload/fsa_channels.html")
+  help_click("MetaData", helpfile = "data/upload/metadata.html")
+  help_click("ladder", helpfile = "data/upload/ladder.html")
 
   observeEvent(input$LoadBoxSTART, {
     if (input$LoadBoxIntro$collapsed == FALSE) {

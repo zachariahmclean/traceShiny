@@ -2,12 +2,7 @@ ladder_box_ui1 <- function(id) {
   box(id = "LadderBoxIntro", title = strong("Find Ladders"), status = "warning", solidHeader = F,
       collapsible = T, collapsed = T, width = 12,
 
-      h4(HTML('<h4 style="text-align:justify">This function takes a list of fsa files (the output from read_fsa) and identifies the ladders in the ladder channel which is used to
-      call the bp size. The output is a list of fragments_traces. bp sizes are assigned using the local Southern method. Basically, for each data point, linear models are made for
-      the lower and upper 3 size standard and the predicted sizes are averaged. <br>
-
-      The ladder peaks are assigned from largest to smallest. I would recommend excluding size standard peaks less than 50 bp (eg size standard 35 bp). <br><br>
-      Each ladder should be manually inspected to make sure that is has been correctly assigned.')),
+      includeHTML("data/find_ladders/find_ladders_landing_page.html"),
       br(), br(),
 
       fluidRow(column(3,
@@ -18,7 +13,7 @@ ladder_box_ui1 <- function(id) {
 }
 
 ladder_box_ui2 <- function(id) {
-  box(id = "LadderBox1", title = p("Settings", help_button("Ladder_Upload")), status = "warning", solidHeader = F,
+  box(id = "LadderBox1", title = p("Settings", help_button("ladder_params")), status = "warning", solidHeader = F,
       collapsible = T, width = NULL,
 
       materialSwitch("advancesettings_Ladder", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Show Advanced Settings')), value = FALSE, status = "primary"),
@@ -88,6 +83,9 @@ ladder_box_ui3 <- function(id) {
 
 
 ladder_server <- function(input, output, session, upload_data, continue_module) {
+  # help files
+  help_click("ladder_params", helpfile = "data/find_ladders/ladder_params.html")
+
 
   fragment_trace_list_reactive <- shiny::reactiveValues()
   manual_ladder_list <- shiny::reactiveValues()
@@ -166,30 +164,18 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
                      ladders$scan <- NULL
                      ladders$size <- NULL
 
-                     if (input$spikeswitch == T) {
-                       reactive_ladder$ladder <- trace::find_ladders(upload_data$fsa_list(),
-                                                                     ladder_channel = input$LadderChannel,
-                                                                     signal_channel = input$SignalChannel,
-                                                                     ladder_sizes = as.numeric(strsplit(input$LadderSizes, split = ",")[[1]]),
-                                                                     ladder_start_scan = NULL,
-                                                                     zero_floor = input$zerofloor,
-                                                                     ladder_selection_window = input$ladderselectionwindow,
-                                                                     smoothing_window = input$smoothingwindow,
-                                                                     max_combinations = input$maxcombinations,
-                                                                     show_progress_bar = FALSE)
-                     }
-                     else {
-                       reactive_ladder$ladder <- trace::find_ladders(upload_data$fsa_list(),
-                                                                     ladder_channel = input$LadderChannel,
-                                                                     signal_channel = input$SignalChannel,
-                                                                     ladder_sizes = as.numeric(strsplit(input$LadderSizes, split = ",")[[1]]),
-                                                                     ladder_start_scan = input$spikelocation,
-                                                                     zero_floor = input$zerofloor,
-                                                                     ladder_selection_window = input$ladderselectionwindow,
-                                                                     smoothing_window = input$smoothingwindow,
-                                                                     max_combinations = input$maxcombinations,
-                                                                     show_progress_bar = FALSE)
-                     }
+                     reactive_ladder$ladder <- upload_data$fsa_list()
+
+                     trace::find_ladders(reactive_ladder$ladder,
+                                         ladder_channel = input$LadderChannel,
+                                         signal_channel = input$SignalChannel,
+                                         ladder_sizes = as.numeric(strsplit(input$LadderSizes, split = ",")[[1]]),
+                                         ladder_start_scan = if(input$spikeswitch == T) NULL else input$spikelocation,
+                                         zero_floor = input$zerofloor,
+                                         ladder_selection_window = input$ladderselectionwindow,
+                                         smoothing_window = input$smoothingwindow,
+                                         max_combinations = input$maxcombinations,
+                                         show_progress_bar = FALSE)
 
                      ladders$scan <- reactive_ladder$ladder[[input$unique_id_selection]]$ladder_df$scan
                      ladders$size <- reactive_ladder$ladder[[input$unique_id_selection]]$ladder_df$size

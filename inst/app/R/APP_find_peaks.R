@@ -1,10 +1,7 @@
 peaks_box_ui1 <- function(id) {
   box(id = "PeaksBoxIntro", title = strong("Find Peaks"), status = "warning", solidHeader = F,
       collapsible = T, collapsed = T, width = 12,
-
-      h4(HTML('<h4 style="text-align:justify">This function is basically a wrapper around pracma::findpeaks. As mentioned above, the default arguments arguments of pracma::findpeaks can be changed
-      by passing them to find_fragments with.
-      If too many and inappropriate peaks are being called, this may also be solved with the different repeat calling algorithms in call_repeats().')),
+      includeHTML("data/peaks/peaks_landing_page.html"),
       br(), br(),
 
       fluidRow(column(3,
@@ -15,7 +12,7 @@ peaks_box_ui1 <- function(id) {
 }
 
 peaks_box_ui2 <- function(id) {
-  box(id = "PeaksBox1", title = p("Settings", help_button("Peaks_Upload")), status = "warning", solidHeader = F,
+  box(id = "PeaksBox1", title = p("Settings", help_button("peaks_param")), status = "warning", solidHeader = F,
       collapsible = T, width = NULL,
 
       materialSwitch("advancesettings_Peaks", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Show Advanced Settings')), value = FALSE, status = "primary"),
@@ -234,12 +231,15 @@ peaks_box_ui4 <- function(id) {
 
 peaks_server <- function(input, output, session, continue_module, upload_data, ladder_module) {
 
+  # help files
+  help_click("peaks_param", helpfile = "data/peaks/peak_params.html")
+
   reactive_peaks <- reactiveValues()
 
   #Load saved objects if applicable
   observe({
     if(!is.null(continue_module$index_list())) {
-      reactive_peaks$index_list <- continue_module$index_list()
+      reactive_peaks$peaks <- continue_module$index_list()
       reactive_peaks$sample_traces_size <- continue_module$sample_traces_size
       reactive_peaks$sample_traces_repeats <- continue_module$sample_traces_repeats
     }
@@ -249,7 +249,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
     shinyjs::hide("NextButtonLadder")
 
-    reactive_peaks$index_list <- NULL
+    reactive_peaks$peaks <- NULL
 
     if(input$PeaksBoxIntro$collapsed == FALSE) {
       js$collapse("PeaksBoxIntro")
@@ -311,84 +311,33 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
                      if (!is.null(upload_data$metadata_table())) {
 
-                       reactive_peaks$metadata_added_list <- add_metadata(
+                       add_metadata(
                          fragments_list = reactive_peaks$peaks,
                          metadata_data.frame = upload_data$metadata_table(),
                          unique_id = "unique_id",
                          metrics_baseline_control = "metrics_baseline_control"
                        )
                      }
-                     else {
-                       reactive_peaks$metadata_added_list <- reactive_peaks$peaks
-                     }
 
-                     reactive_peaks$allele_list <- find_alleles(reactive_peaks$metadata_added_list,
-                                                                peak_region_size_gap_threshold = input$peak_region_size_gap_threshold,
-                                                                peak_region_height_threshold_multiplier = input$peak_region_height_threshold_multiplier)
+                     find_alleles(reactive_peaks$peaks,
+                          peak_region_size_gap_threshold = input$peak_region_size_gap_threshold,
+                          peak_region_height_threshold_multiplier = input$peak_region_height_threshold_multiplier)
 
-                     if (input$force_whole_repeat_units == "YES") {
-                       if (any(grepl("TRUE", upload_data$metadata_table()$batch_sample_id))) {
-                         reactive_peaks$repeats_list <- call_repeats(fragments_list = reactive_peaks$allele_list,
-                                                                     assay_size_without_repeat = input$assay_size_without_repeat,
-                                                                     repeat_size = input$repeat_size,
-                                                                     repeat_calling_algorithm = input$repeat_calling_algorithm,
-                                                                     repeat_calling_algorithm_size_window_around_allele = input$repeat_calling_algorithm_size_window_around_allele,
-                                                                     repeat_calling_algorithm_peak_assignment_scan_window = input$repeat_calling_algorithm_peak_assignment_scan_window,
-                                                                     repeat_calling_algorithm_size_period = input$repeat_calling_algorithm_size_period,
-                                                                     force_whole_repeat_units = TRUE,
-                                                                     batch_correction = input$batchcorrectionswitch)
-                       }
-                       else {
-                         reactive_peaks$repeats_list <- call_repeats(fragments_list = reactive_peaks$allele_list,
-                                                                     assay_size_without_repeat = input$assay_size_without_repeat,
-                                                                     repeat_size = input$repeat_size,
-                                                                     repeat_calling_algorithm = input$repeat_calling_algorithm,
-                                                                     repeat_calling_algorithm_size_window_around_allele = input$repeat_calling_algorithm_size_window_around_allele,
-                                                                     repeat_calling_algorithm_peak_assignment_scan_window = input$repeat_calling_algorithm_peak_assignment_scan_window,
-                                                                     repeat_calling_algorithm_size_period = input$repeat_calling_algorithm_size_period,
-                                                                     force_whole_repeat_units = TRUE,
-                                                                     batch_correction = input$batchcorrectionswitch)
-                       }
-                     }
-                     else if (input$force_whole_repeat_units == "NO") {
-                       if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
-                         reactive_peaks$repeats_list <- call_repeats(fragments_list = reactive_peaks$allele_list,
-                                                                     assay_size_without_repeat = input$assay_size_without_repeat,
-                                                                     repeat_size = input$repeat_size,
-                                                                     repeat_calling_algorithm = input$repeat_calling_algorithm,
-                                                                     repeat_calling_algorithm_size_window_around_allele = input$repeat_calling_algorithm_size_window_around_allele,
-                                                                     repeat_calling_algorithm_peak_assignment_scan_window = input$repeat_calling_algorithm_peak_assignment_scan_window,
-                                                                     repeat_calling_algorithm_size_period = input$repeat_calling_algorithm_size_period,
-                                                                     force_whole_repeat_units = FALSE,
-                                                                     batch_correction = input$batchcorrectionswitch
-                         )
-                       }
-                       else {
-                         reactive_peaks$repeats_list <- call_repeats(fragments_list = reactive_peaks$allele_list,
-                                                                     assay_size_without_repeat = input$assay_size_without_repeat,
-                                                                     repeat_size = input$repeat_size,
-                                                                     repeat_calling_algorithm = input$repeat_calling_algorithm,
-                                                                     repeat_calling_algorithm_size_window_around_allele = input$repeat_calling_algorithm_size_window_around_allele,
-                                                                     repeat_calling_algorithm_peak_assignment_scan_window = input$repeat_calling_algorithm_peak_assignment_scan_window,
-                                                                     repeat_calling_algorithm_size_period = input$repeat_calling_algorithm_size_period,
-                                                                     force_whole_repeat_units = FALSE,
-                                                                     batch_correction = input$batchcorrectionswitch
-                         )
-                       }
-                     }
+                     call_repeats(fragments_list = reactive_peaks$peaks,
+                                  assay_size_without_repeat = input$assay_size_without_repeat,
+                                  repeat_size = input$repeat_size,
+                                  repeat_calling_algorithm = input$repeat_calling_algorithm,
+                                  repeat_calling_algorithm_size_window_around_allele = input$repeat_calling_algorithm_size_window_around_allele,
+                                  repeat_calling_algorithm_peak_assignment_scan_window = input$repeat_calling_algorithm_peak_assignment_scan_window,
+                                  repeat_calling_algorithm_size_period = input$repeat_calling_algorithm_size_period,
+                                  force_whole_repeat_units = if(input$force_whole_repeat_units == "YES") TRUE else FALSE,
+                                  batch_correction = input$batchcorrectionswitch)
 
-                     if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
-                       reactive_peaks$index_list <- assign_index_peaks(
-                         reactive_peaks$repeats_list,
-                         grouped = TRUE
-                       )
-                     }
-                     else {
-                       reactive_peaks$index_list <- assign_index_peaks(
-                         reactive_peaks$repeats_list,
-                         grouped = FALSE
-                       )
-                     }
+
+                     assign_index_peaks(
+                       reactive_peaks$peaks,
+                       grouped = if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) TRUE else FALSE
+                     )
 
                      shinyjs::show("NextButtonPeaks")
 
@@ -468,7 +417,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
       paste0(format(Sys.time(), "%Y-%m-%d_%H%M%S"), "_ladder_df_list", ".rds")
     },
     content = function(file) {
-      saveRDS(reactive_peaks$metadata_added_list, file)
+      saveRDS(reactive_peaks$peaks, file)
     }
   )
 
@@ -478,8 +427,8 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
   observe({
     if (!is.null(relayout_data_peak())) {
-      reactive_peaks$index_list <- metrics_override_helper(
-        reactive_peaks$index_list,
+      reactive_peaks$peaks <- metrics_override_helper(
+        reactive_peaks$peaks,
         index_override_dataframe = cbind(input$sample_subset, paste(relayout_data_peak()[1]))
       )
     }
@@ -487,38 +436,38 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
   output$text_coordinates1 <- renderUI({
     if (is.null(upload_data$metadata_table())) {
-      if (!is.null(relayout_data_peak()) && !is.null(reactive_peaks$index_list)) {
-        h3(HTML(paste0("Index Peak: ", reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat, " (You can drag the red line to change the index peak)")))
+      if (!is.null(relayout_data_peak()) && !is.null(reactive_peaks$peaks)) {
+        h3(HTML(paste0("Index Peak: ", reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat, " (You can drag the red line to change the index peak)")))
       }
       else {
-        h3(HTML(paste0("Index Peak: ", reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat, " (You can drag the red line to change the index peak)")))
+        h3(HTML(paste0("Index Peak: ", reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat, " (You can drag the red line to change the index peak)")))
       }
     }
 
     else if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
-      if (!is.null(relayout_data_peak()) && !is.null(reactive_peaks$index_list)) {
-        h3(HTML(paste0("Index Peak: ", reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat)))
+      if (!is.null(relayout_data_peak()) && !is.null(reactive_peaks$peaks)) {
+        h3(HTML(paste0("Index Peak: ", reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat)))
       }
       else {
-        h3(HTML(paste0("Index Peak: ", reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat)))
+        h3(HTML(paste0("Index Peak: ", reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat)))
       }
     }
     else {
-      if (!is.null(relayout_data_peak()) && !is.null(reactive_peaks$index_list)) {
-        h3(HTML(paste0("Index Peak: ", reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat, " (You can drag the red line to change the index peak)")))
+      if (!is.null(relayout_data_peak()) && !is.null(reactive_peaks$peaks)) {
+        h3(HTML(paste0("Index Peak: ", reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat, " (You can drag the red line to change the index peak)")))
       }
       else {
-        h3(HTML(paste0("Index Peak: ", reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat, " (You can drag the red line to change the index peak)")))
+        h3(HTML(paste0("Index Peak: ", reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat, " (You can drag the red line to change the index peak)")))
       }
     }
   })
 
   output$text_coordinates2 <- renderUI({
-    if (!is.null(relayout_data_peak()) && !is.null(reactive_peaks$index_list)) {
-      h3(HTML(paste0("Index Peak: ", reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat, " (You can drag the red line to change the index peak)")))
+    if (!is.null(relayout_data_peak()) && !is.null(reactive_peaks$peaks)) {
+      h3(HTML(paste0("Index Peak: ", reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat, " (You can drag the red line to change the index peak)")))
     }
     else {
-      h3(HTML(paste0("Index Peak: ", reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat, " (You can drag the red line to change the index peak)")))
+      h3(HTML(paste0("Index Peak: ", reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat, " (You can drag the red line to change the index peak)")))
     }
   })
 
@@ -528,7 +477,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
   output$plot_traces <- renderPlotly({
 
-    if (is.null(reactive_peaks$index_list)) {
+    if (is.null(reactive_peaks$peaks)) {
       # Return a blank plot if object is missing
       return(plotly::plot_ly())
     }
@@ -540,7 +489,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
       show_peaks = FALSE
     }
 
-    fragments <- reactive_peaks$index_list[[input$sample_subset]]
+    fragments <- reactive_peaks$peaks[[input$sample_subset]]
     xlim = c(input$xlim1, input$xlim2)
     ylim = c(input$ylim1, input$ylim2)
     x_axis = input$x_axis
@@ -650,8 +599,8 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                                 range = ylim),
                    shapes = list(
                      #vertical line
-                     list(type = "line", x0 = reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat,
-                          x1 = reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat,
+                     list(type = "line", x0 = reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat,
+                          x1 = reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat,
                           y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")))
             ) %>%
             config(edits = list(shapePosition = TRUE))
@@ -671,8 +620,8 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                               range = ylim),
                  shapes = list(
                    #vertical line
-                   list(type = "line", x0 = reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat,
-                        x1 = reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat,
+                   list(type = "line", x0 = reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat,
+                        x1 = reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat,
                         y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")))
           ) %>%
           config(edits = list(shapePosition = TRUE))
@@ -709,8 +658,8 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                                 range = ylim),
                    shapes = list(
                      #vertical line
-                     list(type = "line", x0 = ifelse(!is.null(relayout_data_peak()), reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat, reactive_peaks$index_list[[input$sample_subset2]]$.__enclos_env__$private$index_repeat),
-                          x1 = ifelse(!is.null(relayout_data_peak()), reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat, reactive_peaks$index_list[[input$sample_subset2]]$.__enclos_env__$private$index_repeat),
+                     list(type = "line", x0 = ifelse(!is.null(relayout_data_peak()), reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat, reactive_peaks$peaks[[input$sample_subset2]]$.__enclos_env__$private$index_repeat),
+                          x1 = ifelse(!is.null(relayout_data_peak()), reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat, reactive_peaks$peaks[[input$sample_subset2]]$.__enclos_env__$private$index_repeat),
                           y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")))
             )
         }
@@ -728,8 +677,8 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                               range = ylim),
                  shapes = list(
                    #vertical line
-                   list(type = "line", x0 = ifelse(!is.null(relayout_data_peak()), reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat, reactive_peaks$index_list[[input$sample_subset2]]$.__enclos_env__$private$index_repeat),
-                        x1 = ifelse(!is.null(relayout_data_peak()), reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat, reactive_peaks$index_list[[input$sample_subset2]]$.__enclos_env__$private$index_repeat),
+                   list(type = "line", x0 = ifelse(!is.null(relayout_data_peak()), reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat, reactive_peaks$peaks[[input$sample_subset2]]$.__enclos_env__$private$index_repeat),
+                        x1 = ifelse(!is.null(relayout_data_peak()), reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat, reactive_peaks$peaks[[input$sample_subset2]]$.__enclos_env__$private$index_repeat),
                         y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")))
           )
       }
@@ -764,8 +713,8 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                                 range = ylim),
                    shapes = list(
                      #vertical line
-                     list(type = "line", x0 = reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat,
-                          x1 = reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat,
+                     list(type = "line", x0 = reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat,
+                          x1 = reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat,
                           y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")))
             ) %>%
             config(edits = list(shapePosition = TRUE))
@@ -785,8 +734,8 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                               range = ylim),
                  shapes = list(
                    #vertical line
-                   list(type = "line", x0 = reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat,
-                        x1 = reactive_peaks$index_list[[input$sample_subset]]$.__enclos_env__$private$index_repeat,
+                   list(type = "line", x0 = reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat,
+                        x1 = reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat,
                         y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")))
           ) %>%
           config(edits = list(shapePosition = TRUE))
@@ -802,7 +751,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     validate(
       need(!is.null(input$sample_subset2), 'You do not have any baseline control samples in your metadata, please check your metadata file.'))
 
-    if (is.null(reactive_peaks$index_list)) {
+    if (is.null(reactive_peaks$peaks)) {
       # Return a blank plot if object is missing
       return(plotly::plot_ly())
     }
@@ -814,7 +763,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
       show_peaks = FALSE
     }
 
-    fragments <- reactive_peaks$index_list[[input$sample_subset2]]
+    fragments <- reactive_peaks$peaks[[input$sample_subset2]]
     xlim = c(input$xlim1, input$xlim2)
     ylim = c(input$ylim1, input$ylim2)
     x_axis = input$x_axis
@@ -923,8 +872,8 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                               range = ylim),
                  shapes = list(
                    #vertical line
-                   list(type = "line", x0 = reactive_peaks$index_list[[input$sample_subset2]]$.__enclos_env__$private$index_repeat,
-                        x1 = reactive_peaks$index_list[[input$sample_subset2]]$.__enclos_env__$private$index_repeat,
+                   list(type = "line", x0 = reactive_peaks$peaks[[input$sample_subset2]]$.__enclos_env__$private$index_repeat,
+                        x1 = reactive_peaks$peaks[[input$sample_subset2]]$.__enclos_env__$private$index_repeat,
                         y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")))
           ) %>%
           config(edits = list(shapePosition = TRUE))
@@ -944,8 +893,8 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                             range = ylim),
                shapes = list(
                  #vertical line
-                 list(type = "line", x0 = reactive_peaks$index_list[[input$sample_subset2]]$.__enclos_env__$private$index_repeat,
-                      x1 = reactive_peaks$index_list[[input$sample_subset2]]$.__enclos_env__$private$index_repeat,
+                 list(type = "line", x0 = reactive_peaks$peaks[[input$sample_subset2]]$.__enclos_env__$private$index_repeat,
+                      x1 = reactive_peaks$peaks[[input$sample_subset2]]$.__enclos_env__$private$index_repeat,
                       y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")))
         ) %>%
         config(edits = list(shapePosition = TRUE))
@@ -953,7 +902,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
   })
 
   observe({
-    if (is.null(reactive_peaks$index_list)) {
+    if (is.null(reactive_peaks$peaks)) {
       shinyjs::show("text_no_data2")
     }
     else {
@@ -972,9 +921,9 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
   output$plot_traces_Batch <- renderPlotly({
 
     validate(
-      need(!is.null(reactive_peaks$index_list), 'Please Run The Analysis First'))
+      need(!is.null(reactive_peaks$peaks), 'Please Run The Analysis First'))
 
-    fragments_list = reactive_peaks$index_list
+    fragments_list = reactive_peaks$peaks
     sample_subset = NULL
     x_axis = "repeats"
     n_facet_col  = 1
@@ -1080,7 +1029,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
 
   return(list(
-    index_list = reactive(reactive_peaks$index_list),
+    index_list = reactive(reactive_peaks$peaks),
     sample_traces_size = reactive(reactive_peaks$sample_traces_size),
     sample_traces_repeats = reactive(reactive_peaks$sample_traces_repeats),
     min_bp_size = reactive(input$min_bp_size),

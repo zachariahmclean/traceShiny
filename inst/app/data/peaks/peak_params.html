@@ -1,0 +1,164 @@
+
+
+
+<div id="settings" class="section level1">
+<h1>Settings</h1>
+<div id="find-fragments" class="section level2">
+<h2>Find fragments</h2>
+<p>This function simply finds the maxima in the continuous trace data to
+call peaks</p>
+<p>If too many and inappropriate peaks are being called, this may also
+be solved with the different repeat calling algorithms in
+call_repeats.</p>
+<div id="minimum-base-pair-size" class="section level3">
+<h3>Minimum Base Pair Size</h3>
+<p>Minimum bp size of peaks to consider</p>
+</div>
+<div id="advanced-maximum-base-pair-size" class="section level3">
+<h3>(advanced) Maximum Base Pair Size</h3>
+<p>Maximum bp size of peaks to consider</p>
+</div>
+<div id="advanced-smoothing-window" class="section level3">
+<h3>(advanced) Smoothing Window</h3>
+<p>Signal smoothing window size passed to smoothing algorithm</p>
+</div>
+<div id="advanced-minimum-peak-signal" class="section level3">
+<h3>(advanced) Minimum Peak Signal</h3>
+<p>Minimum height of peak from smoothed trace</p>
+</div>
+</div>
+<div id="find-alleles" class="section level2">
+<h2>Find Alleles</h2>
+<p>This function finds the main alleles for each fragment by identifying
+clusters of peaks (“peak regions”) with the highest signal intensities.
+This is based on the idea that PCR amplicons of repeats have clusters of
+peaks (from somatic mosaicism and PCR artifacts) that help differentiate
+the main allele of interest from capillary electrophoresis
+noise/contamination.</p>
+<p>The tallest of peaks will be selected as the allele. This means that
+if your sample has multiple alleles, you’ll need to make sure that your
+data is subsetted to exclude that second allele. For example in a human
+cell line with a shorter repeat, we recommend using min_bp_size in
+find_fragments to make sure that the smaller allele is excluded.
+Otherwise, the smaller taller allele will be set as the allele.</p>
+<p>The parameters peak_region_height_threshold_multiplier and
+peak_region_size_gap_threshold will only need to be adjusted if peaks
+are not being found for some reason. They influence the criteria for
+identifying peak regions, and finding the right balance between them is
+crucial.</p>
+<div id="advanced-peak_region_size_gap_threshold" class="section level3">
+<h3>(advanced) peak_region_size_gap_threshold</h3>
+<p>Gap threshold for identifying peak regions. The
+peak_region_size_gap_threshold is a parameter used to determine the
+maximum allowed gap between peak sizes within a peak region. Adjusting
+this parameter affects the size range of peaks that can be grouped
+together in a region. A smaller value makes it more stringent, while a
+larger value groups peaks with greater size differences, leading to
+broader peak regions that may encompass wider size ranges.</p>
+</div>
+<div id="advanced-peak_region_height_threshold_multiplier" class="section level3">
+<h3>(advanced) peak_region_height_threshold_multiplier</h3>
+<p>Multiplier for the peak height threshold. The
+peak_region_height_threshold_multiplier parameter allows adjusting the
+threshold for identifying peak regions based on peak heights. Increasing
+this multiplier value will result in higher thresholds, making it more
+stringent to consider peaks as part of a peak region. Conversely,
+reducing the multiplier value will make the criteria less strict,
+potentially leading to more peaks being grouped into peak regions. It’s
+important to note that this parameter’s optimal value depends on the
+characteristics of the data and the specific analysis goals. Choosing an
+appropriate value for this parameter can help in accurately identifying
+meaningful peak regions in the data.</p>
+</div>
+</div>
+<div id="call-repeats" class="section level2">
+<h2>Call Repeats</h2>
+<p>Repeat lengths are calculated from the bp size with several different
+alternative algorithm or options.</p>
+<p>The force_whole_repeat_units option aims to correct for the
+systematic underestimation in fragment sizes that occurs in capillary
+electrophoresis. It is independent to the algorithms described below and
+can be used in conjunction. It modifies repeat lengths in a way that
+helps align peaks with the underlying repeat pattern, making the repeat
+lengths whole units (rather than ~0.9 repeats). The calculated repeat
+lengths start from the main peak’s repeat length and increases in
+increments of the specified repeat_size in either direction.</p>
+<p>batch_correction involves using common sample(s) across fragment
+analysis runs to correct systematic batch effects that occur with
+repeat-containing amplicons in capillary electrophoresis. There are
+slight fluctuations of size across runs for amplicons containing repeats
+that result in systematic differences, so if samples are to be analyzed
+for different runs, the absolute bp size is not comparable unless this
+batch effect is corrected. This is only relevant when the absolute size
+of a amplicons are compared for grouping metrics (otherwise instability
+metrics are all relative and it doesn’t matter that there’s systematic
+batch effects across runs) or plotting traces. This correction can be
+achieved by running a couple of samples in every fragment analysis run,
+or having a single run that takes a couple of samples from every run
+together, thereby linking them. These samples are then indicated in the
+metadata with batch_run_id (to group samples by fragment analysis run)
+and batch_sample_id (to enable linking samples across batches).</p>
+<p>The simple algorithm is just the repeat size calculated directly from
+bp. The fft or size_period algorithms both re-call the peaks based on
+empirically determined (fft) or specified (size_period) periodicity of
+the peaks. The main application of these algorithms is to solve the
+issue of contaminating peaks in the expected regular pattern of peaks.
+The fft approach applies a fourier transform to the peak signal to
+determine the underlying periodicity of the signal. size_period is
+similar and simpler, where instead of automatically figuring out the
+periodicity, we as users specify the periodicity (since we usually know
+the size distance between repeat units). We can use the periodicity to
+jump between peaks.</p>
+<div id="assay-size-without-repeat" class="section level3">
+<h3>Assay Size Without Repeat</h3>
+<p>An integer specifying the assay size without repeat for repeat
+calling. This is the length of the sequence flanking the repeat in the
+PCR product.</p>
+</div>
+<div id="repeat-size" class="section level3">
+<h3>Repeat Size</h3>
+<p>An integer specifying the repeat size for repeat calling.</p>
+</div>
+<div id="force-whole-repeat-units" class="section level3">
+<h3>Force Whole Repeat Units</h3>
+<p>A logical value specifying if the peaks should be forced to be whole
+repeat units apart. Usually the peaks are slightly under the whole
+repeat unit if left unchanged.</p>
+</div>
+<div id="apply-batch-correction" class="section level3">
+<h3>Apply Batch Correction</h3>
+<p>A logical specifying if the size should be adjusted across fragment
+analysis runs. Requires metadata to be added to specify samples
+(“batch_sample_id”) common across runs (“batch_run_id”).</p>
+</div>
+<div id="advanced-repeat_calling_algorithm" class="section level3">
+<h3>(advanced) repeat_calling_algorithm</h3>
+<p>A character specifying the repeat calling algorithm. Options:
+“simple”, “fft”, or “size_period” (see details section for more
+information on these).</p>
+</div>
+<div id="advanced-repeat_calling_algorithm_size_window_around_allele" class="section level3">
+<h3>(advanced) repeat_calling_algorithm_size_window_around_allele</h3>
+<p>A numeric value for how big of a window around the tallest peak
+should be used to find the peak periodicity. Used for both “fft” and
+“size_period”. For “fft”, you want to make sure that this window is
+limited to where there are clear peaks. For “size_period”, it will not
+make a big difference.</p>
+</div>
+<div id="advanced-repeat_calling_algorithm_peak_assignment_scan_window" class="section level3">
+<h3>(advanced) repeat_calling_algorithm_peak_assignment_scan_window</h3>
+<p>A numeric value for the scan window when assigning the peak. This is
+used for both “fft” and “size_period”. When the scan period is
+determined, the algorithm jumps to the predicted scan for the next peak.
+This value opens a window of the neighboring scans to pick the tallest
+in.</p>
+</div>
+<div id="advanced-repeat_calling_algorithm_size_period" class="section level3">
+<h3>(advanced) repeat_calling_algorithm_size_period</h3>
+<p>A numeric value “size_period” algorithm to set the peak periodicity
+by bp size. This is the key variable to change for “size_period”. In
+fragment analysis, the peaks are usually slightly below the actual
+repeat unit size.</p>
+</div>
+</div>
+</div>

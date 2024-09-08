@@ -1,0 +1,12 @@
+---
+output: html_fragment
+---
+In the previous step we processed the raw data, now we need to extract fragment data. That involves finding peaks, finding alleles, and calling repeats. 
+
+
+```{r, include=FALSE}
+#TOODO
+
+
+
+```

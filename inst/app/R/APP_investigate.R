@@ -1,8 +1,7 @@
 metrics_box_ui1 <- function(id) {
   box(id = "MetricsBoxIntro", title = strong("Calculate Instability Metrics"), status = "warning", solidHeader = F,
       collapsible = T, collapsed = T, width = 12,
-
-      h4(HTML('<h4 style="text-align:justify">This function computes instability metrics from a list of fragments_repeats data objects.')),
+      includeHTML("data/metrics/metrics_landing_page.html"),
       br(), br(),
 
       fluidRow(column(3,
@@ -13,7 +12,7 @@ metrics_box_ui1 <- function(id) {
 }
 
 metrics_box_ui2 <- function(id) {
-  box(id = "MetricsBox1", title = p("Settings", help_button("Peaks_Upload")), status = "warning", solidHeader = F,
+  box(id = "MetricsBox1", title = p("Settings", help_button("metrics_params")), status = "warning", solidHeader = F,
       collapsible = T, width = NULL,
 
       materialSwitch("advancesettings_Metrics", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Show Advanced Settings')), value = FALSE, status = "primary"),
@@ -148,6 +147,9 @@ metrics_box_ui5 <- function(id) {
 
 
 metrics_server <- function(input, output, session, continue_module, upload_data, ladder_module, peaks_module) {
+
+  # help files
+  help_click("metrics_params", helpfile = "data/metrics/metrics_params.html")
 
   reactive_metrics <- reactiveValues()
 

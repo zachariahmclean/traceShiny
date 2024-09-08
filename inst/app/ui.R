@@ -278,18 +278,7 @@ body <- dashboardBody(
             box(id = "HelpBox", title = strong("Help"), status = "warning", solidHeader = F,
                 collapsible = T, width = 12,
 
-                h2(HTML('<h2 style = "text-align:justify;color:#000000; margin-top:-20px;"><b>Contact Us</b>')),
-
-                h4(HTML('<h4 style = "text-align:justify;"> <b>Version of the application: </b> Ditto v1')),
-                actionBttn("updates2", "See what's new in Ditto v1", size = "sm"),
-                h4(HTML('<h4 style = "text-align:justify;">Ditto was designed and maintained by Andrew Jiang and Zachariah Mclean based at the Centre for Genomic Medicine at Massachusetts General Hospital and Harvard Medical School. <br>
-                    Please forward any queries to <a href = "mailto: ajiang8@mgh.harvard.edu">ajiang8@mgh.harvard.edu</a> or visit the <a href="https://github.com/zachariahmclean/ditto" target="_blank">Github page</a>.')), br(),
-
-                h2(HTML('<h2 style = "text-align:justify;color:#000000; margin-top:-20px;"><b>Citation</b>')),
-
-                h4(HTML('<h4 style = "text-align:justify;">If you used Ditto for your research, please cite the following publications: <br><br>')), br(),
-
-                h2(strong("Troubleshooting"))
+                includeHTML("data/help_tab/help.html")
             ),
 
             box(id = "LoadedPackagesBox", title = strong("Loaded Packages"), status = "warning", solidHeader = F,

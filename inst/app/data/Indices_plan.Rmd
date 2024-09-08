@@ -1,1 +1,0 @@
-Ideas: have a box that lines up samples wihtin a group to see if the index peak looks like it has been correctly set. For example, put the index sample first and then all the other samples in the group

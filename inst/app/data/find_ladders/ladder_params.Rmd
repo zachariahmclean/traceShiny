@@ -1,0 +1,38 @@
+---
+output: html_fragment
+---
+# Settings
+
+### Ladder Sizes	
+numeric vector: base pair sizes of ladder used in fragment analysis.
+
+### Input Ladder Starting Scan Position	
+numeric: indicate the scan number to start looking for ladder peaks. Usually this can be automatically found (when set to NULL) since there's a big spike right at the start. However, if your ladder peaks are taller than the big spike, you will need to set this starting scan number manually.
+
+# Advanced Settings
+
+### Minimum Peak Signal	
+Minimum height of peak from smoothed signal. Note that the smoothing applied to the signal lowers the value, so you need to select a value lower than what you see on the plot.
+
+### Apply Zero Floor	
+If set to TRUE, all negative values will be set to zero. This can help deal with cases where there are peaks in the negative direction that interfere with peak detection.
+
+### Scan Subset	
+Filter the ladder and data signal between the selected scans (eg scan_subset = c(3000, 5000)).
+
+### Ladder Selection Window
+In the ladder assigning algorithm, the we iterate through the scans in blocks and test their linear fit ( We can assume that the ladder is linear over a short distance) This value defines how large that block of peaks should be.
+
+### Max Combinations	
+What is the maximum number of ladder combinations that should be tested.
+
+### Smoothing Window	
+numeric: ladder signal smoothing window size passed
+
+
+```{r, include=FALSE}
+#TOODO
+
+
+
+```

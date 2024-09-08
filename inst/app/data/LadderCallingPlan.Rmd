@@ -1,4 +1,0 @@
-1. Load in FSA files, call ladder for all
-2. Present 1 plot for each id, then export the rest
-3. Have the option to download/export all plots for all samples
-4. Need some metric (table?) showing the output of the ladder calling, i.e. how many ladders expected vs how many found... highlight difs? Rank the table based on the amount of differences (to highlight issues)

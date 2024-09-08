@@ -1,0 +1,33 @@
+---
+output: html_fragment
+---
+
+# Troubleshooting
+
+# Citation
+
+If you used traceShiny for your research, please use the following citation:
+
+```{r, include=FALSE}
+#TOODO
+# add publication link
+
+
+```
+
+# Contact Us
+
+traceShiny was designed and maintained by Andrew Jiang and Zachariah McLean based at the Center for Genomic Medicine at Massachusetts General Hospital and Harvard Medical School.
+
+Please forward any queries to [Andrew Jiang](mailto:ajiang8@mgh.harvard.edu) or log an issue at the [Github page](https://github.com/zachariahmclean/traceShiny/issues).
+
+# About traceShiny
+
+This is build with traceShiny v0.2.0 and trace v0.1.0.
+
+```{r, include=FALSE}
+#TOODO
+
+
+
+```

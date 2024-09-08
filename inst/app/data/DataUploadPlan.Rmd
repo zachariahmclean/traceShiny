@@ -1,8 +1,0 @@
-1. Point to a folder w/ FSAs
-2. Upload manifest w/ meta data etc.
-3. For gene mapper output, have a selectable box.
-4. Think about ladder -- either needs to be a manual box OR could be part of the manifest? Could have a ladder id on the manifest, which you fill in on the app. Have an option for mouse vs human vs cell?
-
-
-
-Need to think about what happens if someone selects the wrong box and for example puts the peak table in the FSA file box
