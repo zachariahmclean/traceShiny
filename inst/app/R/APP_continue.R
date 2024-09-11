@@ -87,6 +87,8 @@ continue_server <- function(input, output, session) {
                      reactive_continue$size <- size
                      reactive_continue$sample_traces_size <- sample_traces_size
                      reactive_continue$sample_traces_repeats <- sample_traces_repeats
+                     reactive_continue$sample_subset_metrics <- sample_subset_metrics
+                     reactive_continue$sample_subset2 <- sample_subset2
 
                      updateRadioGroupButtons(session, "DataUpload", selected = DataUpload)
                      updateMaterialSwitch(session, "DataUploadMeta", value = DataUploadMeta)
@@ -134,6 +136,8 @@ continue_server <- function(input, output, session) {
                      updateNumericInput(session, "repeat_range1", value = repeat_range1)
                      updateNumericInput(session, "repeat_range2", value = repeat_range2)
                      updateNumericInput(session, "repeat_range3", value = repeat_range3)
+                     updatePickerInput(session, "sample_subset2", choices = sample_subset2)
+                     updatePickerInput(session, "sample_subset_metrics", choices = sample_subset_metrics)
 
                      output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
                                                                       menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = F),
@@ -156,7 +160,9 @@ continue_server <- function(input, output, session) {
     scan = reactive(reactive_continue$scan),
     size = reactive(reactive_continue$size),
     index_list = reactive(reactive_continue$index_list),
-    instability_metrics = reactive(reactive_continue$instability_metrics)
+    instability_metrics = reactive(reactive_continue$instability_metrics),
+    sample_subset_metrics = reactive(reactive_continue$sample_subset_metrics),
+    sample_subset2 = reactive(reactive_continue$sample_subset2)
   ))
 
 }

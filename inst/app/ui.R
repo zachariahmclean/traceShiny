@@ -11,8 +11,6 @@ library(shinydashboardPlus)
 library(DT)
 library(plotly)
 library(shinyWidgets)
-library(openxlsx)
-library(readr)
 
 ####GLOBAL ENVIROMENT####
 # Options for Spinner

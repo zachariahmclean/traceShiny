@@ -1,7 +1,7 @@
 peaks_box_ui1 <- function(id) {
   box(id = "PeaksBoxIntro", title = strong("Find Peaks"), status = "warning", solidHeader = F,
       collapsible = T, collapsed = T, width = 12,
-      includeHTML("data/peaks/peaks_landing_page.html"),
+      h4(includeHTML("data/peaks/peaks_landing_page.html")),
       br(), br(),
 
       fluidRow(column(3,
@@ -90,7 +90,7 @@ peaks_box_ui2 <- function(id) {
 
                fluidRow(
                  column(12,
-                 materialSwitch("batchcorrectionswitch", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Apply Batch Correction')), value = FALSE, status = "primary")
+                        materialSwitch("batchcorrectionswitch", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Apply Batch Correction')), value = FALSE, status = "primary")
                  )
                ),
 
@@ -187,18 +187,8 @@ peaks_box_ui3 <- function(id) {
                  column(1,
                         numericInput("ylim2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Y max')),
                                      value = 2000))))),
-      htmlOutput("text_no_data2"),
-      htmlOutput("text_coordinates1"),
-      htmlOutput("plot_tracesUI"),
-
-      fluidRow(
-        column(3,
-               pickerInput("sample_subset2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Index Samples')),
-                           choices = NULL))
-      ),
-
-      htmlOutput("text_coordinates2"),
-      htmlOutput("plot_traces_INDEX_UI")
+      htmlOutput("text_no_data"),
+      htmlOutput("plot_tracesUI")
   )
 }
 
@@ -320,8 +310,8 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                      }
 
                      find_alleles(reactive_peaks$peaks,
-                          peak_region_size_gap_threshold = input$peak_region_size_gap_threshold,
-                          peak_region_height_threshold_multiplier = input$peak_region_height_threshold_multiplier)
+                                  peak_region_size_gap_threshold = input$peak_region_size_gap_threshold,
+                                  peak_region_height_threshold_multiplier = input$peak_region_height_threshold_multiplier)
 
                      call_repeats(fragments_list = reactive_peaks$peaks,
                                   assay_size_without_repeat = input$assay_size_without_repeat,
@@ -382,93 +372,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
   })
 
   observe({
-    if (is.null(upload_data$metadata_table())) {
-      updatePickerInput(session, "sample_subset", choices = names(upload_data$fsa_list()))
-      shinyjs::hide("sample_subset2")
-      shinyjs::show("text_coordinates1")
-      shinyjs::hide("text_coordinates2")
-      shinyjs::hide("plot_traces_INDEX_UI")
-    }
-
-    else if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
-      updatePickerInput(session, "sample_subset", choices = upload_data$metadata_table()[-which(upload_data$metadata_table()$metrics_baseline_control == TRUE),]$unique_id)
-
-      updatePickerInput(session, "sample_subset2", choices = upload_data$metadata_table()[which(upload_data$metadata_table()$metrics_group_id == upload_data$metadata_table()[which(upload_data$metadata_table()$unique_id == input$sample_subset),]$metrics_group_id),][which(upload_data$metadata_table()[which(upload_data$metadata_table()$metrics_group_id == upload_data$metadata_table()[which(upload_data$metadata_table()$unique_id == input$sample_subset),]$metrics_group_id),]$metrics_baseline_control == "TRUE"),]$unique_id)
-
-
-      shinyjs::show("sample_subset2")
-      shinyjs::show("text_coordinates1")
-      shinyjs::show("text_coordinates2")
-      shinyjs::show("plot_traces_INDEX_UI")
-    }
-    else {
-      updatePickerInput(session, "sample_subset", choices = upload_data$metadata_table()$unique_id)
-
-      shinyjs::hide("sample_subset2")
-      shinyjs::show("text_coordinates1")
-      shinyjs::hide("text_coordinates2")
-      shinyjs::hide("plot_traces_INDEX_UI")
-    }
-  })
-
-  ## export ladder fixes
-  output$download_RDS <- shiny::downloadHandler(
-    filename = function() {
-      paste0(format(Sys.time(), "%Y-%m-%d_%H%M%S"), "_ladder_df_list", ".rds")
-    },
-    content = function(file) {
-      saveRDS(reactive_peaks$peaks, file)
-    }
-  )
-
-  relayout_data_peak <- reactive({
-    event_data(event = "plotly_relayout", source = "plot_peak")
-  })
-
-  observe({
-    if (!is.null(relayout_data_peak())) {
-      reactive_peaks$peaks <- metrics_override_helper(
-        reactive_peaks$peaks,
-        index_override_dataframe = cbind(input$sample_subset, paste(relayout_data_peak()[1]))
-      )
-    }
-  })
-
-  output$text_coordinates1 <- renderUI({
-    if (is.null(upload_data$metadata_table())) {
-      if (!is.null(relayout_data_peak()) && !is.null(reactive_peaks$peaks)) {
-        h3(HTML(paste0("Index Peak: ", reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat, " (You can drag the red line to change the index peak)")))
-      }
-      else {
-        h3(HTML(paste0("Index Peak: ", reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat, " (You can drag the red line to change the index peak)")))
-      }
-    }
-
-    else if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
-      if (!is.null(relayout_data_peak()) && !is.null(reactive_peaks$peaks)) {
-        h3(HTML(paste0("Index Peak: ", reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat)))
-      }
-      else {
-        h3(HTML(paste0("Index Peak: ", reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat)))
-      }
-    }
-    else {
-      if (!is.null(relayout_data_peak()) && !is.null(reactive_peaks$peaks)) {
-        h3(HTML(paste0("Index Peak: ", reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat, " (You can drag the red line to change the index peak)")))
-      }
-      else {
-        h3(HTML(paste0("Index Peak: ", reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat, " (You can drag the red line to change the index peak)")))
-      }
-    }
-  })
-
-  output$text_coordinates2 <- renderUI({
-    if (!is.null(relayout_data_peak()) && !is.null(reactive_peaks$peaks)) {
-      h3(HTML(paste0("Index Peak: ", reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat, " (You can drag the red line to change the index peak)")))
-    }
-    else {
-      h3(HTML(paste0("Index Peak: ", reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat, " (You can drag the red line to change the index peak)")))
-    }
+    updatePickerInput(session, "sample_subset", choices = names(upload_data$fsa_list()))
   })
 
   output$plot_tracesUI <- renderUI({
@@ -492,35 +396,11 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     fragments <- reactive_peaks$peaks[[input$sample_subset]]
     xlim = c(input$xlim1, input$xlim2)
     ylim = c(input$ylim1, input$ylim2)
-    x_axis = input$x_axis
     height_color_threshold = 0.05
     plot_title = NULL
 
-    if (is.null(fragments$trace_bp_df)) {
-      stop(
-        call. = FALSE,
-        paste(fragments$unique_id, "This sample does not have trace data. Use fsa files as inputs to pipeline to plot trace.")
-      )
-    }
-
-    #there must be a simpler way of the following if else below
-    if (is.null(x_axis) && is.null(fragments$repeat_table_df)) {
-      data <- fragments$trace_bp_df
-      data$x <- data$size
-      x_axis_label <- "Size"
-    } else if (is.null(x_axis) && !is.null(fragments$repeat_table_df)) {
-      data <- fragments$trace_bp_df
-      data$x <- data$calculated_repeats
-      x_axis_label <- "Repeats"
-    } else if (x_axis == "size") {
-      data <- fragments$trace_bp_df
-      data$x <- data$size
-      x_axis_label <- "Size"
-    } else {
-      data <- fragments$trace_bp_df
-      data$x <- data$calculated_repeats
-      x_axis_label <- "Repeats"
-    }
+    data <- fragments$trace_bp_df
+    data$x <- data$calculated_repeats
 
     if (!is.null(xlim)) {
       data <- data[which(data$x < xlim[2] & data$x > xlim[1]), ]
@@ -528,319 +408,24 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
     if (show_peaks == TRUE) {
       # add points onto plot showing peaks
-      if (!is.null(fragments$peak_table_df) && show_peaks) {
-        if (is.null(x_axis) && is.null(fragments$repeat_table_df)) {
-          peak_table <- fragments$peak_table_df
-          peak_table$x <- peak_table$size
-        } else if (is.null(x_axis) && !is.null(fragments$repeat_table_df)) {
-          peak_table <- fragments$repeat_table_df
-          peak_table$x <- peak_table$repeats
-        } else if (x_axis == "size") {
-          peak_table <- fragments$peak_table_df
-          peak_table$x <- peak_table$size
-        } else {
-          peak_table <- fragments$repeat_table_df
-          peak_table$x <- peak_table$repeats
-        }
 
-        if (!is.null(xlim)) {
-          peak_table <- peak_table[which(peak_table$x < xlim[2] & peak_table$x > xlim[1]), ]
-        }
+      peak_table <- fragments$repeat_table_df
+      peak_table$x <- peak_table$repeats
 
-        tallest_peak_height <- peak_table[which(peak_table$height == max(peak_table$height)), "height"]
-        tallest_peak_x <- peak_table[which(peak_table$height == tallest_peak_height), "x"]
-        if (!is.null(fragments$allele_1_height) && !is.na(fragments$allele_1_height)) {
-          tallest_peak_height <- fragments$allele_1_height
-          #find the tallest peak x axis position
-          if (is.null(x_axis) && is.na(fragments$allele_repeat)) {
-            tallest_peak_x <- fragments$allele_size
-          } else if (is.null(x_axis) && !is.na(fragments$allele_repeat)) {
-            tallest_peak_x <- fragments$allele_repeat
-          } else if (x_axis == "size") {
-            tallest_peak_x <- fragments$allele_size
-          } else {
-            tallest_peak_x <- fragments$allele_repeat
-          }
-        }
-
-        peaks_above <- peak_table[which(peak_table$height > tallest_peak_height * height_color_threshold), ]
-        peaks_below <- peak_table[which(peak_table$height < tallest_peak_height * height_color_threshold), ]
-
+      if (!is.null(xlim)) {
+        peak_table <- peak_table[which(peak_table$x < xlim[2] & peak_table$x > xlim[1]), ]
       }
-    }
 
-    if (is.null(upload_data$metadata_table())) {
-      if (show_peaks == TRUE) {
-        if (!is.null(peak_table$repeats) && !is.null(peak_table$calculated_repeats)) {
-          plot_ly(data = data,
-                  x = ~x, y = ~signal,
-                  type = "scatter",
-                  mode = "lines",
-                  source = "plot_peak",
-                  height = (300 + input$HeightPeaks*20)) %>%
-            add_markers(x = peaks_above$x,
-                        y = peaks_above$height,
-                        colors = "blue") %>%
-            add_markers(x = peaks_below$x,
-                        y = peaks_below$height,
-                        colors = "purple") %>%
-            add_markers(x = tallest_peak_x,
-                        y = tallest_peak_height,
-                        colors = "green") %>%
-            add_segments(x = peak_table$repeats,
-                         y = peak_table$height,
-                         xend = peak_table$calculated_repeats,
-                         yend = peak_table$height,
-                         line = list(dash = "dash")) %>%
-            layout(title = ifelse(is.null(plot_title), fragments$unique_id, plot_title),
-                   xaxis = list("Repeats",
-                                range = xlim),
-                   yaxis = list("Signal",
-                                range = ylim),
-                   shapes = list(
-                     #vertical line
-                     list(type = "line", x0 = reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat,
-                          x1 = reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat,
-                          y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")))
-            ) %>%
-            config(edits = list(shapePosition = TRUE))
-        }
+      tallest_peak_height <- peak_table[which(peak_table$height == max(peak_table$height)), "height"]
+      tallest_peak_x <- peak_table[which(peak_table$height == tallest_peak_height), "x"]
+      if (!is.null(fragments$get_allele_peak()$allele_height) && !is.na(fragments$get_allele_peak()$allele_height)) {
+        tallest_peak_height <- fragments$get_allele_peak()$allele_height
+        tallest_peak_x <- fragments$get_allele_peak()$allele_repeat
       }
-      else {
-        plot_ly(data = data,
-                x = ~x, y = ~signal,
-                type = "scatter",
-                mode = "lines",
-                source = "plot_peak",
-                height = (300 + input$HeightPeaks*20)) %>%
-          layout(title = ifelse(is.null(plot_title), fragments$unique_id, plot_title),
-                 xaxis = list("Repeats",
-                              range = xlim),
-                 yaxis = list("Signal",
-                              range = ylim),
-                 shapes = list(
-                   #vertical line
-                   list(type = "line", x0 = reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat,
-                        x1 = reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat,
-                        y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")))
-          ) %>%
-          config(edits = list(shapePosition = TRUE))
-      }
-    }
 
-    else if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
+      peaks_above <- peak_table[which(peak_table$height > tallest_peak_height * height_color_threshold), ]
+      peaks_below <- peak_table[which(peak_table$height < tallest_peak_height * height_color_threshold), ]
 
-      if (show_peaks == TRUE) {
-        if (!is.null(peak_table$repeats) && !is.null(peak_table$calculated_repeats)) {
-          plot_ly(data = data,
-                  x = ~x, y = ~signal,
-                  type = "scatter",
-                  mode = "lines",
-                  height = (300 + input$HeightPeaks*20)) %>%
-            add_markers(x = peaks_above$x,
-                        y = peaks_above$height,
-                        colors = "blue") %>%
-            add_markers(x = peaks_below$x,
-                        y = peaks_below$height,
-                        colors = "purple") %>%
-            add_markers(x = tallest_peak_x,
-                        y = tallest_peak_height,
-                        colors = "green") %>%
-            add_segments(x = peak_table$repeats,
-                         y = peak_table$height,
-                         xend = peak_table$calculated_repeats,
-                         yend = peak_table$height,
-                         line = list(dash = "dash")) %>%
-            layout(title = ifelse(is.null(plot_title), fragments$unique_id, plot_title),
-                   xaxis = list("Repeats",
-                                range = xlim),
-                   yaxis = list("Signal",
-                                range = ylim),
-                   shapes = list(
-                     #vertical line
-                     list(type = "line", x0 = ifelse(!is.null(relayout_data_peak()), reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat, reactive_peaks$peaks[[input$sample_subset2]]$.__enclos_env__$private$index_repeat),
-                          x1 = ifelse(!is.null(relayout_data_peak()), reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat, reactive_peaks$peaks[[input$sample_subset2]]$.__enclos_env__$private$index_repeat),
-                          y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")))
-            )
-        }
-      }
-      else {
-        plot_ly(data = data,
-                x = ~x, y = ~signal,
-                type = "scatter",
-                mode = "lines",
-                height = (300 + input$HeightPeaks*20)) %>%
-          layout(title = ifelse(is.null(plot_title), fragments$unique_id, plot_title),
-                 xaxis = list("Repeats",
-                              range = xlim),
-                 yaxis = list("Signal",
-                              range = ylim),
-                 shapes = list(
-                   #vertical line
-                   list(type = "line", x0 = ifelse(!is.null(relayout_data_peak()), reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat, reactive_peaks$peaks[[input$sample_subset2]]$.__enclos_env__$private$index_repeat),
-                        x1 = ifelse(!is.null(relayout_data_peak()), reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat, reactive_peaks$peaks[[input$sample_subset2]]$.__enclos_env__$private$index_repeat),
-                        y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")))
-          )
-      }
-    }
-    else {
-      if (show_peaks == TRUE) {
-        if (!is.null(peak_table$repeats) && !is.null(peak_table$calculated_repeats)) {
-          plot_ly(data = data,
-                  x = ~x, y = ~signal,
-                  type = "scatter",
-                  mode = "lines",
-                  source = "plot_peak",
-                  height = (300 + input$HeightPeaks*20)) %>%
-            add_markers(x = peaks_above$x,
-                        y = peaks_above$height,
-                        colors = "blue") %>%
-            add_markers(x = peaks_below$x,
-                        y = peaks_below$height,
-                        colors = "purple") %>%
-            add_markers(x = tallest_peak_x,
-                        y = tallest_peak_height,
-                        colors = "green") %>%
-            add_segments(x = peak_table$repeats,
-                         y = peak_table$height,
-                         xend = peak_table$calculated_repeats,
-                         yend = peak_table$height,
-                         line = list(dash = "dash")) %>%
-            layout(title = ifelse(is.null(plot_title), fragments$unique_id, plot_title),
-                   xaxis = list("Repeats",
-                                range = xlim),
-                   yaxis = list("Signal",
-                                range = ylim),
-                   shapes = list(
-                     #vertical line
-                     list(type = "line", x0 = reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat,
-                          x1 = reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat,
-                          y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")))
-            ) %>%
-            config(edits = list(shapePosition = TRUE))
-        }
-      }
-      else {
-        plot_ly(data = data,
-                x = ~x, y = ~signal,
-                type = "scatter",
-                mode = "lines",
-                source = "plot_peak",
-                height = (300 + input$HeightPeaks*20)) %>%
-          layout(title = ifelse(is.null(plot_title), fragments$unique_id, plot_title),
-                 xaxis = list("Repeats",
-                              range = xlim),
-                 yaxis = list("Signal",
-                              range = ylim),
-                 shapes = list(
-                   #vertical line
-                   list(type = "line", x0 = reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat,
-                        x1 = reactive_peaks$peaks[[input$sample_subset]]$.__enclos_env__$private$index_repeat,
-                        y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")))
-          ) %>%
-          config(edits = list(shapePosition = TRUE))
-      }
-    }
-  })
-
-  output$plot_traces_INDEX_UI <- renderUI({
-    plotlyOutput("plot_traces_INDEX", height = (300 + input$HeightPeaks*20))
-  })
-
-  output$plot_traces_INDEX <- renderPlotly({
-    validate(
-      need(!is.null(input$sample_subset2), 'You do not have any baseline control samples in your metadata, please check your metadata file.'))
-
-    if (is.null(reactive_peaks$peaks)) {
-      # Return a blank plot if object is missing
-      return(plotly::plot_ly())
-    }
-
-    if (input$show_peaks == "YES") {
-      show_peaks = TRUE
-    }
-    else {
-      show_peaks = FALSE
-    }
-
-    fragments <- reactive_peaks$peaks[[input$sample_subset2]]
-    xlim = c(input$xlim1, input$xlim2)
-    ylim = c(input$ylim1, input$ylim2)
-    x_axis = input$x_axis
-    height_color_threshold = 0.05
-    plot_title = NULL
-
-    if (is.null(fragments$trace_bp_df)) {
-      stop(
-        call. = FALSE,
-        paste(fragments$unique_id, "This sample does not have trace data. Use fsa files as inputs to pipeline to plot trace.")
-      )
-    }
-
-    #there must be a simpler way of the following if else below
-    if (is.null(x_axis) && is.null(fragments$repeat_table_df)) {
-      data <- fragments$trace_bp_df
-      data$x <- data$size
-      x_axis_label <- "Size"
-    } else if (is.null(x_axis) && !is.null(fragments$repeat_table_df)) {
-      data <- fragments$trace_bp_df
-      data$x <- data$calculated_repeats
-      x_axis_label <- "Repeats"
-    } else if (x_axis == "size") {
-      data <- fragments$trace_bp_df
-      data$x <- data$size
-      x_axis_label <- "Size"
-    } else {
-      data <- fragments$trace_bp_df
-      data$x <- data$calculated_repeats
-      x_axis_label <- "Repeats"
-    }
-
-    if (!is.null(xlim)) {
-      data <- data[which(data$x < xlim[2] & data$x > xlim[1]), ]
-    }
-
-    if (show_peaks == TRUE) {
-      # add points onto plot showing peaks
-      if (!is.null(fragments$peak_table_df) && show_peaks) {
-        if (is.null(x_axis) && is.null(fragments$repeat_table_df)) {
-          peak_table <- fragments$peak_table_df
-          peak_table$x <- peak_table$size
-        } else if (is.null(x_axis) && !is.null(fragments$repeat_table_df)) {
-          peak_table <- fragments$repeat_table_df
-          peak_table$x <- peak_table$repeats
-        } else if (x_axis == "size") {
-          peak_table <- fragments$peak_table_df
-          peak_table$x <- peak_table$size
-        } else {
-          peak_table <- fragments$repeat_table_df
-          peak_table$x <- peak_table$repeats
-        }
-
-        if (!is.null(xlim)) {
-          peak_table <- peak_table[which(peak_table$x < xlim[2] & peak_table$x > xlim[1]), ]
-        }
-
-        tallest_peak_height <- peak_table[which(peak_table$height == max(peak_table$height)), "height"]
-        tallest_peak_x <- peak_table[which(peak_table$height == tallest_peak_height), "x"]
-        if (!is.null(fragments$get_allele_peak()$allele_1_height) && !is.na(fragments$get_allele_peak()$allele_1_height)) {
-          tallest_peak_height <- fragments$get_allele_peak()$allele_1_height
-          #find the tallest peak x axis position
-          if (is.null(x_axis) && is.na(fragments$get_allele_peak()$allele_repeat)) {
-            tallest_peak_x <- fragments$get_allele_peak()$allele_size
-          } else if (is.null(x_axis) && !is.na(fragments$get_allele_peak()$allele_repeat)) {
-            tallest_peak_x <- fragments$get_allele_peak()$allele_repeat
-          } else if (x_axis == "size") {
-            tallest_peak_x <- fragments$get_allele_peak()$allele_size
-          } else {
-            tallest_peak_x <- fragments$get_allele_peak()$allele_repeat
-          }
-        }
-
-        peaks_above <- peak_table[which(peak_table$height > tallest_peak_height * height_color_threshold), ]
-        peaks_below <- peak_table[which(peak_table$height < tallest_peak_height * height_color_threshold), ]
-
-      }
     }
 
     if (show_peaks == TRUE) {
@@ -849,7 +434,6 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                 x = ~x, y = ~signal,
                 type = "scatter",
                 mode = "lines",
-                source = "plot_peak",
                 height = (300 + input$HeightPeaks*20)) %>%
           add_markers(x = peaks_above$x,
                       y = peaks_above$height,
@@ -869,14 +453,8 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                  xaxis = list("Repeats",
                               range = xlim),
                  yaxis = list("Signal",
-                              range = ylim),
-                 shapes = list(
-                   #vertical line
-                   list(type = "line", x0 = reactive_peaks$peaks[[input$sample_subset2]]$.__enclos_env__$private$index_repeat,
-                        x1 = reactive_peaks$peaks[[input$sample_subset2]]$.__enclos_env__$private$index_repeat,
-                        y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")))
-          ) %>%
-          config(edits = list(shapePosition = TRUE))
+                              range = ylim)
+          )
       }
     }
     else {
@@ -884,33 +462,26 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
               x = ~x, y = ~signal,
               type = "scatter",
               mode = "lines",
-              source = "plot_peak",
               height = (300 + input$HeightPeaks*20)) %>%
         layout(title = ifelse(is.null(plot_title), fragments$unique_id, plot_title),
                xaxis = list("Repeats",
                             range = xlim),
                yaxis = list("Signal",
-                            range = ylim),
-               shapes = list(
-                 #vertical line
-                 list(type = "line", x0 = reactive_peaks$peaks[[input$sample_subset2]]$.__enclos_env__$private$index_repeat,
-                      x1 = reactive_peaks$peaks[[input$sample_subset2]]$.__enclos_env__$private$index_repeat,
-                      y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")))
-        ) %>%
-        config(edits = list(shapePosition = TRUE))
+                            range = ylim)
+        )
     }
   })
 
   observe({
     if (is.null(reactive_peaks$peaks)) {
-      shinyjs::show("text_no_data2")
+      shinyjs::show("text_no_data")
     }
     else {
-      shinyjs::hide("text_no_data2")
+      shinyjs::hide("text_no_data")
     }
   })
 
-  output$text_no_data2 <- renderUI({
+  output$text_no_data <- renderUI({
     h3(HTML('<b><h3 style = "text-align:justify;color:#FF0000">Please select your inputs and press apply to start analysis.</b>'))
   })
 
@@ -998,7 +569,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     ## Add the traces one at a time
     for (i in 1:n_dfs) {
       p1 <- p1 %>% add_trace(y = sample_traces_size[[i]]$rel_signal, x = ((sample_traces_size[[i]]$x - input$assay_size_without_repeat)/input$repeat_size), name = gsub(".fsa", "", unique(sample_traces_size[[i]]$unique_id)),
-                           mode="lines")
+                             mode="lines")
     }
 
     #Repeats
@@ -1011,7 +582,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     ## Add the traces one at a time
     for (i in 1:n_dfs) {
       p2 <- p2 %>% add_trace(y = sample_traces_repeats[[i]]$rel_signal, x = sample_traces_repeats[[i]]$x, name = gsub(".fsa", "", unique(sample_traces_repeats[[i]]$unique_id)),
-                           mode="lines")
+                             mode="lines")
     }
 
     subplot(p1, p2)

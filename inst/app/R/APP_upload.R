@@ -2,7 +2,7 @@ upload_data_box_ui1 <- function(id) {
   box(id = "LoadBoxIntro", title = strong("Load your data"), status = "warning", solidHeader = F,
       collapsible = T, collapsed = T, width = 12,
 
-      includeHTML("data/upload/upload.html"),
+      h4(includeHTML("data/upload/upload.html")),
       br(),
 
       fluidRow(column(3,
@@ -110,10 +110,21 @@ upload_data_box_ui5 <- function(id) {
 
     conditionalPanel(
       condition = 'input.Ladder_switch == false',
-      fileInput("LadderUpload", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Upload Custom Ladders')), multiple = F),
-      withSpinner(DT::dataTableOutput("ladder_table", width = "100%", height = "400"))
+
+      fluidRow(
+        column(3,
+               textInput("LadderUploadName", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Input Custom Ladders Name')))
+        ),
+        column(5,
+               textInput("LadderUpload", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Input Custom Ladders Size (each size must be separated by a comma, see examples in the table below)')))
+        ),
+        column(3,
+               p(style="text-align: left;", actionBttn("Ladderbutton", "APPLY", size = "lg")))
+
+        ),
+        withSpinner(DT::dataTableOutput("ladder_table", width = "100%", height = "400"))
+      )
     )
-  )
 }
 
 #####SERVER#####
@@ -228,7 +239,6 @@ upload_data_box_server <- function(input, output, session, continue_module) {
     },
     error = function(e) {
       shinyalert("ERROR!", "File is not in correct format.", type = "error", confirmButtonCol = "#337ab7")
-      shinyjs::hide("NextButtonLoad")
     })
   })
 
@@ -353,24 +363,32 @@ upload_data_box_server <- function(input, output, session, continue_module) {
     },
 
     content = function(file) {
-      Example <- read.csv("data/example_metadata.csv")
-      write.csv(Example, file, row.names = F, col.names = T)
+
+      write.csv(trace::metadata, file, row.names = F, col.names = T)
     }
   )
 
-  observeEvent(input$LadderUpload, {
+  observeEvent(input$Ladderbutton, {
     tryCatch({
       withProgress(message = 'Loading Ladder file...', style = "old",
                    value = 0, {
                      incProgress(0.1)
 
-                     reactive$laddertable <- read.csv(input$LadderUpload$datapath)
+                     reactive$laddertable
 
-                     if (any(grepl("Ladder_ID", colnames(reactive$laddertable))) &&
-                         any(grepl("Expected_ladder_peaks", colnames(reactive$laddertable))))
-                     {
+                     ladderID <- read.csv("data/default_ladderids.csv")
 
-                       shinyalert("SUCCESS!", "File uploaded successfully.", type = "success", confirmButtonCol = "#337ab7")
+                     if (grepl("(\\d+,){1,}", input$LadderUpload) && !grepl("[a-zA-Z]", input$LadderUpload)) {
+                     entry <- as.data.frame(cbind(input$LadderUploadName, input$LadderUpload))
+
+                     colnames(entry) <- colnames(ladderID)
+
+                     if (is.null(reactive$laddertable)) {
+                       reactive$laddertable <- rbind(ladderID, entry)
+                     }
+                     else {
+                       reactive$laddertable <- rbind(reactive$laddertable, entry)
+                     }
 
                        shinyjs::show("LoadBox2")
                        shinyjs::show("LoadBox5")
@@ -385,8 +403,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                        ))
                      }
                      else {
-                       shinyalert("ERROR!", "File is not in correct format. Please check if your column names, make sure it is in the correct format.", type = "error", confirmButtonCol = "#337ab7")
-                       shinyjs::hide("NextButtonLoad")
+                       shinyalert("ERROR!", "Ladder size input is not in correct format. Please follow the format shown in the table below.", type = "error", confirmButtonCol = "#337ab7")
 
                        output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
                                                                         menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = T))
@@ -395,7 +412,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                    })
     },
     error = function(e) {
-      shinyalert("ERROR!", "File is not in correct format.", type = "error", confirmButtonCol = "#337ab7")
+      shinyalert("ERROR!", "Something broke... Panic!", type = "error", confirmButtonCol = "#337ab7")
     })
   })
 

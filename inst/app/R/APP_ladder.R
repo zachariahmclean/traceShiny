@@ -2,7 +2,7 @@ ladder_box_ui1 <- function(id) {
   box(id = "LadderBoxIntro", title = strong("Find Ladders"), status = "warning", solidHeader = F,
       collapsible = T, collapsed = T, width = 12,
 
-      includeHTML("data/find_ladders/find_ladders_landing_page.html"),
+      h4(includeHTML("data/find_ladders/find_ladders_landing_page.html")),
       br(), br(),
 
       fluidRow(column(3,
@@ -86,7 +86,6 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
   # help files
   help_click("ladder_params", helpfile = "data/find_ladders/ladder_params.html")
 
-
   fragment_trace_list_reactive <- shiny::reactiveValues()
   manual_ladder_list <- shiny::reactiveValues()
   reactive_ladder <- reactiveValues()
@@ -107,6 +106,30 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
 
     if (is.null(upload_data$metadata_table())) {
       shinyalert("WARNING!", "No metadata was loaded!", type = "warning", confirmButtonCol = "#337ab7")
+    }
+
+      if (is.null(upload_data$metadata_table())) {
+        updatePickerInput(session, "sample_subset_metrics", choices = names(upload_data$fsa_list()))
+        shinyjs::hide("sample_subset2")
+        shinyjs::show("IndexRepeat1")
+        shinyjs::hide("IndexRepeat2")
+        shinyjs::hide("plot_traces_INDEX_UI")
+      }
+    else if (!is.null(upload_data$metadata_table())) {
+      if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
+        updatePickerInput(session, "sample_subset_metrics", choices = upload_data$metadata_table()[-which(upload_data$metadata_table()$metrics_baseline_control == TRUE),]$unique_id)
+        shinyjs::hide("IndexRepeat1")
+        shinyjs::show("IndexRepeat2")
+        shinyjs::show("sample_subset2")
+        shinyjs::show("plot_traces_INDEX_UI")
+      }
+      else {
+        updatePickerInput(session, "sample_subset_metrics", choices = upload_data$metadata_table()$unique_id)
+        shinyjs::show("IndexRepeat1")
+        shinyjs::hide("IndexRepeat2")
+        shinyjs::hide("sample_subset2")
+        shinyjs::hide("plot_traces_INDEX_UI")
+      }
     }
 
     shinyjs::hide("NextButtonLoad")
@@ -141,7 +164,7 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
     ladders$scan <- NULL
     ladders$size <- NULL
 
-    updatePickerInput(session, 'LadderSizes', choices = upload_data$laddertable()$Expected_ladder_peaks)
+    updatePickerInput(session, 'LadderSizes', choices = upload_data$laddertable()$Ladder_ID)
     updatePickerInput(session, "unique_id_selection", choices = names(upload_data$fsa_list()))
   })
 
@@ -169,7 +192,7 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
                      trace::find_ladders(reactive_ladder$ladder,
                                          ladder_channel = input$LadderChannel,
                                          signal_channel = input$SignalChannel,
-                                         ladder_sizes = as.numeric(strsplit(input$LadderSizes, split = ",")[[1]]),
+                                         ladder_sizes = as.numeric(strsplit(upload_data$laddertable()[which(upload_data$laddertable() == input$LadderSizes),]$Expected_ladder_peaks, split = ",")[[1]]),
                                          ladder_start_scan = if(input$spikeswitch == T) NULL else input$spikelocation,
                                          zero_floor = input$zerofloor,
                                          ladder_selection_window = input$ladderselectionwindow,
@@ -198,7 +221,7 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
                    })
     },
     error = function(e) {
-      shinyalert("ERROR!", "Fewer ladder peaks than reference ladder sizes were identified for 20230413_A03.fsa. Adjust settings/ladder sizes to ensure the expected number of peaks are found.", type = "error", confirmButtonCol = "#337ab7")
+      shinyalert("ERROR!", "Fewer ladder peaks than reference ladder sizes were identified for some samples. Adjust settings/ladder sizes to ensure the expected number of peaks are found.", type = "error", confirmButtonCol = "#337ab7")
     })
   })
 
@@ -244,6 +267,9 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
                             choices = names(reactive_ladder$ladder)[which(names(reactive_ladder$ladder) %in% unlist(warning_list))]
           )
         }
+      }
+      else {
+        updatePickerInput(session, "unique_id_selection", choices = names(upload_data$fsa_list()))
       }
     }
   })

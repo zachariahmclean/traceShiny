@@ -4,7 +4,7 @@ welcome_message_ui <- function(id) {
   box(id = "intro", status = "warning", solidHeader = F, collapsible = T, width = 12,
       title = h1(HTML('<h2 style = "text-align:justify; margin-top:-50px; margin-bottom:-10px; ">Welcome to the TRACE')),
 
-      includeHTML("data/welcome_page/welcome_page.html"),
+      h4(includeHTML("data/welcome_page/welcome_page.html")),
       br(),
       fluidRow(column(3,
                       valueBox("NEW", actionBttn("startbuttonintro", "START",
