@@ -24,15 +24,7 @@ metrics_box_ui2 <- function(id) {
                  column(6,
                         numericInput("peak_threshold", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Peak Threshold')),
                                      min = 0.01,
-                                     value = 0.05, step = 0.01)),
-                 column(6,
-                        numericInput("IndexRepeat1", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Input Index Repeat')),
-                                     value = NULL)
-                 ),
-                 column(6,
-                        numericInput("IndexRepeat2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Input Index Repeat')),
-                                     value = NULL)
-                 )
+                                     value = 0.05, step = 0.01))
                ),
                fluidRow(
                  column(6,
@@ -43,6 +35,13 @@ metrics_box_ui2 <- function(id) {
                                      value = 40, step = 1))
                )
         )
+      ),
+
+      fluidRow(
+        column(12,
+               h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Index Repeat Table</b>')),
+               withSpinner(DT::dataTableOutput("Index_Table", width = "100%", height = "400"))
+               )
       ),
       conditionalPanel(
         condition = 'input.advancesettings_Metrics == true',
@@ -137,15 +136,29 @@ metrics_box_ui4 <- function(id) {
                         numericInput("ylim2_metrics", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Y max')),
                                      value = 2000))))),
 
+      fluidRow(
+        column(6,
+               numericInput("IndexRepeat1", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Index Repeat (can be manually changed)')),
+                            value = NULL)
+        )
+      ),
+
       htmlOutput("text_no_data2"),
-      htmlOutput("plot_traces_final_UI"),
+      withSpinner(htmlOutput("plot_traces_final_UI")),
 
       fluidRow(
         column(3,
                pickerInput("sample_subset2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Index Samples')),
                            choices = NULL))
       ),
-      htmlOutput("plot_traces_INDEX_UI")
+
+      fluidRow(
+        column(6,
+               numericInput("IndexRepeat2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Index Repeat (can be manually changed)')),
+                            value = NULL)
+        )
+      ),
+      withSpinner(htmlOutput("plot_traces_INDEX_UI"))
   )
 }
 
@@ -173,6 +186,8 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
     reactive_metrics$df <- continue_module$instability_metrics()
     reactive_metrics$sample_subset_metrics <- continue_module$sample_subset_metrics()
     reactive_metrics$sample_subset2 <- continue_module$sample_subset2()
+    reactive_metrics$Index_Table <- continue_module$Index_Table()
+    reactive_metrics$Index_Table2 <- continue_module$Index_Table2()
   })
 
   output$downloadlogs <- shiny::downloadHandler(
@@ -295,7 +310,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
       if (input$show_peaks_metrics == "YES") {
       for (i in 1:length(names(peaks_module$index_list()))) {
         trace::plot_traces(peaks_module$index_list()[i],
-                    show_peaks_metrics = T,
+                    show_peaks = T,
                     xlim = c(input$xlim1_metrics, input$xlim2_metrics),
                     ylim = c(input$ylim1_metrics, input$ylim2_metrics))
       }
@@ -303,7 +318,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
       else {
         for (i in 1:length(names(peaks_module$index_list()))) {
           trace::plot_traces(peaks_module$index_list()[i],
-                      show_peaks_metrics = F,
+                      show_peaks = F,
                       xlim = c(input$xlim1_metrics, input$xlim2_metrics),
                       ylim = c(input$ylim1_metrics, input$ylim2_metrics))
         }
@@ -361,14 +376,58 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
       }
     }
 
+    index <- list()
+
+    for (i in 1:length(peaks_module$index_list())) {
+      index[[i]] <- as.data.frame(cbind(peaks_module$index_list()[[i]]$unique_id, peaks_module$index_list()[[i]]$get_index_peak()$index_repeat))
+    }
+
+    reactive_metrics$Index_Table <- do.call(rbind, index)
+    colnames(reactive_metrics$Index_Table) <- c("Unique IDs", "Index Repeat")
+
+    reactive_metrics$Index_Table2 <- "no"
+
+  })
+
+  observe({
+    if (!is.null(reactive_metrics$Index_Table2)) {
+    if (!is.null(upload_data$metadata_table())) {
+      if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
+        updatePickerInput(session, "sample_subset2", choices = reactive_metrics$sample_subset2)
+      }
+    }
+  }
   })
 
   observe({
     if (!is.null(peaks_module$index_list()) && !is.null(input$sample_subset_metrics)) {
-      updateNumericInput(session, "IndexRepeat1", value = peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_repeat)
+      updateNumericInput(session, "IndexRepeat1", value = reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset_metrics),]$`Index Repeat`)
 
       if (!is.null(input$sample_subset2)) {
-        updateNumericInput(session, "IndexRepeat2", value = peaks_module$index_list()[[input$sample_subset2]]$.__enclos_env__$private$index_repeat)
+        updateNumericInput(session, "IndexRepeat2", value = reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset2),]$`Index Repeat`)
+      }
+    }
+  })
+
+  observe({
+    if (is.null(upload_data$metadata_table())) {
+      shinyjs::hide("sample_subset2")
+      shinyjs::show("IndexRepeat1")
+      shinyjs::hide("IndexRepeat2")
+      shinyjs::hide("plot_traces_INDEX_UI")
+    }
+    else if (!is.null(upload_data$metadata_table())) {
+      if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
+        shinyjs::hide("IndexRepeat1")
+        shinyjs::show("IndexRepeat2")
+        shinyjs::show("sample_subset2")
+        shinyjs::show("plot_traces_INDEX_UI")
+      }
+      else {
+        shinyjs::show("IndexRepeat1")
+        shinyjs::hide("IndexRepeat2")
+        shinyjs::hide("sample_subset2")
+        shinyjs::hide("plot_traces_INDEX_UI")
       }
     }
   })
@@ -388,22 +447,11 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                    value = 0, {
                      incProgress(0.1)
 
-                     if (!is.null(input$IndexRepeat1)) {
-
-                       df <- cbind(input$sample_subset_metrics, input$IndexRepeat1)
-
-                       if (!is.null(input$sample_subset2)) {
-                         df <- cbind(input$sample_subset_metrics, input$IndexRepeat2)
-                         df2 <- cbind(input$sample_subset2, input$IndexRepeat2)
-                         df <- rbind(df, df2)
-                       }
-
                        assign_index_peaks(
                          peaks_module$index_list(),
                          grouped = if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) TRUE else FALSE,
-                         index_override_dataframe = df
+                         index_override_dataframe = reactive_metrics$Index_Table
                        )
-                     }
 
                      reactive_metrics$df <- calculate_instability_metrics(
                        fragments_list = peaks_module$index_list(),
@@ -412,12 +460,37 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                        percentile_range = seq(input$percentile_range1, input$percentile_range2, input$percentile_range3),
                        repeat_range = seq(input$repeat_range1 , input$repeat_range2, input$repeat_range3)
                      )
+
+                     reactive_metrics$Index_Table2 <- "no"
                    })
     },
     error = function(e) {
       shinyalert("ERROR!", "Analysis Failed, please check if the previous steps were completed successfully.", type = "error", confirmButtonCol = "#337ab7")
     })
   })
+
+  observeEvent(input$IndexRepeat1, {
+    if (!is.null(reactive_metrics$Index_Table)) {
+    reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset_metrics),]$`Index Repeat` <- input$IndexRepeat1
+    reactive_metrics$Index_Table2 <- "yes"
+    }
+  })
+
+  observeEvent(list(input$IndexRepeat2, input$sample_subset_metrics),  {
+    if (!is.null(reactive_metrics$Index_Table)) {
+    reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset_metrics),]$`Index Repeat` <- input$IndexRepeat2
+    reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset2),]$`Index Repeat` <- input$IndexRepeat2
+    reactive_metrics$Index_Table2 <- "yes"
+    }
+  })
+
+  output$Index_Table <- DT::renderDataTable({
+    validate(
+      need(!is.null(peaks_module$index_list()), 'You must perform the analysis first...'))
+
+    reactive_metrics$Index_Table
+
+  },  options = list(scrollX = TRUE))
 
   output$metrics_table <- DT::renderDataTable({
     validate(
@@ -508,10 +581,10 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                      #vertical line
                      list(type = "line", x0 = input$IndexRepeat1,
                           x1 = input$IndexRepeat1,
-                          y0 = 0, y1 = 1, yref = "paper", line = list(color = "darkgreen")),
+                          y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")),
                      list(type = "rect",
-                          fillcolor = "red", line = list(color = "red"), opacity = 0.2,
-                          y0 = 0, y1 = 2000,
+                          fillcolor = "red", line = list(color = "red"), opacity = 0.1,
+                          y0 = 0, y1 = input$ylim2_metrics,
                           x0 = input$IndexRepeat1 + input$window_around_index_peak_min,
                           x1 = input$window_around_index_peak_max + input$IndexRepeat1))
             )
@@ -532,10 +605,10 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                                #vertical line
                                list(type = "line", x0 = input$IndexRepeat1,
                                     x1 = input$IndexRepeat1,
-                                    y0 = 0, y1 = 1, yref = "paper", line = list(color = "darkgreen")),
+                                    y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")),
                                list(type = "rect",
-                                    fillcolor = "red", line = list(color = "red"), opacity = 0.2,
-                                    y0 = 0, y1 = 2000,
+                                    fillcolor = "red", line = list(color = "red"), opacity = 0.1,
+                                    y0 = 0, y1 = input$ylim2_metrics,
                                     x0 = input$IndexRepeat1 + input$window_around_index_peak_min,
                                     x1 = input$window_around_index_peak_max + input$IndexRepeat1))
           )
@@ -574,10 +647,10 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                      #vertical line
                      list(type = "line", x0 = input$IndexRepeat2,
                           x1 = input$IndexRepeat2,
-                          y0 = 0, y1 = 1, yref = "paper", line = list(color = "darkgreen")),
+                          y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")),
                      list(type = "rect",
-                          fillcolor = "red", line = list(color = "red"), opacity = 0.2,
-                          y0 = 0, y1 = 2000,
+                          fillcolor = "red", line = list(color = "red"), opacity = 0.1,
+                          y0 = 0, y1 = input$ylim2_metrics,
                           x0 = input$IndexRepeat2 + input$window_around_index_peak_min,
                           x1 = input$window_around_index_peak_max + input$IndexRepeat2))
             )
@@ -598,10 +671,10 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                    #vertical line
                    list(type = "line", x0 = input$IndexRepeat2,
                         x1 = input$IndexRepeat2,
-                        y0 = 0, y1 = 1, yref = "paper", line = list(color = "darkgreen")),
+                        y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")),
                    list(type = "rect",
-                        fillcolor = "red", line = list(color = "red"), opacity = 0.2,
-                        y0 = 0, y1 = 2000,
+                        fillcolor = "red", line = list(color = "red"), opacity = 0.1,
+                        y0 = 0, y1 = input$ylim2_metrics,
                         x0 = input$IndexRepeat2 + input$window_around_index_peak_min,
                         x1 = input$window_around_index_peak_max + input$IndexRepeat2))
           )
@@ -638,10 +711,10 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                      #vertical line
                      list(type = "line", x0 = input$IndexRepeat1,
                           x1 = input$IndexRepeat1,
-                          y0 = 0, y1 = 1, yref = "paper", line = list(color = "darkgreen")),
+                          y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")),
                      list(type = "rect",
-                          fillcolor = "red", line = list(color = "red"), opacity = 0.2,
-                          y0 = 0, y1 = 2000,
+                          fillcolor = "red", line = list(color = "red"), opacity = 0.1,
+                          y0 = 0, y1 = input$ylim2_metrics,
                           x0 = input$IndexRepeat1 + input$window_around_index_peak_min,
                           x1 = input$window_around_index_peak_max + input$IndexRepeat1))
             )
@@ -662,10 +735,10 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                    #vertical line
                    list(type = "line", x0 = input$IndexRepeat1,
                         x1 = input$IndexRepeat1,
-                        y0 = 0, y1 = 1, yref = "paper", line = list(color = "darkgreen")),
+                        y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")),
                    list(type = "rect",
-                        fillcolor = "red", line = list(color = "red"), opacity = 0.2,
-                        y0 = 0, y1 = 2000,
+                        fillcolor = "red", line = list(color = "red"), opacity = 0.1,
+                        y0 = 0, y1 = input$ylim2_metrics,
                         x0 = input$IndexRepeat1 + input$window_around_index_peak_min,
                         x1 = input$window_around_index_peak_max + input$IndexRepeat1))
           )
@@ -784,20 +857,26 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
   })
 
   observe({
-    if (is.null(peaks_module$index_list())) {
-      shinyjs::show("text_no_data2")
-    }
-    else {
-      shinyjs::hide("text_no_data2")
+    if (!is.null(reactive_metrics$Index_Table2) && !is.null(reactive_metrics$Index_Table)) {
+      if (reactive_metrics$Index_Table2 == "no") {
+        shinyjs::hide("text_no_data2")
+      }
+      else {
+        shinyjs::show("text_no_data2")
+      }
     }
   })
 
   output$text_no_data2 <- renderUI({
-    h3(HTML('<b><h3 style = "text-align:justify;color:#FF0000">Please select your inputs and press apply to start analysis.</b>'))
+    if (is.null(reactive_metrics$df)) {
+    h3(HTML('<b><h3 style = "text-align:justify;color:#FF0000">Instability Metrics not computed! Press Apply on the left to compute metrics</b>'))
+    }
+    else {
+      h3(HTML('<b><h3 style = "text-align:justify;color:#FF0000">Change detected in index repeat. Press apply on the left to incorporate these changes</b>'))
+    }
   })
 
   ###SAVE FUNCTION
-
   output$downloadDataSave <- downloadHandler(
     filename = function() {
       paste0(format(Sys.time(), "%Y-%m-%d_%H%M%S"), "_SAVED_OBJECT_", sessionInfo()$otherPkgs$traceShiny$Version, ".Rdata")
@@ -846,7 +925,9 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
       sample_traces_repeats <- peaks_module$sample_traces_repeats()
 
       #Investigate
-      instability_metrics <- reactive_metrics$df
+      instability_metrics <- NULL
+      Index_Table <- reactive_metrics$Index_Table
+      Index_Table2 <- reactive_metrics$Index_Table2
       sample_subset_metrics <- reactive_metrics$sample_subset_metrics
       sample_subset2 <- reactive_metrics$sample_subset2
       peak_threshold <- input$peak_threshold
@@ -869,7 +950,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
            "peak_region_height_threshold_multiplier", "assay_size_without_repeat", "repeat_size", "force_whole_repeat_units", "repeat_calling_algorithm", "repeat_calling_algorithm_size_window_around_allele",
            "repeat_calling_algorithm_size_period", "repeat_calling_algorithm_peak_assignment_scan_window", "sample_traces_size", "sample_traces_repeats",
            "instability_metrics", "peak_threshold", "window_around_index_peak_min", "window_around_index_peak_max", "repeat_range1", "repeat_range2", "repeat_range3", "percentile_range1", "percentile_range2", "percentile_range3",
-           "sample_subset2", "sample_subset_metrics", "Package_version",
+           "sample_subset2", "sample_subset_metrics", "Package_version", "Index_Table", "Index_Table2",
            file = file)
     }
   )

@@ -89,6 +89,8 @@ continue_server <- function(input, output, session) {
                      reactive_continue$sample_traces_repeats <- sample_traces_repeats
                      reactive_continue$sample_subset_metrics <- sample_subset_metrics
                      reactive_continue$sample_subset2 <- sample_subset2
+                     reactive_continue$Index_Table <- Index_Table
+                     reactive_continue$Index_Table2 <- Index_Table2
 
                      updateRadioGroupButtons(session, "DataUpload", selected = DataUpload)
                      updateMaterialSwitch(session, "DataUploadMeta", value = DataUploadMeta)
@@ -139,6 +141,14 @@ continue_server <- function(input, output, session) {
                      updatePickerInput(session, "sample_subset2", choices = sample_subset2)
                      updatePickerInput(session, "sample_subset_metrics", choices = sample_subset_metrics)
 
+                     if (!is.null(index_list) && !is.null(sample_subset_metrics)) {
+                       updateNumericInput(session, "IndexRepeat1", value = Index_Table[1,]$`Index Repeat`)
+
+                       if (!is.null(sample_subset2)) {
+                         updateNumericInput(session, "IndexRepeat2", value = Index_Table[1,]$`Index Repeat`)
+                       }
+                     }
+
                      output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
                                                                       menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = F),
                                                                       menuItem("Find Ladders", icon = icon("water-ladder"), tabName = "FindLadders", selected = F),
@@ -162,7 +172,9 @@ continue_server <- function(input, output, session) {
     index_list = reactive(reactive_continue$index_list),
     instability_metrics = reactive(reactive_continue$instability_metrics),
     sample_subset_metrics = reactive(reactive_continue$sample_subset_metrics),
-    sample_subset2 = reactive(reactive_continue$sample_subset2)
+    sample_subset2 = reactive(reactive_continue$sample_subset2),
+    Index_Table = reactive(reactive_continue$Index_Table),
+    Index_Table2 = reactive(reactive_continue$Index_Table2)
   ))
 
 }

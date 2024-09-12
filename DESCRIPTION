@@ -10,6 +10,17 @@ License: What license is it under?
 Encoding: UTF-8
 LazyData: true
 Imports: 
+    dashboardthemes,
+    DT,
     methods,
-    R6
+    plotly,
+    R6,
+    shiny,
+    shinyalert,
+    shinybusy,
+    shinycssloaders,
+    shinydashboard,
+    shinydashboardPlus,
+    shinyjs,
+    shinyWidgets
 RoxygenNote: 7.2.1

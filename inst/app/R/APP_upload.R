@@ -59,7 +59,7 @@ upload_data_box_ui3 <- function(id) {
                            value = 20, step = 1))
       ),
 
-      htmlOutput("plot_data_channels_UI"),
+      withSpinner(htmlOutput("plot_data_channels_UI")),
 
       fluidRow(
         column(3,

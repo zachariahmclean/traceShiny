@@ -188,7 +188,7 @@ peaks_box_ui3 <- function(id) {
                         numericInput("ylim2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Y max')),
                                      value = 2000))))),
       htmlOutput("text_no_data"),
-      htmlOutput("plot_tracesUI")
+      withSpinner(htmlOutput("plot_tracesUI"))
   )
 }
 
@@ -215,7 +215,7 @@ peaks_box_ui4 <- function(id) {
         column(6,
                h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>After Batch Correction</b>')))
       ),
-      htmlOutput("plot_traces_BatchUI")
+      withSpinner(htmlOutput("plot_traces_BatchUI"))
   )
 }
 

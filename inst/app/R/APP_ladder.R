@@ -110,25 +110,13 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
 
       if (is.null(upload_data$metadata_table())) {
         updatePickerInput(session, "sample_subset_metrics", choices = names(upload_data$fsa_list()))
-        shinyjs::hide("sample_subset2")
-        shinyjs::show("IndexRepeat1")
-        shinyjs::hide("IndexRepeat2")
-        shinyjs::hide("plot_traces_INDEX_UI")
       }
     else if (!is.null(upload_data$metadata_table())) {
       if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
         updatePickerInput(session, "sample_subset_metrics", choices = upload_data$metadata_table()[-which(upload_data$metadata_table()$metrics_baseline_control == TRUE),]$unique_id)
-        shinyjs::hide("IndexRepeat1")
-        shinyjs::show("IndexRepeat2")
-        shinyjs::show("sample_subset2")
-        shinyjs::show("plot_traces_INDEX_UI")
       }
       else {
         updatePickerInput(session, "sample_subset_metrics", choices = upload_data$metadata_table()$unique_id)
-        shinyjs::show("IndexRepeat1")
-        shinyjs::hide("IndexRepeat2")
-        shinyjs::hide("sample_subset2")
-        shinyjs::hide("plot_traces_INDEX_UI")
       }
     }
 
