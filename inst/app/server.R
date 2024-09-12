@@ -1,7 +1,3 @@
-library(shiny)
-library(shinydashboard)
-library(gargoyle)
-
 server <- function(input, output, session) {
 
   # Intro module ------------------------------------------------------------

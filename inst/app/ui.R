@@ -9,6 +9,7 @@ library(shinydashboardPlus)
 library(DT)
 library(plotly)
 library(shinyWidgets)
+library(trace)
 
 ####GLOBAL ENVIROMENT####
 # Options for Spinner
