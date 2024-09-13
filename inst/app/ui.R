@@ -86,6 +86,17 @@ body <- dashboardBody(
   add_busy_spinner(spin = "fading-circle", position = "bottom-left", color = "#337ab7", height = "100px", width = "100px", margins = c(10,60)),
   tags$head(tags$style(HTML(".small-box {background-color: #e8ebe9 !important; color: #000000 !important; }"))),
 
+  #Font size for validate
+  tags$head(
+    tags$style(HTML("
+      .shiny-output-error-validation {
+        color: red;
+        font-size: 21px;
+        font-weight: bold;
+      }
+    "))
+  ),
+
   tags$style(
     HTML(
       ".main-footer {

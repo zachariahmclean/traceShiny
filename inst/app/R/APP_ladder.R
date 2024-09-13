@@ -104,6 +104,10 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
 
   observeEvent(input$NextButtonLoad, {
 
+    reactive_ladder$ladder <- NULL
+    ladders$scan <- NULL
+    ladders$size <- NULL
+
     if (is.null(upload_data$metadata_table())) {
       shinyalert("WARNING!", "No metadata was loaded!", type = "warning", confirmButtonCol = "#337ab7")
     }
@@ -154,6 +158,15 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
 
     updatePickerInput(session, 'LadderSizes', choices = upload_data$laddertable()$Ladder_ID)
     updatePickerInput(session, "unique_id_selection", choices = names(upload_data$fsa_list()))
+
+    output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
+                                                     menuItem("Upload", icon = icon("spinner"), tabName = "Upload"),
+                                                     menuItem("Find Ladders", icon = icon("water-ladder"), tabName = "FindLadders", selected = T)
+    ))
+  })
+
+  observe({
+    updatePickerInput(session, 'LadderSizes', choices = upload_data$laddertable()$Ladder_ID)
   })
 
   observe({
@@ -213,27 +226,6 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
     })
   })
 
-  observeEvent(input$NextButtonLadder, {
-
-    shinyjs::hide("NextButtonLadder")
-
-    if(input$PeaksBoxIntro$collapsed == TRUE) {
-      js$collapse("PeaksBoxIntro")
-    }
-    shinyjs::hide("PeaksBox1")
-    shinyjs::hide("PeaksBox2")
-    shinyjs::hide("PeaksBox3")
-    shinyjs::hide("NextButtonPeaks")
-
-    output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
-                                                     menuItem("Upload", icon = icon("spinner"), tabName = "Upload"),
-                                                     menuItem("Find Ladders", icon = icon("water-ladder"), tabName = "FindLadders", selected = F),
-                                                     menuItem("Find Peaks", icon = icon("mountain"), tabName = "FindPeaks", selected = T,
-                                                              badgeColor = "green", badgeLabel = "new")))
-  })
-
-
-  #####Functions
   shiny::observe({
     if (!is.null(reactive_ladder$ladder)) {
       if (input$warning_checkbox == T) {

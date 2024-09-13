@@ -212,6 +212,10 @@ upload_data_box_server <- function(input, output, session, continue_module) {
     shinyjs::show("LoadBox4")
     shinyjs::show("NextButtonLoad")
     shinyalert("SUCCESS!", "Channels Selected!", type = "success", confirmButtonCol = "#337ab7")
+
+    output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
+                                                     menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = T))
+    )
   })
 
   observeEvent(input$DataFSA, {
@@ -235,6 +239,10 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                      shinyjs::hide("LoadBox3")
                      shinyjs::hide("LoadBox4")
                      shinyjs::hide("NextButtonLoad")
+
+                     output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
+                                                                      menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = T))
+                     )
                    })
     },
     error = function(e) {
@@ -373,8 +381,6 @@ upload_data_box_server <- function(input, output, session, continue_module) {
       withProgress(message = 'Loading Ladder file...', style = "old",
                    value = 0, {
                      incProgress(0.1)
-
-                     reactive$laddertable
 
                      ladderID <- read.csv("data/default_ladderids.csv")
 

@@ -247,13 +247,20 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     shinyjs::show("PeaksBox1")
     shinyjs::show("PeaksBox2")
 
+    output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
+                                                     menuItem("Upload", icon = icon("spinner"), tabName = "Upload"),
+                                                     menuItem("Find Ladders", icon = icon("water-ladder"), tabName = "FindLadders", selected = F),
+                                                     menuItem("Find Peaks", icon = icon("mountain"), tabName = "FindPeaks", selected = T)))
+
     if (is.null(upload_data$metadata_table())) {
       shinyjs::hide("PeaksBox3")
       shinyjs::hide("batchcorrectionswitch")
     }
     else if (!is.null(upload_data$metadata_table())) {
       if (any(!is.na(upload_data$metadata_table()$batch_sample_id))) {
-        js$collapse("PeaksBox3")
+        if(input$PeaksBox3$collapsed == TRUE) {
+          js$collapse("PeaksBox3")
+        }
         shinyjs::show("PeaksBox3")
         shinyjs::show("batchcorrectionswitch")
         updatePickerInput(session, "sample_subset_Batch", choices = na.omit(unique(upload_data$metadata_table()$batch_sample_id)))
@@ -265,23 +272,45 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     }
   })
 
-  observeEvent(input$NextButtonPeaks, {
+  observe({
+    if (is.null(upload_data$metadata_table())) {
+      shinyjs::hide("PeaksBox3")
+      shinyjs::hide("batchcorrectionswitch")
+    }
+    else if (!is.null(upload_data$metadata_table())) {
+      if (any(!is.na(upload_data$metadata_table()$batch_sample_id))) {
+        if(input$PeaksBox3$collapsed == TRUE) {
+          js$collapse("PeaksBox3")
+        }
+        shinyjs::show("PeaksBox3")
+        shinyjs::show("batchcorrectionswitch")
+        updatePickerInput(session, "sample_subset_Batch", choices = na.omit(unique(upload_data$metadata_table()$batch_sample_id)))
+      }
+      else {
+        shinyjs::hide("PeaksBox3")
+        shinyjs::hide("batchcorrectionswitch")
+      }
+    }
+  })
+
+  observeEvent(input$NextButtonLadder, {
+
+    reactive_peaks$peaks <- NULL
 
     shinyjs::hide("NextButtonLadder")
 
-    if(input$MetricsBoxIntro$collapsed == TRUE) {
-      js$collapse("MetricsBoxIntro")
+    if(input$PeaksBoxIntro$collapsed == TRUE) {
+      js$collapse("PeaksBoxIntro")
     }
-    shinyjs::hide("MetricsBox1")
-    shinyjs::hide("MetricsBox2")
-    shinyjs::hide("MetricsBox3")
-    shinyjs::hide("MetricsBox4")
+    shinyjs::hide("PeaksBox1")
+    shinyjs::hide("PeaksBox2")
+    shinyjs::hide("PeaksBox3")
+    shinyjs::hide("NextButtonPeaks")
 
     output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
                                                      menuItem("Upload", icon = icon("spinner"), tabName = "Upload"),
                                                      menuItem("Find Ladders", icon = icon("water-ladder"), tabName = "FindLadders", selected = F),
-                                                     menuItem("Find Peaks", icon = icon("mountain"), tabName = "FindPeaks", selected = F),
-                                                     menuItem("Instability Metrics", icon = icon("table"), tabName = "InstabilityMetrics", selected = T,
+                                                     menuItem("Find Peaks", icon = icon("mountain"), tabName = "FindPeaks", selected = T,
                                                               badgeColor = "green", badgeLabel = "new")))
   })
 
@@ -428,7 +457,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
     }
 
-    if (show_peaks == TRUE) {
+    if (show_peaks == TRUE && nrow(peak_table) > 0) {
       if (!is.null(peak_table$repeats) && !is.null(peak_table$calculated_repeats)) {
         plot_ly(data = data,
                 x = ~x, y = ~signal,
@@ -438,9 +467,9 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
           add_markers(x = peaks_above$x,
                       y = peaks_above$height,
                       colors = "blue") %>%
-          add_markers(x = peaks_below$x,
-                      y = peaks_below$height,
-                      colors = "purple") %>%
+          # add_markers(x = peaks_below$x,
+          #             y = peaks_below$height,
+          #             colors = "purple") %>%
           add_markers(x = tallest_peak_x,
                       y = tallest_peak_height,
                       colors = "green") %>%

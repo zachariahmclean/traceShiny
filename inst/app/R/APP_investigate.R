@@ -144,7 +144,7 @@ metrics_box_ui4 <- function(id) {
       ),
 
       htmlOutput("text_no_data2"),
-      withSpinner(htmlOutput("plot_traces_final_UI")),
+      htmlOutput("plot_traces_final_UI"),
 
       fluidRow(
         column(3,
@@ -158,7 +158,7 @@ metrics_box_ui4 <- function(id) {
                             value = NULL)
         )
       ),
-      withSpinner(htmlOutput("plot_traces_INDEX_UI"))
+      htmlOutput("plot_traces_INDEX_UI")
   )
 }
 
@@ -357,6 +357,12 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
     shinyjs::show("MetricsBox2")
     shinyjs::show("MetricsBox3")
 
+    output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
+                                                     menuItem("Upload", icon = icon("spinner"), tabName = "Upload"),
+                                                     menuItem("Find Ladders", icon = icon("water-ladder"), tabName = "FindLadders", selected = F),
+                                                     menuItem("Find Peaks", icon = icon("mountain"), tabName = "FindPeaks", selected = F),
+                                                     menuItem("Instability Metrics", icon = icon("table"), tabName = "InstabilityMetrics", selected = T)))
+
     if (!is.null(upload_data$metadata_table())) {
       if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
         updatePickerInput(session, "sample_subset2", choices = upload_data$metadata_table()[which(upload_data$metadata_table()$metrics_group_id == upload_data$metadata_table()[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics),]$metrics_group_id),][which(upload_data$metadata_table()[which(upload_data$metadata_table()$metrics_group_id == upload_data$metadata_table()[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics),]$metrics_group_id),]$metrics_baseline_control == "TRUE"),]$unique_id)
@@ -389,14 +395,26 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
 
   })
 
-  observe({
-    if (!is.null(reactive_metrics$Index_Table2)) {
-    if (!is.null(upload_data$metadata_table())) {
-      if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
-        updatePickerInput(session, "sample_subset2", choices = reactive_metrics$sample_subset2)
-      }
+  observeEvent(input$NextButtonPeaks, {
+
+    reactive_metrics$df <- NULL
+
+    shinyjs::hide("NextButtonLadder")
+
+    if(input$MetricsBoxIntro$collapsed == TRUE) {
+      js$collapse("MetricsBoxIntro")
     }
-  }
+    shinyjs::hide("MetricsBox1")
+    shinyjs::hide("MetricsBox2")
+    shinyjs::hide("MetricsBox3")
+    shinyjs::hide("MetricsBox4")
+
+    output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
+                                                     menuItem("Upload", icon = icon("spinner"), tabName = "Upload"),
+                                                     menuItem("Find Ladders", icon = icon("water-ladder"), tabName = "FindLadders", selected = F),
+                                                     menuItem("Find Peaks", icon = icon("mountain"), tabName = "FindPeaks", selected = F),
+                                                     menuItem("Instability Metrics", icon = icon("table"), tabName = "InstabilityMetrics", selected = T,
+                                                              badgeColor = "green", badgeLabel = "new")))
   })
 
   observe({
@@ -405,6 +423,16 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
 
       if (!is.null(input$sample_subset2)) {
         updateNumericInput(session, "IndexRepeat2", value = reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset2),]$`Index Repeat`)
+      }
+    }
+  })
+
+  observeEvent(input$sample_subset_metrics, {
+    if (!is.null(input$sample_subset2)) {
+      if (!is.null(upload_data$metadata_table())) {
+        if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
+          updatePickerInput(session, "sample_subset2", choices = upload_data$metadata_table()[which(upload_data$metadata_table()$metrics_group_id == upload_data$metadata_table()[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics),]$metrics_group_id),][which(upload_data$metadata_table()[which(upload_data$metadata_table()$metrics_group_id == upload_data$metadata_table()[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics),]$metrics_group_id),]$metrics_baseline_control == "TRUE"),]$unique_id)
+        }
       }
     }
   })
@@ -477,10 +505,14 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
   })
 
   observeEvent(list(input$IndexRepeat2, input$sample_subset_metrics),  {
-    if (!is.null(reactive_metrics$Index_Table)) {
-    reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset_metrics),]$`Index Repeat` <- input$IndexRepeat2
-    reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset2),]$`Index Repeat` <- input$IndexRepeat2
-    reactive_metrics$Index_Table2 <- "yes"
+    if (!is.null(ladder_module$ladders())) {
+    if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
+      if (!is.null(reactive_metrics$Index_Table)) {
+        reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset_metrics),]$`Index Repeat` <- input$IndexRepeat2
+        reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset2),]$`Index Repeat` <- input$IndexRepeat2
+        reactive_metrics$Index_Table2 <- "yes"
+      }
+    }
     }
   })
 
@@ -488,13 +520,16 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
     validate(
       need(!is.null(peaks_module$index_list()), 'You must perform the analysis first...'))
 
-    reactive_metrics$Index_Table
+    as.data.frame(reactive_metrics$Index_Table)
 
   },  options = list(scrollX = TRUE))
 
   output$metrics_table <- DT::renderDataTable({
     validate(
       need(!is.null(reactive_metrics$df), 'You must perform the analysis first...'))
+    validate(
+      need(reactive_metrics$Index_Table2 == "no", 'Changes detected in index repeat for sample(s). Press apply on the left to incorporate these changes.')
+    )
     reactive_metrics$df
   },  options = list(scrollX = TRUE))
 
@@ -551,7 +586,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
     }
 
     if (is.null(upload_data$metadata_table())) {
-      if (show_peaks_metrics == TRUE) {
+      if (show_peaks_metrics == TRUE && nrow(peak_table) > 0) {
         if (!is.null(peak_table$repeats) && !is.null(peak_table$calculated_repeats)) {
           plot_ly(data = data,
                   x = ~x, y = ~signal,
@@ -561,9 +596,9 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
             add_markers(x = peaks_above$x,
                         y = peaks_above$height,
                         colors = "blue") %>%
-            add_markers(x = peaks_below$x,
-                        y = peaks_below$height,
-                        colors = "purple") %>%
+            # add_markers(x = peaks_below$x,
+            #             y = peaks_below$height,
+            #             colors = "purple") %>%
             add_markers(x = tallest_peak_x,
                         y = tallest_peak_height,
                         colors = "green") %>%
@@ -617,7 +652,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
 
     else if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
 
-      if (show_peaks_metrics == TRUE) {
+      if (show_peaks_metrics == TRUE && nrow(peak_table) > 0) {
         if (!is.null(peak_table$repeats) && !is.null(peak_table$calculated_repeats)) {
           plot_ly(data = data,
                   x = ~x, y = ~signal,
@@ -627,9 +662,9 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
             add_markers(x = peaks_above$x,
                         y = peaks_above$height,
                         colors = "blue") %>%
-            add_markers(x = peaks_below$x,
-                        y = peaks_below$height,
-                        colors = "purple") %>%
+            # add_markers(x = peaks_below$x,
+            #             y = peaks_below$height,
+            #             colors = "purple") %>%
             add_markers(x = tallest_peak_x,
                         y = tallest_peak_height,
                         colors = "green") %>%
@@ -681,7 +716,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
       }
     }
     else {
-      if (show_peaks_metrics == TRUE) {
+      if (show_peaks_metrics == TRUE && nrow(peak_table) > 0) {
         if (!is.null(peak_table$repeats) && !is.null(peak_table$calculated_repeats)) {
           plot_ly(data = data,
                   x = ~x, y = ~signal,
@@ -691,9 +726,9 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
             add_markers(x = peaks_above$x,
                         y = peaks_above$height,
                         colors = "blue") %>%
-            add_markers(x = peaks_below$x,
-                        y = peaks_below$height,
-                        colors = "purple") %>%
+            # add_markers(x = peaks_below$x,
+            #             y = peaks_below$height,
+            #             colors = "purple") %>%
             add_markers(x = tallest_peak_x,
                         y = tallest_peak_height,
                         colors = "green") %>%
@@ -800,7 +835,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
 
       }
 
-    if (show_peaks_metrics == TRUE) {
+    if (show_peaks_metrics == TRUE && nrow(peak_table) > 0) {
       if (!is.null(peak_table$repeats) && !is.null(peak_table$calculated_repeats)) {
         plot_ly(data = data,
                 x = ~x, y = ~signal,
@@ -811,9 +846,9 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
           add_markers(x = peaks_above$x,
                       y = peaks_above$height,
                       colors = "blue") %>%
-          add_markers(x = peaks_below$x,
-                      y = peaks_below$height,
-                      colors = "purple") %>%
+          # add_markers(x = peaks_below$x,
+          #             y = peaks_below$height,
+          #             colors = "purple") %>%
           add_markers(x = tallest_peak_x,
                       y = tallest_peak_height,
                       colors = "green") %>%
@@ -872,7 +907,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
     h3(HTML('<b><h3 style = "text-align:justify;color:#FF0000">Instability Metrics not computed! Press Apply on the left to compute metrics</b>'))
     }
     else {
-      h3(HTML('<b><h3 style = "text-align:justify;color:#FF0000">Change detected in index repeat. Press apply on the left to incorporate these changes</b>'))
+      h3(HTML('<b><h3 style = "text-align:justify;color:#FF0000">Changes detected in index repeat for sample(s). Press apply on the left to incorporate these changes.</b>'))
     }
   })
 
