@@ -40,7 +40,7 @@ metrics_box_ui2 <- function(id) {
       fluidRow(
         column(12,
                h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Index Repeat Table</b>')),
-               withSpinner(DT::dataTableOutput("Index_Table", width = "100%", height = "400"))
+               withSpinner(DT::dataTableOutput("Index_Table"))
                )
       ),
       conditionalPanel(
@@ -395,6 +395,13 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
 
   })
 
+  observe({
+    if (!is.null(continue_module$Index_Table()) && is.null(reactive_metrics$Index_Table)) {
+
+      reactive_metrics$Index_Table <- continue_module$Index_Table()
+    }
+  })
+
   observeEvent(input$NextButtonPeaks, {
 
     reactive_metrics$df <- NULL
@@ -518,7 +525,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
 
   output$Index_Table <- DT::renderDataTable({
     validate(
-      need(!is.null(peaks_module$index_list()), 'You must perform the analysis first...'))
+      need(!is.null(reactive_metrics$Index_Table), 'You must perform the analysis first...'))
 
     as.data.frame(reactive_metrics$Index_Table)
 
@@ -960,7 +967,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
       sample_traces_repeats <- peaks_module$sample_traces_repeats()
 
       #Investigate
-      instability_metrics <- NULL
+      instability_metrics <- reactive_metrics$df
       Index_Table <- reactive_metrics$Index_Table
       Index_Table2 <- reactive_metrics$Index_Table2
       sample_subset_metrics <- reactive_metrics$sample_subset_metrics
