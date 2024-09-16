@@ -300,7 +300,7 @@ body <- dashboardBody(
 
     ui <- function () {dashboardPage(
       dashboardHeader(
-        title = img(id="Ditto",src="R.gif",width="30%"),
+        title = img(id="Ditto",src="dancing-ditto-ditto.gif",width="30%"),
         tags$li(class = "dropdown", p(img(id="CGM", src="cfgm-logo-animated.gif", width="85%"))),
         titleWidth = 250),
       sidebar,

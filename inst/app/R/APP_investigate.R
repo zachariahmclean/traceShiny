@@ -385,11 +385,11 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
     index <- list()
 
     for (i in 1:length(peaks_module$index_list())) {
-      index[[i]] <- as.data.frame(cbind(peaks_module$index_list()[[i]]$unique_id, peaks_module$index_list()[[i]]$get_index_peak()$index_repeat))
+      index[[i]] <- as.data.frame(cbind(peaks_module$index_list()[[i]]$unique_id, peaks_module$index_list()[[i]]$metrics_group_id, peaks_module$index_list()[[i]]$get_allele_peak()$allele_repeat, peaks_module$index_list()[[i]]$get_index_peak()$index_repeat))
     }
 
     reactive_metrics$Index_Table <- do.call(rbind, index)
-    colnames(reactive_metrics$Index_Table) <- c("Unique IDs", "Index Repeat")
+    colnames(reactive_metrics$Index_Table) <- c("Unique IDs", "Metrics Group ID", "Allele Repeat", "Index Repeat")
 
     reactive_metrics$Index_Table2 <- "no"
 
@@ -485,7 +485,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                        assign_index_peaks(
                          peaks_module$index_list(),
                          grouped = if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) TRUE else FALSE,
-                         index_override_dataframe = reactive_metrics$Index_Table
+                         index_override_dataframe = reactive_metrics$Index_Table[,c(1,4)]
                        )
 
                      reactive_metrics$df <- calculate_instability_metrics(
