@@ -22,13 +22,49 @@ ladder_box_ui2 <- function(id) {
 
       materialSwitch("spikeswitch", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Use Default Ladder Scan Position')), value = TRUE, status = "primary"),
 
-      numericInput("spikelocation", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-60px;">Input Ladder Starting Scan Position')),
-                   min = 1,
-                   value = 1, step = 1),
+      conditionalPanel(
+        condition = 'input.spikeswitch == false',
+        numericInput("spikelocation", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-60px;">Input Ladder Starting Scan Position')),
+                     min = 1,
+                     value = 1, step = 1)
+      ),
 
       conditionalPanel(
         condition = 'input.advancesettings_Ladder == true',
         materialSwitch("zerofloor", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Apply Zero Floor')), value = TRUE, status = "primary"),
+
+        materialSwitch("minimum_peak_signal_ladder", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Use Default Minimum Peak Signal')), value = TRUE, status = "primary"),
+
+        conditionalPanel(
+          condition = 'input.minimum_peak_signal_ladder == false',
+          numericInput("minimum_peak_signal_number", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-60px;">Input Minimal Peak Signal')),
+                       min = 1,
+                       value = 1, step = 1)
+        ),
+
+        materialSwitch("scan_subset", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Use Default Scan Subset')), value = TRUE, status = "primary"),
+
+        conditionalPanel(
+          condition = 'input.scan_subset == false',
+
+          fluidRow(
+            column(12,
+            h4(HTML('<h4 style = "text-align:left;color:#000000"><br>Scan Subset Input'))
+            )
+          ),
+
+          fluidRow(
+            column(6,
+                   numericInput("scan_subset1", label = h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">From')),
+                                value = 0.5,
+                                min = 0,
+                                step = 0.1)),
+            column(6,
+                   numericInput("scan_subset2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">To')),
+                                min = 0,
+                                value = 0.95, step = 0.1))
+          )
+        ),
 
         numericInput("ladderselectionwindow", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Ladder Selection Window')),
                      min = 1,
@@ -112,9 +148,9 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
       shinyalert("WARNING!", "No metadata was loaded!", type = "warning", confirmButtonCol = "#337ab7")
     }
 
-      if (is.null(upload_data$metadata_table())) {
-        updatePickerInput(session, "sample_subset_metrics", choices = names(upload_data$fsa_list()))
-      }
+    if (is.null(upload_data$metadata_table())) {
+      updatePickerInput(session, "sample_subset_metrics", choices = names(upload_data$fsa_list()))
+    }
     else if (!is.null(upload_data$metadata_table())) {
       if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
         updatePickerInput(session, "sample_subset_metrics", choices = upload_data$metadata_table()[-which(upload_data$metadata_table()$metrics_baseline_control == TRUE),]$unique_id)
@@ -169,15 +205,6 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
     updatePickerInput(session, 'LadderSizes', choices = upload_data$laddertable()$Ladder_ID)
   })
 
-  observe({
-    if (input$spikeswitch == T) {
-      shinyjs::hide("spikelocation")
-    }
-    else {
-      shinyjs::show("spikelocation")
-    }
-  })
-
 
   observeEvent(input$startbuttonFindLadders, {
     tryCatch({
@@ -195,6 +222,8 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
                                          signal_channel = input$SignalChannel,
                                          ladder_sizes = as.numeric(strsplit(upload_data$laddertable()[which(upload_data$laddertable() == input$LadderSizes),]$Expected_ladder_peaks, split = ",")[[1]]),
                                          ladder_start_scan = if(input$spikeswitch == T) NULL else input$spikelocation,
+                                         minimum_peak_signal = if(input$minimum_peak_signal_ladder == T) NULL else input$minimum_peak_signal_number,
+                                         scan_subset = if(input$scan_subset == T) NULL else c(input$scan_subset1, input$scan_subset2),
                                          zero_floor = input$zerofloor,
                                          ladder_selection_window = input$ladderselectionwindow,
                                          smoothing_window = input$smoothingwindow,
@@ -273,8 +302,8 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
   shiny::observe({
     if (!is.null(input$unique_id_selection)) {
       if (!is.null(reactive_ladder$ladder)) {
-      ladders$scan <- reactive_ladder$ladder[[input$unique_id_selection]]$ladder_df$scan
-      ladders$size <- reactive_ladder$ladder[[input$unique_id_selection]]$ladder_df$size
+        ladders$scan <- reactive_ladder$ladder[[input$unique_id_selection]]$ladder_df$scan
+        ladders$size <- reactive_ladder$ladder[[input$unique_id_selection]]$ladder_df$size
       }
     }
   })
@@ -383,27 +412,27 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
   shiny::observe({
     if (!is.null(input$unique_id_selection)) {
       if (!is.null(ladders$size)) {
-      sample_unique_id <- reactive_ladder$ladder[[input$unique_id_selection]]$unique_id
+        sample_unique_id <- reactive_ladder$ladder[[input$unique_id_selection]]$unique_id
 
-      selected_ladder_df <- reactive_ladder$ladder[[input$unique_id_selection]]$ladder_df
-      selected_sample_scans <- selected_ladder_df[which(!is.na(selected_ladder_df$size)), "scan"]
+        selected_ladder_df <- reactive_ladder$ladder[[input$unique_id_selection]]$ladder_df
+        selected_sample_scans <- selected_ladder_df[which(!is.na(selected_ladder_df$size)), "scan"]
 
-      plot_ladder_df <- as.data.frame(shiny::reactiveValuesToList(ladders))
-      plot_scans <- plot_ladder_df[which(!is.na(plot_ladder_df$size)), "scan"]
+        plot_ladder_df <- as.data.frame(shiny::reactiveValuesToList(ladders))
+        plot_scans <- plot_ladder_df[which(!is.na(plot_ladder_df$size)), "scan"]
 
-      # skip if ladder info hasn't been updated
-      if (identical(selected_sample_scans, plot_scans)) {
-        return()
-      } else if (nrow(as.data.frame(shiny::reactiveValuesToList(ladders))) == 0) {
-        return()
-      }
-      manual_ladder_list[[sample_unique_id]] <- as.data.frame(shiny::reactiveValuesToList(ladders))
-      reactive_ladder$ladder[[sample_unique_id]] <- trace:::ladder_fix_helper(
-        reactive_ladder$ladder[[sample_unique_id]],
-        shiny::reactiveValuesToList(manual_ladder_list)[[sample_unique_id]]
-      )
+        # skip if ladder info hasn't been updated
+        if (identical(selected_sample_scans, plot_scans)) {
+          return()
+        } else if (nrow(as.data.frame(shiny::reactiveValuesToList(ladders))) == 0) {
+          return()
+        }
+        manual_ladder_list[[sample_unique_id]] <- as.data.frame(shiny::reactiveValuesToList(ladders))
+        reactive_ladder$ladder[[sample_unique_id]] <- trace:::ladder_fix_helper(
+          reactive_ladder$ladder[[sample_unique_id]],
+          shiny::reactiveValuesToList(manual_ladder_list)[[sample_unique_id]]
+        )
 
-      fragment_ladder_trigger(fragment_ladder_trigger() + 1)
+        fragment_ladder_trigger(fragment_ladder_trigger() + 1)
       }
     }
   })
@@ -432,6 +461,11 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
     LadderSizes = reactive(input$LadderSizes),
     spikeswitch = reactive(input$spikeswitch),
     spikelocation = reactive(input$spikelocation),
+    minimum_peak_signal_ladder = reactive(input$minimum_peak_signal_ladder),
+    minimum_peak_signal_number = reactive(input$minimum_peak_signal_number),
+    scan_subset = reactive(input$scan_subset),
+    scan_subset1 = reactive(input$scan_subset1),
+    scan_subset2 = reactive(input$scan_subset2),
     zerofloor = reactive(input$zerofloor),
     ladderselectionwindow = reactive(input$ladderselectionwindow),
     smoothingwindow = reactive(input$smoothingwindow),

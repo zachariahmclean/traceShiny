@@ -440,7 +440,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
     metadata_table = reactive(reactive$metadata_table),
     DataUpload = reactive(input$DataUpload),
     DataUploadMeta = reactive(input$DataUploadMeta),
-    Ladder_switch = reactive(input$DataUpload)
+    Ladder_switch = reactive(input$Ladder_switch)
   ))
 }
 

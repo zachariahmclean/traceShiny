@@ -36,13 +36,6 @@ metrics_box_ui2 <- function(id) {
                )
         )
       ),
-
-      fluidRow(
-        column(12,
-               h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Index Repeat Table</b>')),
-               withSpinner(DT::dataTableOutput("Index_Table"))
-               )
-      ),
       conditionalPanel(
         condition = 'input.advancesettings_Metrics == true',
       fluidRow(
@@ -158,7 +151,14 @@ metrics_box_ui4 <- function(id) {
                             value = NULL)
         )
       ),
-      htmlOutput("plot_traces_INDEX_UI")
+      htmlOutput("plot_traces_INDEX_UI"),
+
+      fluidRow(
+        column(12,
+               h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Index Repeat Table</b>')),
+               withSpinner(DT::dataTableOutput("Index_Table"))
+        )
+      )
   )
 }
 
@@ -192,88 +192,101 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
 
   output$downloadlogs <- shiny::downloadHandler(
     filename = function() {
-      paste0(format(Sys.time(), "%Y-%m-%d_%H%M%S"), "_logs", ".html")
+      paste0(format(Sys.time(), "%Y-%m-%d_%H%M%S"), "_logs", ".zip")
     },
     content = function(file) {
-      strLoad <- paste("<h4>Data Upload </h4>",
-                       "fsa_raw <- read_fsa('/path/to/fsa_files.fsa') <br>
-                 metadata_table <- read.csv('/path/to/metadata_table.txt')")
 
-      strLadders <- ifelse (input$spikeswitch == T,
-                            paste("<h4>Find Ladders </h4>",
-                                  "ladder_list <- find_ladders(fsa_raw, ladder_channel = ", paste(input$LadderChannel), ", ",
-                                  "signal_channel = ", paste(input$SignalChannel), ", ",
-                                  "ladder_sizes = ", paste(as.numeric(strsplit(input$LadderSizes, split = ",")[[1]])), ", ",
-                                  "spike location = NULL, ",
-                                  "zero_floor = ", paste(input$zerofloor), ", ",
-                                  "ladder_selection_window = ", paste(input$ladderselectionwindow), ", ",
-                                  "smoothing_window = ", paste(input$smoothingwindow), ", ",
-                                  "max_combinations = ", paste(input$maxcombinations), ")"),
-                            paste("<h4>Find Ladders </h4>",
-                                  "ladder_list <- find_ladders(fsa_raw, ladder_channel = ", paste(input$LadderChannel), ", ",
-                                  "signal_channel = ", paste(input$SignalChannel), ", ",
-                                  "ladder_sizes = ", paste(as.numeric(strsplit(input$LadderSizes, split = ",")[[1]])), ", ",
-                                  "spike location = ", paste(input$spikelocation), ", ",
-                                  "zero_floor = ", paste(input$zerofloor), ", ",
-                                  "ladder_selection_window = ", paste(input$ladderselectionwindow), ", ",
-                                  "smoothing_window = ", paste(input$smoothingwindow), ", ",
-                                  "max_combinations = ", paste(input$maxcombinations), ")")
-      )
+      tmpdir <- tempdir()
+      setwd(tempdir())
+
+      strLoad <- paste("<h4>Data Upload </h4>",
+                       "fsa_list <- readRDS('fsa_files.RDS') <br>
+                 metadata_table <- readRDS('metadata.RDS') <br>
+                       Ladder_Fix <- readRDS('Ladder_fix.RDS')")
+
+      strLadders <- paste("<h4>Find Ladders </h4>",
+                          "find_ladders(fsa_list, ladder_channel = ", paste(input$LadderChannel), ", ",
+                          "signal_channel = ", paste(input$SignalChannel), ", ",
+                          "ladder_sizes = ", paste(as.numeric(strsplit(upload_data$laddertable()[which(upload_data$laddertable() == input$LadderSizes),]$Expected_ladder_peaks, split = ",")[[1]])), ", ",
+                          if(input$spikeswitch == T) "ladder_start_scan = NULL, " else paste0("ladder_start_scan = ", paste(input$spikelocation), ","),
+                          if(input$minimum_peak_signal_ladder == T) "minimum_peak_signal = NULL, " else "minimum_peak_signal = ", paste(input$minimum_peak_signal_number), ", ",
+                          if(input$scan_subset == T) "scan_subset = NULL, " else "scan_subset = c(", paste(input$scan_subset1), ", ", paste(input$scan_subset2), "), ",
+                          "zero_floor = ", paste(input$zerofloor), ", ",
+                          "ladder_selection_window = ", paste(input$ladderselectionwindow), ", ",
+                          "smoothing_window = ", paste(input$smoothingwindow), ", ",
+                          "max_combinations = ", paste(input$maxcombinations), ")")
+
+      strLaddersFix <- paste("<h4>Fix Ladders </h4>",
+                             "fix_ladders_manual(fsa_list, Ladder_Fix)"
+                             )
 
       strPeaks <- paste("<h4>Find Peaks </h4>",
-                        "peak_list <- find_fragments(ladder_list, ",
+                        "fragments_list <- find_fragments(fsa_list, ",
                         "smoothing_window = ", paste(input$smoothing_window), ", ",
                         "minimum_peak_signal = ", paste(input$minimum_peak_signal), ", ",
                         "min_bp_size = ", paste(input$min_bp_size), ", ",
                         "max_bp_size = ", paste(input$max_bp_size), ")")
 
-      strAddMeta <- paste("<h4>Add Metadata </h4>",
-                          "metadata_added_list <- add_metadata(peak_list, ",
-                          "metadata_data.frame = metadata_table, ",
-                          "unique_id = 'unique_id'",
-                          "metrics_baseline_control = 'metrics_baseline_control')")
+      strAddMeta <- ifelse (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control)),
+                            paste("<h4>Add Metadata </h4>",
+                                  "add_metadata(fragments_list, ",
+                                  "metadata_data.frame = metadata_table, ",
+                                  "unique_id = 'unique_id'",
+                                  "metrics_baseline_control = 'metrics_baseline_control')"),
+                            paste("<h4>#No Metadata was uploaded </h4>")
+      )
 
       strAlleles <- paste("<h4>Find Alleles </h4>",
-                          "allele_list <- find_alleles(metadata_added_list, ",
+                          "find_alleles(fragments_list, ",
                           "peak_region_size_gap_threshold = ", paste(input$peak_region_size_gap_threshold), ", ",
                           "peak_region_height_threshold_multiplier = ", paste(input$peak_region_height_threshold_multiplier), ")")
 
-      strRepeats <- ifelse (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control)),
-                            paste("<h4>Find Repeats </h4>",
-                                  "repeats_list <- call_repeats(allele_list, assay_size_without_repeat = ", paste(input$assay_size_without_repeat), ", ",
-                                  "repeat_size = ", paste(input$repeat_size), ", ",
-                                  "repeat_calling_algorithm = ", paste(input$repeat_calling_algorithm), ", ",
-                                  "repeat_calling_algorithm_peak_assignment_scan_window = ", paste(input$repeat_calling_algorithm_peak_assignment_scan_window), ", ",
-                                  "repeat_calling_algorithm_size_window_around_allele = ", paste(input$repeat_calling_algorithm_size_window_around_allele), ", ",
-                                  "repeat_calling_algorithm_size_period = ", paste(input$repeat_calling_algorithm_size_period), ", ",
-                                  "force_whole_repeat_units = ", paste(ifelse(input$force_whole_repeat_units == "YES", "TRUE", "FALSE")), ", ",
-                                  "repeat_length_correction = 'from_metadata')"),
-                            paste("<h4>Find Repeats </h4>",
-                                  "repeats_list <- call_repeats(allele_list, assay_size_without_repeat = ", paste(input$assay_size_without_repeat), ", ",
-                                  "repeat_size = ", paste(input$repeat_size), ", ",
-                                  "repeat_calling_algorithm = ", paste(input$repeat_calling_algorithm), ", ",
-                                  "repeat_calling_algorithm_peak_assignment_scan_window = ", paste(input$repeat_calling_algorithm_peak_assignment_scan_window), ", ",
-                                  "repeat_calling_algorithm_size_window_around_allele = ", paste(input$repeat_calling_algorithm_size_window_around_allele), ", ",
-                                  "repeat_calling_algorithm_size_period = ", paste(input$repeat_calling_algorithm_size_period), ", ",
-                                  "force_whole_repeat_units = ", paste(ifelse(input$force_whole_repeat_units == "YES", "TRUE", "FALSE")), ", ",
-                                  "repeat_length_correction = 'none')")
+      strRepeats <- paste("<h4>Find Repeats </h4>",
+                          "call_repeats(fragments_list, assay_size_without_repeat = ", paste(input$assay_size_without_repeat), ", ",
+                          "repeat_size = ", paste(input$repeat_size), ", ",
+                          "repeat_calling_algorithm = ", paste(input$repeat_calling_algorithm), ", ",
+                          "repeat_calling_algorithm_peak_assignment_scan_window = ", paste(input$repeat_calling_algorithm_peak_assignment_scan_window), ", ",
+                          "repeat_calling_algorithm_size_window_around_allele = ", paste(input$repeat_calling_algorithm_size_window_around_allele), ", ",
+                          "repeat_calling_algorithm_size_period = ", paste(input$repeat_calling_algorithm_size_period), ", ",
+                          "force_whole_repeat_units = ", paste(ifelse(input$force_whole_repeat_units == "YES", "TRUE", "FALSE")), ", ",
+                          if(any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) "repeat_length_correction = 'from_metadata')" else "repeat_length_correction = 'none')"
       )
 
       strIndex <- ifelse (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control)),
-                            paste("<h4>Find Index </h4>",
-                                  "index_list <- assign_index_peaks(repeats_list, grouped = TRUE)"),
                           paste("<h4>Find Index </h4>",
-                                "index_list <- assign_index_peaks(repeats_list, grouped = FALSE)")
+                                "assign_index_peaks(repeats_list, grouped = TRUE)"),
+                          paste("<h4>Find Index </h4>",
+                                "assign_index_peaks(repeats_list, grouped = FALSE)")
       )
 
       strMetrics <- paste("<h4>Calculate Instability Metrics </h4>",
-                        "metrics_dataframe <- calculate_instability_metrics(index_list, ",
+                        "metrics_dataframe <- calculate_instability_metrics(fragments_list, ",
                         "peak_threshold = ", paste(input$peak_threshold), ", ",
                         "window_around_index_peak = c(", paste(input$window_around_index_peak_min), ", ", paste(input$window_around_index_peak_max), "))")
 
-      code <- c(paste(strLoad, strLadders, strPeaks, strAddMeta, strAlleles, strRepeats, strIndex, strMetrics, sep = '<br>'))
+      code <- c(paste(strLoad, strLadders, strLaddersFix, strPeaks, strAddMeta, strAlleles, strRepeats, strIndex, strMetrics, sep = '<br>'))
 
-      writeLines(text = code, file)
+      fs <- c("code.R", "Index_Table.csv", "metadata.RDS", "fsa_files.RDS", "Ladder_fix.RDS")
+      writeLines(text = code, "code.R")
+
+      write.csv(reactive_metrics$Index_Table[,c(1,4)], "Index_Table.csv", row.names = F, col.names = T)
+
+      saveRDS(upload_data$metadata_table(), "metadata.RDS")
+
+      saveRDS(upload_data$fsa_list(), "fsa_files.RDS")
+
+
+      ladderfix <- list()
+
+      for (i in 1:length(upload_data$fsa_list())) {
+
+        ladderfix[[i]] <- upload_data$fsa_list()[[i]]$ladder_df
+        names(ladderfix)[i] <- upload_data$fsa_list()[[i]]$unique_id
+      }
+
+      saveRDS(ladderfix, "Ladder_fix.RDS")
+
+      zip(zipfile=file, files=fs)
     }
   )
 
@@ -946,6 +959,11 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
       ladderselectionwindow <- ladder_module$ladderselectionwindow()
       smoothingwindow <- ladder_module$smoothingwindow()
       maxcombinations <- ladder_module$maxcombinations()
+      minimum_peak_signal_ladder <- ladder_module$minimum_peak_signal_ladder()
+      minimum_peak_signal_number <- ladder_module$minimum_peak_signal_number()
+      scan_subset <- ladder_module$scan_subset()
+      scan_subset1 <- ladder_module$scan_subset1()
+      scan_subset2 <- ladder_module$scan_subset2()
 
       #Peaks
       index_list <- peaks_module$index_list()
@@ -987,7 +1005,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
 
 
       save("laddertable", "fsa_list", "metadata_table", "DataUpload", "DataUploadMeta", "Ladder_switch",
-           "ladders", "scan", "size", "LadderChannel", "SignalChannel", "LadderSizes", "spikeswitch", "spikelocation", "zerofloor", "ladderselectionwindow", "smoothingwindow", "maxcombinations",
+           "ladders", "scan", "size", "LadderChannel", "SignalChannel", "LadderSizes", "spikeswitch", "spikelocation", "zerofloor", "ladderselectionwindow", "smoothingwindow", "maxcombinations", "minimum_peak_signal_ladder", "minimum_peak_signal_number", "scan_subset", "scan_subset1", "scan_subset2",
            "index_list", "min_bp_size", "max_bp_size", "smoothing_window_peaks", "minimum_peak_signal", "batchcorrectionswitch", "peak_region_size_gap_threshold",
            "peak_region_height_threshold_multiplier", "assay_size_without_repeat", "repeat_size", "force_whole_repeat_units", "repeat_calling_algorithm", "repeat_calling_algorithm_size_window_around_allele",
            "repeat_calling_algorithm_size_period", "repeat_calling_algorithm_peak_assignment_scan_window", "sample_traces_size", "sample_traces_repeats",

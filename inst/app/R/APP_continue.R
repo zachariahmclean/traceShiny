@@ -108,6 +108,11 @@ continue_server <- function(input, output, session) {
                      updateNumericInput(session, "ladderselectionwindow", value = ladderselectionwindow)
                      updateNumericInput(session, "smoothingwindow", value = smoothingwindow)
                      updateNumericInput(session, "maxcombinations", value = maxcombinations)
+                     updateMaterialSwitch(session, "minimum_peak_signal_ladder", value = minimum_peak_signal_ladder)
+                     updateNumericInput(session, "minimum_peak_signal_number", value = minimum_peak_signal_number)
+                     updateMaterialSwitch(session, "scan_subset", value = scan_subset)
+                     updateNumericInput(session, "scan_subset1", value = scan_subset1)
+                     updateNumericInput(session, "scan_subset2", value = scan_subset2)
 
                      incProgress(7/10, detail = "Setting up peaks settings")
 
