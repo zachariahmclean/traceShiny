@@ -438,7 +438,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
   })
 
   observe({
-    if (!is.null(peaks_module$index_list()) && !is.null(input$sample_subset_metrics)) {
+    if (!is.null(peaks_module$index_list()) && !is.null(reactive_metrics$Index_Table) && !is.null(input$sample_subset_metrics)) {
       updateNumericInput(session, "IndexRepeat1", value = reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset_metrics),]$`Index Repeat`)
 
       if (!is.null(input$sample_subset2)) {
@@ -448,13 +448,11 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
   })
 
   observeEvent(input$sample_subset_metrics, {
-    if (!is.null(input$sample_subset2)) {
       if (!is.null(upload_data$metadata_table())) {
         if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
           updatePickerInput(session, "sample_subset2", choices = upload_data$metadata_table()[which(upload_data$metadata_table()$metrics_group_id == upload_data$metadata_table()[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics),]$metrics_group_id),][which(upload_data$metadata_table()[which(upload_data$metadata_table()$metrics_group_id == upload_data$metadata_table()[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics),]$metrics_group_id),]$metrics_baseline_control == "TRUE"),]$unique_id)
         }
       }
-    }
   })
 
   observe({
@@ -477,6 +475,19 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
         shinyjs::hide("sample_subset2")
         shinyjs::hide("plot_traces_INDEX_UI")
       }
+    }
+
+    if (is.null(input$sample_subset2)) {
+      shinyjs::show("IndexRepeat1")
+      shinyjs::hide("IndexRepeat2")
+      shinyjs::hide("sample_subset2")
+      shinyjs::hide("plot_traces_INDEX_UI")
+    }
+    else {
+      shinyjs::hide("IndexRepeat1")
+      shinyjs::show("IndexRepeat2")
+      shinyjs::show("sample_subset2")
+      shinyjs::show("plot_traces_INDEX_UI")
     }
   })
 
@@ -518,16 +529,16 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
   })
 
   observeEvent(input$IndexRepeat1, {
-    if (!is.null(reactive_metrics$Index_Table)) {
+    if (!is.null(reactive_metrics$Index_Table) && !is.null(peaks_module$index_list())) {
     reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset_metrics),]$`Index Repeat` <- input$IndexRepeat1
     reactive_metrics$Index_Table2 <- "yes"
     }
   })
 
   observeEvent(list(input$IndexRepeat2, input$sample_subset_metrics),  {
-    if (!is.null(ladder_module$ladders())) {
+    if (!is.null(ladder_module$ladders()) && !is.null(input$sample_subset2)) {
     if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
-      if (!is.null(reactive_metrics$Index_Table)) {
+      if (!is.null(reactive_metrics$Index_Table) && !is.null(peaks_module$index_list())) {
         reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset_metrics),]$`Index Repeat` <- input$IndexRepeat2
         reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset2),]$`Index Repeat` <- input$IndexRepeat2
         reactive_metrics$Index_Table2 <- "yes"
@@ -670,7 +681,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
       }
     }
 
-    else if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
+    else if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control)) && !is.null(input$sample_subset2)) {
 
       if (show_peaks_metrics == TRUE && nrow(peak_table) > 0) {
         if (!is.null(peak_table$repeats) && !is.null(peak_table$calculated_repeats)) {

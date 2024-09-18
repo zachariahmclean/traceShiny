@@ -296,6 +296,8 @@ upload_data_box_server <- function(input, output, session, continue_module) {
 
                      reactive$metadata_table <- read.csv(input$MetadataUpload$datapath)
 
+                     reactive$metadata_table[reactive$metadata_table==""] <- NA
+
                      if (any(grepl("unique_id", colnames(reactive$metadata_table))) &&
                          any(grepl("metrics_group_id", colnames(reactive$metadata_table))) &&
                          any(grepl("metrics_baseline_control", colnames(reactive$metadata_table))) &&
@@ -325,7 +327,18 @@ upload_data_box_server <- function(input, output, session, continue_module) {
 
                            }
                            else {
-                             shinyalert("ERROR!", "Not all samples have matching controls. Please check your column metrics_baseline_control.", type = "error", confirmButtonCol = "#337ab7")
+                             shinyalert("WARNING!", "Not all samples have matching controls. Please check your column metrics_baseline_control.", type = "warning", confirmButtonCol = "#337ab7")
+
+                             shinyjs::show("LoadBox2")
+                             shinyjs::show("LoadBox5")
+                             shinyjs::show("LoadBox3")
+                             shinyjs::show("LoadBox4")
+                             shinyjs::show("NextButtonLoad")
+
+                             output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
+                                                                              menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = T),
+                                                                              menuItem("Find Ladders", icon = icon("water-ladder"), tabName = "FindLadders", selected = F,
+                                                                                       badgeColor = "green", badgeLabel = "new")))
                            }
                          }
                          else {

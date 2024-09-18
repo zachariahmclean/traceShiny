@@ -1,5 +1,6 @@
 library(shiny)
 library(shinyjs)
+library(shinyBS)
 library(shinyalert)
 library(shinydashboard)
 library(dashboardthemes)
@@ -113,6 +114,12 @@ body <- dashboardBody(
   width:550px;
   }
   '))),
+
+  tags$a(href="javascript:history.go(0)",
+         popify(tags$i(class="fa fa-refresh fa-5x"),
+                title = "",
+                content = "Click here to delete all data and restart the Shiny session",
+                placement = "right")),
 
   tags$head(tags$style(
     "html {height: 100%; overflow-y: scroll;}"
