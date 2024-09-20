@@ -441,14 +441,14 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
     if (!is.null(peaks_module$index_list()) && !is.null(reactive_metrics$Index_Table) && !is.null(input$sample_subset_metrics)) {
       updateNumericInput(session, "IndexRepeat1", value = reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset_metrics),]$`Index Repeat`)
 
-      if (!is.null(input$sample_subset2)) {
+      if (!is.null(input$sample_subset2) && !is.na(input$IndexRepeat1)) {
         updateNumericInput(session, "IndexRepeat2", value = reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset2),]$`Index Repeat`)
       }
     }
   })
 
   observeEvent(input$sample_subset_metrics, {
-      if (!is.null(upload_data$metadata_table())) {
+      if (!is.null(upload_data$metadata_table()) && !is.na(input$IndexRepeat1)) {
         if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
           updatePickerInput(session, "sample_subset2", choices = upload_data$metadata_table()[which(upload_data$metadata_table()$metrics_group_id == upload_data$metadata_table()[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics),]$metrics_group_id),][which(upload_data$metadata_table()[which(upload_data$metadata_table()$metrics_group_id == upload_data$metadata_table()[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics),]$metrics_group_id),]$metrics_baseline_control == "TRUE"),]$unique_id)
         }
@@ -521,6 +521,18 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                      )
 
                      reactive_metrics$Index_Table2 <- "no"
+
+                     if(input$AnalysisBox1$collapsed == TRUE) {
+                       js$collapse("AnalysisBox1")
+                     }
+
+                     output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
+                                                                      menuItem("Upload", icon = icon("spinner"), tabName = "Upload"),
+                                                                      menuItem("Find Ladders", icon = icon("water-ladder"), tabName = "FindLadders", selected = F),
+                                                                      menuItem("Find Peaks", icon = icon("mountain"), tabName = "FindPeaks", selected = F),
+                                                                      menuItem("Instability Metrics", icon = icon("table"), tabName = "InstabilityMetrics", selected = T),
+                                                                      menuItem("Analysis", icon = icon("magnifying-glass-chart"), tabName = "Analysis", selected = F,
+                                                                               badgeColor = "green", badgeLabel = "new")))
                    })
     },
     error = function(e) {
@@ -536,7 +548,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
   })
 
   observeEvent(list(input$IndexRepeat2, input$sample_subset_metrics),  {
-    if (!is.null(ladder_module$ladders()) && !is.null(input$sample_subset2)) {
+    if (!is.null(ladder_module$ladders()) && !is.null(input$sample_subset2) && !is.na(input$IndexRepeat1)) {
     if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
       if (!is.null(reactive_metrics$Index_Table) && !is.null(peaks_module$index_list())) {
         reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset_metrics),]$`Index Repeat` <- input$IndexRepeat2
@@ -551,7 +563,15 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
     validate(
       need(!is.null(reactive_metrics$Index_Table), 'You must perform the analysis first...'))
 
-    as.data.frame(reactive_metrics$Index_Table)
+    datatable(reactive_metrics$Index_Table,
+              options = list(scrollX = TRUE,
+                             scrollY = TRUE,
+                             server = TRUE,
+                             paging = TRUE,
+                             pageLength = 15
+              ),
+              selection = 'single',
+              rownames = FALSE)
 
   },  options = list(scrollX = TRUE))
 
@@ -643,7 +663,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                                 range = xlim),
                    yaxis = list("Signal",
                                 range = ylim),
-                   shapes = list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_height),
+                   shapes = if(!is.na(input$IndexRepeat1)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_height),
                      #vertical line
                      list(type = "line", x0 = input$IndexRepeat1,
                           x1 = input$IndexRepeat1,
@@ -667,7 +687,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                               range = xlim),
                  yaxis = list("Signal",
                               range = ylim),
-                 shapes = list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_height),
+                 shapes = if(!is.na(input$IndexRepeat1)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_height),
                                #vertical line
                                list(type = "line", x0 = input$IndexRepeat1,
                                     x1 = input$IndexRepeat1,
@@ -709,7 +729,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                                 range = xlim),
                    yaxis = list("Signal",
                                 range = ylim),
-                   shapes = list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_height),
+                   shapes = if(!is.na(input$IndexRepeat2)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_height),
                      #vertical line
                      list(type = "line", x0 = input$IndexRepeat2,
                           x1 = input$IndexRepeat2,
@@ -733,7 +753,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                               range = xlim),
                  yaxis = list("Signal",
                               range = ylim),
-                 shapes = list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_height),
+                 shapes = if(!is.na(input$IndexRepeat2)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_height),
                    #vertical line
                    list(type = "line", x0 = input$IndexRepeat2,
                         x1 = input$IndexRepeat2,
@@ -773,7 +793,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                                 range = xlim),
                    yaxis = list("Signal",
                                 range = ylim),
-                   shapes = list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_height),
+                   shapes = if(!is.na(input$IndexRepeat1)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_height),
                      #vertical line
                      list(type = "line", x0 = input$IndexRepeat1,
                           x1 = input$IndexRepeat1,
@@ -797,7 +817,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                               range = xlim),
                  yaxis = list("Signal",
                               range = ylim),
-                 shapes = list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_height),
+                 shapes = if(!is.na(input$IndexRepeat1)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_height),
                    #vertical line
                    list(type = "line", x0 = input$IndexRepeat1,
                         x1 = input$IndexRepeat1,
@@ -919,6 +939,22 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                       x1 = input$IndexRepeat2,
                       y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")))
         )
+    }
+  })
+
+  observeEvent(input$Index_Table_rows_selected, {
+    if (is.null(upload_data$metadata_table())) {
+      updatePickerInput(session, "sample_subset_metrics", selected = upload_data$fsa_list()[[input$Index_Table_rows_selected]]$unique_id)
+    }
+    else if (!is.null(upload_data$metadata_table())) {
+      if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
+        if (!any(which(upload_data$metadata_table()$metrics_baseline_control == TRUE) == input$Index_Table_rows_selected)) {
+          updatePickerInput(session, "sample_subset_metrics", selected = upload_data$metadata_table()$unique_id[input$Index_Table_rows_selected])
+        }
+      }
+      else {
+        updatePickerInput(session, "sample_subset_metrics", selected = upload_data$metadata_table()$unique_id[input$Index_Table_rows_selected])
+      }
     }
   })
 

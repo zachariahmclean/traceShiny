@@ -188,7 +188,9 @@ peaks_box_ui3 <- function(id) {
                         numericInput("ylim2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Y max')),
                                      value = 2000))))),
       htmlOutput("text_no_data"),
-      withSpinner(htmlOutput("plot_tracesUI"))
+      withSpinner(htmlOutput("plot_tracesUI")),
+      htmlOutput("peaks_text"),
+      dataTableOutput("peaks_summary")
   )
 }
 
@@ -504,9 +506,13 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
   observe({
     if (is.null(reactive_peaks$peaks)) {
       shinyjs::show("text_no_data")
+      shinyjs::hide("peaks_text")
+      shinyjs::hide("peaks_summary")
     }
     else {
       shinyjs::hide("text_no_data")
+      shinyjs::show("peaks_text")
+      shinyjs::show("peaks_summary")
     }
   })
 
@@ -591,7 +597,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     #Size
     p1 <- plot_ly(height = (300 + input$HeightBatch*20)) %>%
       layout(title = sample_traces_size[[1]]$batch_sample_id,
-             xaxis = list(title = "Size"),
+             xaxis = list(title = "Repeat"),
              yaxis = list(title = "Signal")
       )
 
@@ -616,6 +622,32 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
     subplot(p1, p2)
 
+  })
+
+  output$peaks_summary <- DT::renderDataTable({
+    validate(
+      need(!is.null(reactive_peaks$peaks), 'Please Run The Analysis First'))
+
+    df <- extract_fragment_summary(reactive_peaks$peaks)
+    rownames(df) <- NULL
+
+    datatable(df,
+              options = list(scrollX = TRUE,
+                             scrollY = TRUE,
+                             server = TRUE,
+                             paging = TRUE,
+                             pageLength = 15
+              ),
+              selection = 'single',
+              rownames = FALSE)
+  })
+
+  output$peaks_text <- renderUI({
+    h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Ladder R-squared Table (check this to see how well the ladder has fitted)</b>'))
+  })
+
+  observeEvent(input$peaks_summary_rows_selected, {
+    updatePickerInput(session, "sample_subset", selected = upload_data$fsa_list()[[input$peaks_summary_rows_selected]]$unique_id)
   })
 
   output$BatchWarning <- renderUI({

@@ -19,7 +19,11 @@ server <- function(input, output, session) {
 
   # Metrics module ---------------------------------------------------------------------
 
-  metrics_server(input = input, output = output, session = session, continue_module = continue_module, upload_data = upload_data, ladder_module = ladder_module, peaks_module = peaks_module)
+  metrics_module <- metrics_server(input = input, output = output, session = session, continue_module = continue_module, upload_data = upload_data, ladder_module = ladder_module, peaks_module = peaks_module)
+
+  # Analysis module ---------------------------------------------------------------------
+
+  analysis_server(input = input, output = output, session = session, continue_module = continue_module, upload_data = upload_data, ladder_module = ladder_module, peaks_module = peaks_module, metrics_module = metrics_module)
 
   # Help Menu ---------------------------------------------------------------
   output$sessionInfo <- renderPrint({

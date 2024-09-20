@@ -287,6 +287,13 @@ body <- dashboardBody(
             )
     ),
 
+    tabItem(tabName = "Analysis",
+            fluidRow(
+              column(12,
+              Analysis_box_ui1("fe"))
+            )
+    ),
+
     ####HELP TAB####
     tabItem(tabName = "Help",
 

@@ -94,10 +94,17 @@ ladder_box_ui3 <- function(id) {
         )
       ),
       fluidRow(
-        column(6,
+        column(3,
                prettySwitch("warning_checkbox", "Select only samples with ladder warnings",
                             value = FALSE, fill = T, status = "success", inline = T),
         )
+      ),
+
+      fluidRow(
+        column(3,
+               sliderInput("rsq_limit", HTML('<h5 style = "text-align:justify; margin-top:-50px;">r-squared threshold for warning (see table below)'),
+                           min = 0.9, max = 1,
+                           value = 0.998, step = 0.001))
       ),
       fluidRow(
         column(6,
@@ -113,7 +120,24 @@ ladder_box_ui3 <- function(id) {
       ),
       htmlOutput("text_no_data1"),
       withSpinner(htmlOutput("plotUI")),
-      tableOutput("rsq_table")
+
+      br(),
+
+      fluidRow(
+        column(6,
+               htmlOutput("laddertext1")
+        ),
+        column(6,
+               htmlOutput("laddertext2")
+        )
+      ),
+
+      fluidRow(
+        column(6,
+               dataTableOutput("rsq_table")),
+        column(6,
+               dataTableOutput("ladder_summary"))
+      )
   )
 }
 
@@ -261,7 +285,7 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
         warning_list <- list()
 
         for (i in 1:length(names(reactive_ladder$ladder))) {
-          warning_list[[i]] <- ladder_rsq_warning_helper(reactive_ladder$ladder[[i]], 0.998)
+          warning_list[[i]] <- ladder_rsq_warning_helper(reactive_ladder$ladder[[i]], input$rsq_limit)
         }
 
         if (length(warning_list) == 0) {
@@ -322,7 +346,6 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
       # Return a blank plot if ladders are not initialized
       return(plotly::plot_ly())
     }
-
 
     shapes_with_labels <- list()
     text_annotations <- list()
@@ -402,10 +425,54 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
 
   })
 
-  output$rsq_table <- shiny::renderTable({
+  output$rsq_table <- DT::renderDataTable({
     validate(
       need(!is.null(reactive_ladder$ladder), 'You must run the analysis first'))
-    rsq_table()
+
+    ## Colour and values for table colour formatting
+    brks <- seq(0.5, 1, .001)
+    clrs <- colorRampPalette(c("red", "white", "green"))(length(brks) + 1)
+
+    datatable(rsq_table(),
+              options = list(scrollX = TRUE,
+                             scrollY = TRUE,
+                             server = TRUE,
+                             paging = TRUE,
+                             pageLength = 15
+              ),
+              selection = 'single',
+              rownames = FALSE) %>%
+      formatStyle(c("r_squared"), backgroundColor = styleInterval(brks, clrs))
+  })
+
+  output$ladder_summary <- DT::renderDataTable({
+    validate(
+      need(!is.null(reactive_ladder$ladder), 'You must run the analysis first'))
+
+    df <- trace::extract_ladder_summary(upload_data$fsa_list())
+    rownames(df) <- NULL
+
+    datatable(df,
+              options = list(scrollX = TRUE,
+                             scrollY = TRUE,
+                             server = TRUE,
+                             paging = TRUE,
+                             pageLength = 15
+              ),
+              selection = 'single',
+              rownames = FALSE)
+  })
+
+  output$laddertext1 <- renderUI({
+    h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Ladder R-squared Table (check this to see how well the ladder has fitted)</b>'))
+  })
+
+  output$laddertext2 <- renderUI({
+    h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Ladder Summary Table</b>'))
+  })
+
+  observeEvent(input$ladder_summary_rows_selected, {
+    updatePickerInput(session, "unique_id_selection", selected = upload_data$fsa_list()[[input$ladder_summary_rows_selected]]$unique_id)
   })
 
   #have a reactive list that gets updated when you change the stuff
@@ -441,10 +508,16 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
     if (is.null(ladders$scan) || is.null(ladders$size)) {
       shinyjs::show("text_no_data1")
       shinyjs::hide("rsq_table")
+      shinyjs::hide("ladder_summary")
+      shinyjs::hide("laddertext1")
+      shinyjs::hide("laddertext2")
     }
     else {
       shinyjs::hide("text_no_data1")
       shinyjs::show("rsq_table")
+      shinyjs::show("ladder_summary")
+      shinyjs::show("laddertext1")
+      shinyjs::show("laddertext2")
     }
   })
 

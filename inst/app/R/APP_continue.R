@@ -77,21 +77,6 @@ continue_server <- function(input, output, session) {
                      incProgress(5/10, detail = "Setting up upload settings")
 
                      #Upload
-                     reactive_continue$laddertable <- laddertable
-                     reactive_continue$fsa_list <- fsa_list
-                     reactive_continue$metadata_table <- metadata_table
-                     reactive_continue$instability_metrics <- instability_metrics
-                     reactive_continue$ladders <- ladders
-                     reactive_continue$index_list <- index_list
-                     reactive_continue$scan <- scan
-                     reactive_continue$size <- size
-                     reactive_continue$sample_traces_size <- sample_traces_size
-                     reactive_continue$sample_traces_repeats <- sample_traces_repeats
-                     reactive_continue$sample_subset_metrics <- sample_subset_metrics
-                     reactive_continue$sample_subset2 <- sample_subset2
-                     reactive_continue$Index_Table <- Index_Table
-                     reactive_continue$Index_Table2 <- Index_Table2
-
                      updateRadioGroupButtons(session, "DataUpload", selected = DataUpload)
                      updateMaterialSwitch(session, "DataUploadMeta", value = DataUploadMeta)
                      updateMaterialSwitch(session, "Ladder_switch", value = Ladder_switch)
@@ -99,9 +84,9 @@ continue_server <- function(input, output, session) {
                      incProgress(6/10, detail = "Setting up ladder settings")
 
                      #Ladders
-                     updatePickerInput(session, "LadderChannel", selected = LadderChannel)
-                     updatePickerInput(session, "SignalChannel", selected = SignalChannel)
-                     updatePickerInput(session, "LadderSizes", selected = LadderSizes)
+                     updatePickerInput(session,"LadderChannel", selected = LadderChannel)
+                     updatePickerInput(session,"SignalChannel", selected = SignalChannel)
+                     updatePickerInput(session,"LadderSizes", selected = LadderSizes)
                      updateMaterialSwitch(session, "spikeswitch", value = spikeswitch)
                      updateNumericInput(session, "spikelocation", value = spikelocation)
                      updateMaterialSwitch(session, "zerofloor", value = zerofloor)
@@ -126,7 +111,7 @@ continue_server <- function(input, output, session) {
                      updateNumericInput(session, "peak_region_height_threshold_multiplier", value = peak_region_height_threshold_multiplier)
                      updateNumericInput(session, "assay_size_without_repeat", value = assay_size_without_repeat)
                      updateRadioGroupButtons(session, "force_whole_repeat_units", selected = force_whole_repeat_units)
-                     updatePickerInput(session, "repeat_calling_algorithm", selected = repeat_calling_algorithm)
+                     updatePickerInput(session,"repeat_calling_algorithm", selected = repeat_calling_algorithm)
                      updateNumericInput(session, "repeat_calling_algorithm_size_window_around_allele", value = repeat_calling_algorithm_size_window_around_allele)
                      updateNumericInput(session, "repeat_calling_algorithm_size_period", value = repeat_calling_algorithm_size_period)
                      updateNumericInput(session, "repeat_calling_algorithm_peak_assignment_scan_window", value = repeat_calling_algorithm_peak_assignment_scan_window)
@@ -144,7 +129,22 @@ continue_server <- function(input, output, session) {
                      updateNumericInput(session, "repeat_range2", value = repeat_range2)
                      updateNumericInput(session, "repeat_range3", value = repeat_range3)
                      updatePickerInput(session, "sample_subset2", choices = sample_subset2)
-                     updatePickerInput(session, "sample_subset_metrics", choices = sample_subset_metrics)
+                     updatePickerInput(session,"sample_subset_metrics", choices = sample_subset_metrics)
+
+                     reactive_continue$laddertable <- laddertable
+                     reactive_continue$fsa_list <- fsa_list
+                     reactive_continue$metadata_table <- metadata_table
+                     reactive_continue$instability_metrics <- instability_metrics
+                     reactive_continue$ladders <- ladders
+                     reactive_continue$index_list <- index_list
+                     reactive_continue$scan <- scan
+                     reactive_continue$size <- size
+                     reactive_continue$sample_traces_size <- sample_traces_size
+                     reactive_continue$sample_traces_repeats <- sample_traces_repeats
+                     reactive_continue$sample_subset_metrics <- sample_subset_metrics
+                     reactive_continue$sample_subset2 <- sample_subset2
+                     reactive_continue$Index_Table <- Index_Table
+                     reactive_continue$Index_Table2 <- Index_Table2
 
                      if (!is.null(index_list) && !is.null(sample_subset_metrics)) {
                        updateNumericInput(session, "IndexRepeat1", value = Index_Table[1,]$`Index Repeat`)

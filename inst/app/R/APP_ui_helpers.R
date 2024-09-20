@@ -169,6 +169,20 @@ assign_index_peaks <- function(
   }
 }
 
+extract_fragment_summary <- function(fragments_list) {
+  extracted <- lapply(fragments_list, function(x) {
+    data.frame(
+      unique_id = x$unique_id,
+      number_of_peaks = nrow(x$repeat_table_df),
+      modal_repeat = x$get_allele_peak()$allele_repeat,
+      modal_height = x$get_allele_peak()$allele_height
+    )
+  })
+  extracted_df <- do.call(rbind, extracted)
+
+  return(extracted_df)
+}
+
 
 hline <- function(y = 0, color = "black") {
   list(
