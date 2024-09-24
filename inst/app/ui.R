@@ -291,6 +291,10 @@ body <- dashboardBody(
             fluidRow(
               column(12,
               Analysis_box_ui1("fe"))
+            ),
+            fluidRow(
+              column(12,
+                     Analysis_box_ui2("fe"))
             )
     ),
 

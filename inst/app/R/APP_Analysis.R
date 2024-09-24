@@ -42,6 +42,14 @@ Analysis_box_ui1 <- function(id) {
   )
 }
 
+Analysis_box_ui2 <- function(id) {
+  box(id = "AnalysisBox2", title = p("Instability Metrics Table"), status = "warning", solidHeader = F,
+      collapsible = T, width = NULL,
+
+      withSpinner(DT::dataTableOutput("metrics_table_analysis", width = "100%", height = "400"))
+  )
+}
+
 analysis_server <- function(input, output, session, continue_module, upload_data, ladder_module, peaks_module, metrics_module) {
 
   reactive_analysis <- reactiveValues()
@@ -71,8 +79,8 @@ analysis_server <- function(input, output, session, continue_module, upload_data
     #Size
     p1 <- plot_ly(height = (300 + input$HeightAnalysis*20)) %>%
       layout(title = "",
-             xaxis = list(title = "Repeat", range = xlim),
-             yaxis = list(title = "Size", range = ylim)
+             xaxis = list(title = "Repeats", range = xlim),
+             yaxis = list(title = "Signal", range = ylim)
       )
 
     ## Add the traces one at a time
@@ -81,6 +89,31 @@ analysis_server <- function(input, output, session, continue_module, upload_data
                              mode="lines")
     }
     p1
+  })
+
+  output$metrics_table_analysis <- DT::renderDataTable({
+    metrics_module$metrics_table()
+
+    datatable(metrics_module$metrics_table(),
+              options = list(scrollX = TRUE,
+                             scrollY = TRUE,
+                             server = TRUE,
+                             paging = TRUE,
+                             pageLength = 15
+              ),
+              rownames = FALSE)
+  },  options = list(scrollX = TRUE))
+
+  observeEvent(input$metrics_table_analysis_rows_selected, {
+
+    list <- list()
+    for (i in input$metrics_table_analysis_rows_selected) {
+      list[i] <- paste(upload_data$fsa_list()[[i]]$unique_id)
+    }
+
+    list <- unlist(list)
+
+    updateVirtualSelect("Analysis_samples", selected = list)
   })
 
 }

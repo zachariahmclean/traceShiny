@@ -92,9 +92,15 @@ metrics_box_ui4 <- function(id) {
       collapsible = T, width = NULL,
 
       fluidRow(
-        column(3,
+        column(2,
                pickerInput("sample_subset_metrics", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Samples')),
                            choices = NULL)),
+
+        column(1,
+               actionButton("up_inv", NULL, icon("arrow-up"), style='text-align: left; margin-top:50px; font-size:200%'),
+               br(),
+               actionButton("down_inv", NULL, icon("arrow-down"), style='text-align: left; margin-top:-20px; font-size:200%')),
+
         column(3,
                radioGroupButtons(
                  inputId = "show_peaks_metrics",
@@ -129,6 +135,8 @@ metrics_box_ui4 <- function(id) {
                         numericInput("ylim2_metrics", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Y max')),
                                      value = 2000))))),
 
+      htmlOutput("text_no_data2"),
+
       fluidRow(
         column(6,
                numericInput("IndexRepeat1", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Index Repeat (can be manually changed)')),
@@ -136,7 +144,6 @@ metrics_box_ui4 <- function(id) {
         )
       ),
 
-      htmlOutput("text_no_data2"),
       htmlOutput("plot_traces_final_UI"),
 
       fluidRow(
@@ -182,13 +189,15 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
 
   reactive_metrics <- reactiveValues()
 
-  observeEvent(input$fileinputLOAD, {
-    reactive_metrics$df <- continue_module$instability_metrics()
-    reactive_metrics$sample_subset_metrics <- continue_module$sample_subset_metrics()
-    reactive_metrics$sample_subset2 <- continue_module$sample_subset2()
-    reactive_metrics$Index_Table <- continue_module$Index_Table()
-    reactive_metrics$Index_Table2 <- continue_module$Index_Table2()
-  })
+  observe(
+    if (!is.null(continue_module$instability_metrics())) {
+      reactive_metrics$df <- continue_module$instability_metrics()
+      reactive_metrics$sample_subset_metrics <- continue_module$sample_subset_metrics()
+      reactive_metrics$sample_subset2 <- continue_module$sample_subset2()
+      reactive_metrics$Index_Table <- continue_module$Index_Table()
+      reactive_metrics$Index_Table_original <- continue_module$Index_Table_original()
+    }
+  )
 
   output$downloadlogs <- shiny::downloadHandler(
     filename = function() {
@@ -199,74 +208,74 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
       tmpdir <- tempdir()
       setwd(tempdir())
 
-      strLoad <- paste("<h4>Data Upload </h4>",
-                       "fsa_list <- readRDS('fsa_files.RDS') <br>
-                 metadata_table <- readRDS('metadata.RDS') <br>
-                       Ladder_Fix <- readRDS('Ladder_fix.RDS')")
+      strLoad <- paste("library(trace)",
+                       "##Data Upload",
+                       "fsa_list <- readRDS('fsa_files.RDS')",
+                       "metadata_table <- readRDS('metadata.RDS')",
+                       "Ladder_Fix <- readRDS('Ladder_fix.RDS')", sep = "\n")
 
-      strLadders <- paste("<h4>Find Ladders </h4>",
-                          "find_ladders(fsa_list, ladder_channel = ", paste(input$LadderChannel), ", ",
-                          "signal_channel = ", paste(input$SignalChannel), ", ",
-                          "ladder_sizes = ", paste(as.numeric(strsplit(upload_data$laddertable()[which(upload_data$laddertable() == input$LadderSizes),]$Expected_ladder_peaks, split = ",")[[1]])), ", ",
-                          if(input$spikeswitch == T) "ladder_start_scan = NULL, " else paste0("ladder_start_scan = ", paste(input$spikelocation), ","),
-                          if(input$minimum_peak_signal_ladder == T) "minimum_peak_signal = NULL, " else "minimum_peak_signal = ", paste(input$minimum_peak_signal_number), ", ",
-                          if(input$scan_subset == T) "scan_subset = NULL, " else "scan_subset = c(", paste(input$scan_subset1), ", ", paste(input$scan_subset2), "), ",
+      strLadders <- paste("##Find Ladders", "\n",
+                          paste0("find_ladders(fsa_list, ladder_channel = ", "'", paste(input$LadderChannel), "'", ", ",
+                          "signal_channel = ", "'", paste(input$SignalChannel), "'", ", ",
+                          "ladder_sizes = c(", paste(upload_data$laddertable()[which(upload_data$laddertable() == upload_data$laddertable()$Ladder_ID[1]),]$Expected_ladder_peaks), "), ",
+                          paste0(if(input$spikeswitch == T) "ladder_start_scan = NULL, " else paste0("ladder_start_scan = ", paste(input$spikelocation), ", ")),
+                          paste0(if(input$minimum_peak_signal_ladder == T) "minimum_peak_signal = NULL, " else paste0("minimum_peak_signal = ", paste(input$minimum_peak_signal_number), ", ")),
+                          paste0(if(input$scan_subset == T) "scan_subset = NULL, " else paste0("scan_subset = c(", paste(input$scan_subset1), ", ", paste(input$scan_subset2), "), ")),
                           "zero_floor = ", paste(input$zerofloor), ", ",
                           "ladder_selection_window = ", paste(input$ladderselectionwindow), ", ",
                           "smoothing_window = ", paste(input$smoothingwindow), ", ",
-                          "max_combinations = ", paste(input$maxcombinations), ")")
+                          "max_combinations = ", paste(input$maxcombinations), ")"))
 
-      strLaddersFix <- paste("<h4>Fix Ladders </h4>",
-                             "fix_ladders_manual(fsa_list, Ladder_Fix)"
+      strLaddersFix <- paste("##Fix Ladders",
+                             paste("fix_ladders_manual(fsa_list, Ladder_Fix)"), sep = "\n"
                              )
 
-      strPeaks <- paste("<h4>Find Peaks </h4>",
-                        "fragments_list <- find_fragments(fsa_list, ",
+      strPeaks <- paste("##Find Peaks", "\n",
+                        paste0("fragments_list <- find_fragments(fsa_list, ",
                         "smoothing_window = ", paste(input$smoothing_window), ", ",
                         "minimum_peak_signal = ", paste(input$minimum_peak_signal), ", ",
                         "min_bp_size = ", paste(input$min_bp_size), ", ",
-                        "max_bp_size = ", paste(input$max_bp_size), ")")
+                        "max_bp_size = ", paste(input$max_bp_size), ")"))
 
-      strAddMeta <- ifelse (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control)),
-                            paste("<h4>Add Metadata </h4>",
-                                  "add_metadata(fragments_list, ",
-                                  "metadata_data.frame = metadata_table, ",
-                                  "unique_id = 'unique_id'",
-                                  "metrics_baseline_control = 'metrics_baseline_control')"),
-                            paste("<h4>#No Metadata was uploaded </h4>")
+      strAddMeta <- ifelse(is.null(upload_data$metadata_table()),
+                           paste0("##No Metadata was uploaded"),
+                           paste0("##Add Metadata", "\n",
+                                 "add_metadata(fragments_list, ",
+                                 "metadata_data.frame = metadata_table)")
       )
 
-      strAlleles <- paste("<h4>Find Alleles </h4>",
-                          "find_alleles(fragments_list, ",
+      strAlleles <- paste("##Find Alleles", "\n",
+                          paste0("find_alleles(fragments_list, ",
                           "peak_region_size_gap_threshold = ", paste(input$peak_region_size_gap_threshold), ", ",
-                          "peak_region_height_threshold_multiplier = ", paste(input$peak_region_height_threshold_multiplier), ")")
+                          "peak_region_height_threshold_multiplier = ", paste(input$peak_region_height_threshold_multiplier), ")"))
 
-      strRepeats <- paste("<h4>Find Repeats </h4>",
-                          "call_repeats(fragments_list, assay_size_without_repeat = ", paste(input$assay_size_without_repeat), ", ",
+      strRepeats <- paste("##Find Repeats", "\n",
+                          paste0("call_repeats(fragments_list, assay_size_without_repeat = ", paste(input$assay_size_without_repeat), ", ",
                           "repeat_size = ", paste(input$repeat_size), ", ",
-                          "repeat_calling_algorithm = ", paste(input$repeat_calling_algorithm), ", ",
+                          "repeat_calling_algorithm = ", "'", paste(input$repeat_calling_algorithm), "'", ", ",
                           "repeat_calling_algorithm_peak_assignment_scan_window = ", paste(input$repeat_calling_algorithm_peak_assignment_scan_window), ", ",
                           "repeat_calling_algorithm_size_window_around_allele = ", paste(input$repeat_calling_algorithm_size_window_around_allele), ", ",
                           "repeat_calling_algorithm_size_period = ", paste(input$repeat_calling_algorithm_size_period), ", ",
                           "force_whole_repeat_units = ", paste(ifelse(input$force_whole_repeat_units == "YES", "TRUE", "FALSE")), ", ",
-                          if(any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) "repeat_length_correction = 'from_metadata')" else "repeat_length_correction = 'none')"
-      )
+                          "batch_correction = ", paste(input$batchcorrectionswitch), ")"
+                          ))
 
       strIndex <- ifelse (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control)),
-                          paste("<h4>Find Index </h4>",
-                                "assign_index_peaks(repeats_list, grouped = TRUE)"),
-                          paste("<h4>Find Index </h4>",
-                                "assign_index_peaks(repeats_list, grouped = FALSE)")
+                          paste0("##Find Index", "\n",
+                                "assign_index_peaks(fragments_list, grouped = TRUE)"),
+                          paste0("##Find Index", "\n",
+                                "assign_index_peaks(fragments_list, grouped = FALSE)")
       )
 
-      strMetrics <- paste("<h4>Calculate Instability Metrics </h4>",
-                        "metrics_dataframe <- calculate_instability_metrics(fragments_list, ",
-                        "peak_threshold = ", paste(input$peak_threshold), ", ",
-                        "window_around_index_peak = c(", paste(input$window_around_index_peak_min), ", ", paste(input$window_around_index_peak_max), "))")
+      strMetrics <- paste("##Calculate Instability Metrics", "\n",
+                          paste0("metrics_dataframe <- calculate_instability_metrics(fragments_list, ",
+                          "peak_threshold = ", paste(input$peak_threshold), ", ",
+                          "window_around_index_peak = c(", paste(input$window_around_index_peak_min), ", ", paste(input$window_around_index_peak_max), "))"))
 
-      code <- c(paste(strLoad, strLadders, strLaddersFix, strPeaks, strAddMeta, strAlleles, strRepeats, strIndex, strMetrics, sep = '<br>'))
+      code <- paste(strLoad, strLadders, strLaddersFix, strPeaks, strAddMeta, strAlleles, strRepeats, strIndex, strMetrics, sep = '\n')
 
       fs <- c("code.R", "Index_Table.csv", "metadata.RDS", "fsa_files.RDS", "Ladder_fix.RDS")
+
       writeLines(text = code, "code.R")
 
       write.csv(reactive_metrics$Index_Table[,c(1,4)], "Index_Table.csv", row.names = F, col.names = T)
@@ -275,13 +284,12 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
 
       saveRDS(upload_data$fsa_list(), "fsa_files.RDS")
 
-
       ladderfix <- list()
 
-      for (i in 1:length(upload_data$fsa_list())) {
+      for (i in 1:length(ladder_module$ladders())) {
 
-        ladderfix[[i]] <- upload_data$fsa_list()[[i]]$ladder_df
-        names(ladderfix)[i] <- upload_data$fsa_list()[[i]]$unique_id
+        ladderfix[[i]] <- ladder_module$ladders()[[i]]$ladder_df
+        names(ladderfix)[i] <- ladder_module$ladders()[[i]]$unique_id
       }
 
       saveRDS(ladderfix, "Ladder_fix.RDS")
@@ -404,15 +412,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
     reactive_metrics$Index_Table <- do.call(rbind, index)
     colnames(reactive_metrics$Index_Table) <- c("Unique IDs", "Metrics Group ID", "Allele Repeat", "Index Repeat")
 
-    reactive_metrics$Index_Table2 <- "no"
-
-  })
-
-  observe({
-    if (!is.null(continue_module$Index_Table()) && is.null(reactive_metrics$Index_Table)) {
-
-      reactive_metrics$Index_Table <- continue_module$Index_Table()
-    }
+    reactive_metrics$Index_Table_original <- reactive_metrics$Index_Table
   })
 
   observeEvent(input$NextButtonPeaks, {
@@ -520,7 +520,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                        repeat_range = seq(input$repeat_range1 , input$repeat_range2, input$repeat_range3)
                      )
 
-                     reactive_metrics$Index_Table2 <- "no"
+                     reactive_metrics$Index_Table_original <- reactive_metrics$Index_Table
 
                      if(input$AnalysisBox1$collapsed == TRUE) {
                        js$collapse("AnalysisBox1")
@@ -543,7 +543,6 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
   observeEvent(input$IndexRepeat1, {
     if (!is.null(reactive_metrics$Index_Table) && !is.null(peaks_module$index_list())) {
     reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset_metrics),]$`Index Repeat` <- input$IndexRepeat1
-    reactive_metrics$Index_Table2 <- "yes"
     }
   })
 
@@ -553,15 +552,12 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
       if (!is.null(reactive_metrics$Index_Table) && !is.null(peaks_module$index_list())) {
         reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset_metrics),]$`Index Repeat` <- input$IndexRepeat2
         reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset2),]$`Index Repeat` <- input$IndexRepeat2
-        reactive_metrics$Index_Table2 <- "yes"
       }
     }
     }
   })
 
   output$Index_Table <- DT::renderDataTable({
-    validate(
-      need(!is.null(reactive_metrics$Index_Table), 'You must perform the analysis first...'))
 
     datatable(reactive_metrics$Index_Table,
               options = list(scrollX = TRUE,
@@ -579,7 +575,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
     validate(
       need(!is.null(reactive_metrics$df), 'You must perform the analysis first...'))
     validate(
-      need(reactive_metrics$Index_Table2 == "no", 'Changes detected in index repeat for sample(s). Press apply on the left to incorporate these changes.')
+      need(identical(reactive_metrics$Index_Table_original, reactive_metrics$Index_Table), 'Changes detected in index repeat for sample(s). Press apply on the left to incorporate these changes.')
     )
     reactive_metrics$df
   },  options = list(scrollX = TRUE))
@@ -659,9 +655,9 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                          yend = peak_table$height,
                          line = list(dash = "dash")) %>%
             layout(title = ifelse(is.null(plot_title), peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id, plot_title),
-                   xaxis = list("Repeats",
+                   xaxis = list(title = "Repeats",
                                 range = xlim),
-                   yaxis = list("Signal",
+                   yaxis = list(title = "Signal",
                                 range = ylim),
                    shapes = if(!is.na(input$IndexRepeat1)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_height),
                      #vertical line
@@ -683,9 +679,9 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                 mode = "lines",
                 height = (300 + input$HeightPeaks_metrics*20)) %>%
           layout(title = ifelse(is.null(plot_title), peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id, plot_title),
-                 xaxis = list("Repeats",
+                 xaxis = list(title = "Repeats",
                               range = xlim),
-                 yaxis = list("Signal",
+                 yaxis = list(title = "Signal",
                               range = ylim),
                  shapes = if(!is.na(input$IndexRepeat1)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_height),
                                #vertical line
@@ -725,9 +721,9 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                          yend = peak_table$height,
                          line = list(dash = "dash")) %>%
             layout(title = ifelse(is.null(plot_title), peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id, plot_title),
-                   xaxis = list("Repeats",
+                   xaxis = list(title = "Repeats",
                                 range = xlim),
-                   yaxis = list("Signal",
+                   yaxis = list(title = "Signal",
                                 range = ylim),
                    shapes = if(!is.na(input$IndexRepeat2)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_height),
                      #vertical line
@@ -789,9 +785,9 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                          yend = peak_table$height,
                          line = list(dash = "dash")) %>%
             layout(title = ifelse(is.null(plot_title), peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id, plot_title),
-                   xaxis = list("Repeats",
+                   xaxis = list(title = "Repeats",
                                 range = xlim),
-                   yaxis = list("Signal",
+                   yaxis = list(title = "Signal",
                                 range = ylim),
                    shapes = if(!is.na(input$IndexRepeat1)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_height),
                      #vertical line
@@ -813,9 +809,9 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                 mode = "lines",
                 height = (300 + input$HeightPeaks_metrics*20)) %>%
           layout(title = ifelse(is.null(plot_title), peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id, plot_title),
-                 xaxis = list("Repeats",
+                 xaxis = list(title = "Repeats",
                               range = xlim),
-                 yaxis = list("Signal",
+                 yaxis = list(title = "Signal",
                               range = ylim),
                  shapes = if(!is.na(input$IndexRepeat1)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_height),
                    #vertical line
@@ -909,9 +905,9 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                        yend = peak_table$height,
                        line = list(dash = "dash")) %>%
           layout(title = ifelse(is.null(plot_title), peaks_module$index_list()[[input$sample_subset2]]$unique_id, plot_title),
-                 xaxis = list("Repeats",
+                 xaxis = list(title = "Repeats",
                               range = xlim),
-                 yaxis = list("Signal",
+                 yaxis = list(title = "Signal",
                               range = ylim),
                  shapes = list(
                    #vertical line
@@ -929,9 +925,9 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
               source = "plot_peak2",
               height = (300 + input$HeightPeaks_metrics*20)) %>%
         layout(title = ifelse(is.null(plot_title), peaks_module$index_list()[[input$sample_subset2]]$unique_id, plot_title),
-               xaxis = list("Repeats",
+               xaxis = list(title = "Repeats",
                             range = xlim),
-               yaxis = list("Signal",
+               yaxis = list(title = "Signal",
                             range = ylim),
                shapes = list(
                  #vertical line
@@ -940,6 +936,58 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                       y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")))
         )
     }
+  })
+
+  observeEvent(input$up_inv, {
+    tryCatch({
+      if (is.null(upload_data$metadata_table())) {
+        updatePickerInput(session, "sample_subset_metrics", selected = if (which(names(upload_data$fsa_list()) == input$sample_subset_metrics) - 1 == 0)
+          upload_data$fsa_list()[[which(names(upload_data$fsa_list()) == input$sample_subset_metrics)]]$unique_id
+          else upload_data$fsa_list()[[which(names(upload_data$fsa_list()) == input$sample_subset_metrics) - 1]]$unique_id)
+      }
+      else if (!is.null(upload_data$metadata_table())) {
+        if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
+          if (!any(which(upload_data$metadata_table()$metrics_baseline_control == TRUE) == input$Index_Table_rows_selected)) {
+            updatePickerInput(session, "sample_subset_metrics", selected = if (which(upload_data$metadata_table()[-which(upload_data$metadata_table()$metrics_baseline_control == TRUE),]$unique_id == input$sample_subset_metrics) - 1 == 0)
+              upload_data$metadata_table()[-which(upload_data$metadata_table()$metrics_baseline_control == TRUE),]$unique_id[which(upload_data$metadata_table()[-which(upload_data$metadata_table()$metrics_baseline_control == TRUE),]$unique_id == input$sample_subset_metrics)]
+              else upload_data$metadata_table()[-which(upload_data$metadata_table()$metrics_baseline_control == TRUE),]$unique_id[which(upload_data$metadata_table()[-which(upload_data$metadata_table()$metrics_baseline_control == TRUE),]$unique_id == input$sample_subset_metrics) - 1])
+          }
+        }
+        else {
+          updatePickerInput(session, "sample_subset_metrics", selected = if (which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics) - 1 == 0)
+            upload_data$metadata_table()$unique_id[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics)]
+            else upload_data$metadata_table()$unique_id[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics) - 1])
+        }
+      }
+    },
+    error = function(e) {
+      shinyalert("ERROR!", "You've reached the end of the selection, please go the other way!", type = "error", confirmButtonCol = "#337ab7")
+    })
+  })
+
+  observeEvent(input$down_inv, {
+    tryCatch({
+      if (is.null(upload_data$metadata_table())) {
+        updatePickerInput(session, "sample_subset_metrics", selected = if (which(names(upload_data$fsa_list()) == input$sample_subset_metrics) + 1 > length(names(upload_data$fsa_list())))
+          upload_data$fsa_list()[[which(names(upload_data$fsa_list()) == input$sample_subset_metrics)]]$unique_id
+          else upload_data$fsa_list()[[which(names(upload_data$fsa_list()) == input$sample_subset_metrics) + 1]]$unique_id)
+      }
+      else if (!is.null(upload_data$metadata_table())) {
+        if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
+            updatePickerInput(session, "sample_subset_metrics", selected = if (which(upload_data$metadata_table()[-which(upload_data$metadata_table()$metrics_baseline_control == TRUE),]$unique_id == input$sample_subset_metrics) + 1 > length(upload_data$metadata_table()[-which(upload_data$metadata_table()$metrics_baseline_control == TRUE),]$unique_id))
+              upload_data$metadata_table()[-which(upload_data$metadata_table()$metrics_baseline_control == TRUE),]$unique_id[which(upload_data$metadata_table()[-which(upload_data$metadata_table()$metrics_baseline_control == TRUE),]$unique_id == input$sample_subset_metrics)]
+          else upload_data$metadata_table()[-which(upload_data$metadata_table()$metrics_baseline_control == TRUE),]$unique_id[which(upload_data$metadata_table()[-which(upload_data$metadata_table()$metrics_baseline_control == TRUE),]$unique_id == input$sample_subset_metrics) + 1])
+        }
+        else {
+          updatePickerInput(session, "sample_subset_metrics", selected = if (which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics) + 1 > length(upload_data$metadata_table()$unique_id))
+            upload_data$metadata_table()$unique_id[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics)]
+            else upload_data$metadata_table()$unique_id[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics) + 1])
+        }
+      }
+    },
+    error = function(e) {
+      shinyalert("ERROR!", "You've reached the end of the selection, please go the other way!", type = "error", confirmButtonCol = "#337ab7")
+    })
   })
 
   observeEvent(input$Index_Table_rows_selected, {
@@ -959,8 +1007,8 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
   })
 
   observe({
-    if (!is.null(reactive_metrics$Index_Table2) && !is.null(reactive_metrics$Index_Table)) {
-      if (reactive_metrics$Index_Table2 == "no") {
+    if (!is.null(reactive_metrics$Index_Table_original) && !is.null(reactive_metrics$Index_Table)) {
+      if (identical(reactive_metrics$Index_Table_original, reactive_metrics$Index_Table)) {
         shinyjs::hide("text_no_data2")
       }
       else {
@@ -970,12 +1018,12 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
   })
 
   output$text_no_data2 <- renderUI({
-    if (is.null(reactive_metrics$df)) {
-    h3(HTML('<b><h3 style = "text-align:justify;color:#FF0000">Instability Metrics not computed! Press Apply on the left to compute metrics</b>'))
-    }
-    else {
-      h3(HTML('<b><h3 style = "text-align:justify;color:#FF0000">Changes detected in index repeat for sample(s). Press apply on the left to incorporate these changes.</b>'))
-    }
+      if (is.null(reactive_metrics$df)) {
+        h3(HTML('<b><h3 style = "text-align:justify;color:#FF0000">Instability Metrics not computed! Press Apply on the left to compute metrics</b>'))
+      }
+      else {
+        h3(HTML('<b><h3 style = "text-align:justify;color:#FF0000">Changes detected in index repeat for sample(s). Press apply on the left to incorporate these changes.</b>'))
+      }
   })
 
   ###SAVE FUNCTION
@@ -1034,7 +1082,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
       #Investigate
       instability_metrics <- reactive_metrics$df
       Index_Table <- reactive_metrics$Index_Table
-      Index_Table2 <- reactive_metrics$Index_Table2
+      Index_Table_original <- reactive_metrics$Index_Table_original
       sample_subset_metrics <- reactive_metrics$sample_subset_metrics
       sample_subset2 <- reactive_metrics$sample_subset2
       peak_threshold <- input$peak_threshold
@@ -1057,9 +1105,12 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
            "peak_region_height_threshold_multiplier", "assay_size_without_repeat", "repeat_size", "force_whole_repeat_units", "repeat_calling_algorithm", "repeat_calling_algorithm_size_window_around_allele",
            "repeat_calling_algorithm_size_period", "repeat_calling_algorithm_peak_assignment_scan_window", "sample_traces_size", "sample_traces_repeats",
            "instability_metrics", "peak_threshold", "window_around_index_peak_min", "window_around_index_peak_max", "repeat_range1", "repeat_range2", "repeat_range3", "percentile_range1", "percentile_range2", "percentile_range3",
-           "sample_subset2", "sample_subset_metrics", "Package_version", "Index_Table", "Index_Table2",
+           "sample_subset2", "sample_subset_metrics", "Package_version", "Index_Table", "Index_Table_original",
            file = file)
     }
   )
 
+  return(list(
+    metrics_table = reactive(reactive_metrics$df)
+  ))
 }

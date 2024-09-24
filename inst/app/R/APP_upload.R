@@ -178,17 +178,12 @@ upload_data_box_server <- function(input, output, session, continue_module) {
 
         shinyjs::show("LoadBox2")
         shinyjs::show("LoadBox5")
-        shinyjs::hide("LoadBox3")
-        shinyjs::hide("LoadBox4")
         shinyjs::hide("NextButtonLoad")
       }
     }
     else {
       updateMaterialSwitch(session, "DataUploadMeta", value = F)
       shinyjs::show("LoadBox2")
-      shinyjs::hide("LoadBox5")
-      shinyjs::hide("LoadBox3")
-      shinyjs::hide("LoadBox4")
       shinyjs::hide("NextButtonLoad")
     }
   })

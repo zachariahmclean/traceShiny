@@ -144,7 +144,7 @@ continue_server <- function(input, output, session) {
                      reactive_continue$sample_subset_metrics <- sample_subset_metrics
                      reactive_continue$sample_subset2 <- sample_subset2
                      reactive_continue$Index_Table <- Index_Table
-                     reactive_continue$Index_Table2 <- Index_Table2
+                     reactive_continue$Index_Table_original <- Index_Table_original
 
                      if (!is.null(index_list) && !is.null(sample_subset_metrics)) {
                        updateNumericInput(session, "IndexRepeat1", value = Index_Table[1,]$`Index Repeat`)
@@ -154,11 +154,17 @@ continue_server <- function(input, output, session) {
                        }
                      }
 
+                     shinyjs::show("LoadBox2")
+                     shinyjs::show("LoadBox5")
+                     shinyjs::show("LoadBox3")
+                     shinyjs::show("LoadBox4")
+
                      output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
                                                                       menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = F),
                                                                       menuItem("Find Ladders", icon = icon("water-ladder"), tabName = "FindLadders", selected = F),
                                                                       menuItem("Find Peaks", icon = icon("mountain"), tabName = "FindPeaks", selected = F),
-                                                                      menuItem("Instability Metrics", icon = icon("water-ladder"), tabName = "InstabilityMetrics", selected = T)))
+                                                                      menuItem("Instability Metrics", icon = icon("water-ladder"), tabName = "InstabilityMetrics", selected = T),
+                                                                      menuItem("Analysis", icon = icon("magnifying-glass-chart"), tabName = "Analysis", selected = F)))
 
                    })
     },
@@ -179,7 +185,7 @@ continue_server <- function(input, output, session) {
     sample_subset_metrics = reactive(reactive_continue$sample_subset_metrics),
     sample_subset2 = reactive(reactive_continue$sample_subset2),
     Index_Table = reactive(reactive_continue$Index_Table),
-    Index_Table2 = reactive(reactive_continue$Index_Table2)
+    Index_Table_original = reactive(reactive_continue$Index_Table_original)
   ))
 
 }

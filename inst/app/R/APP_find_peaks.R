@@ -151,9 +151,15 @@ peaks_box_ui3 <- function(id) {
       collapsible = T, width = NULL,
 
       fluidRow(
-        column(3,
+        column(2,
                pickerInput("sample_subset", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Samples')),
                            choices = NULL)),
+
+        column(1,
+               actionButton("up_peak", NULL, icon("arrow-up"), style='text-align: left; margin-top:50px; font-size:200%'),
+               br(),
+               actionButton("down_peak", NULL, icon("arrow-down"), style='text-align: left; margin-top:-20px; font-size:200%')),
+
         column(3,
                radioGroupButtons(
                  inputId = "show_peaks",
@@ -481,9 +487,9 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                        yend = peak_table$height,
                        line = list(dash = "dash")) %>%
           layout(title = ifelse(is.null(plot_title), fragments$unique_id, plot_title),
-                 xaxis = list("Repeats",
+                 xaxis = list(title = "Repeats",
                               range = xlim),
-                 yaxis = list("Signal",
+                 yaxis = list(title = "Signal",
                               range = ylim)
           )
       }
@@ -495,9 +501,9 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
               mode = "lines",
               height = (300 + input$HeightPeaks*20)) %>%
         layout(title = ifelse(is.null(plot_title), fragments$unique_id, plot_title),
-               xaxis = list("Repeats",
+               xaxis = list(title = "Repeats",
                             range = xlim),
-               yaxis = list("Signal",
+               yaxis = list(title = "Signal",
                             range = ylim)
         )
     }
@@ -624,6 +630,28 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
   })
 
+  observeEvent(input$up_peak, {
+    tryCatch({
+      updatePickerInput(session, "sample_subset", selected = if (which(names(upload_data$fsa_list()) == input$sample_subset) - 1 == 0)
+        upload_data$fsa_list()[[which(names(upload_data$fsa_list()) == input$sample_subset)]]$unique_id
+        else upload_data$fsa_list()[[which(names(upload_data$fsa_list()) == input$sample_subset) - 1]]$unique_id)
+    },
+    error = function(e) {
+      shinyalert("ERROR!", "You've reached the end of the selection, please go the other way!", type = "error", confirmButtonCol = "#337ab7")
+    })
+  })
+
+  observeEvent(input$down_peak, {
+    tryCatch({
+      updatePickerInput(session, "sample_subset", selected = if (which(names(upload_data$fsa_list()) == input$sample_subset) + 1 > length(names(upload_data$fsa_list())))
+        upload_data$fsa_list()[[which(names(upload_data$fsa_list()) == input$sample_subset)]]$unique_id
+        else upload_data$fsa_list()[[which(names(upload_data$fsa_list()) == input$sample_subset) + 1]]$unique_id)
+    },
+    error = function(e) {
+      shinyalert("ERROR!", "You've reached the end of the selection, please go the other way!", type = "error", confirmButtonCol = "#337ab7")
+    })
+  })
+
   output$peaks_summary <- DT::renderDataTable({
     validate(
       need(!is.null(reactive_peaks$peaks), 'Please Run The Analysis First'))
@@ -658,7 +686,6 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
       return()
     }
   })
-
 
   return(list(
     index_list = reactive(reactive_peaks$peaks),

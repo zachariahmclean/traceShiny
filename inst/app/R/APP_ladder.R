@@ -91,7 +91,11 @@ ladder_box_ui3 <- function(id) {
       fluidRow(
         column(6,
                pickerInput("unique_id_selection", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Sample Selection')), choices = NULL)
-        )
+        ),
+        column(6,
+               actionButton("up_ladder", NULL, icon("arrow-up"), style='text-align: left; margin-top:50px; font-size:200%'),
+               br(),
+               actionButton("down_ladder", NULL, icon("arrow-down"), style='text-align: left; margin-top:-20px; font-size:200%'))
       ),
       fluidRow(
         column(3,
@@ -449,7 +453,8 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
     validate(
       need(!is.null(reactive_ladder$ladder), 'You must run the analysis first'))
 
-    df <- trace::extract_ladder_summary(upload_data$fsa_list())
+    df <- trace::extract_ladder_summary(reactive_ladder$ladder)
+
     rownames(df) <- NULL
 
     datatable(df,
@@ -473,6 +478,28 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
 
   observeEvent(input$ladder_summary_rows_selected, {
     updatePickerInput(session, "unique_id_selection", selected = upload_data$fsa_list()[[input$ladder_summary_rows_selected]]$unique_id)
+  })
+
+  observeEvent(input$up_ladder, {
+    tryCatch({
+      updatePickerInput(session, "unique_id_selection", selected = if (which(names(upload_data$fsa_list()) == input$unique_id_selection) - 1 == 0)
+        upload_data$fsa_list()[[which(names(upload_data$fsa_list()) == input$unique_id_selection)]]$unique_id
+        else upload_data$fsa_list()[[which(names(upload_data$fsa_list()) == input$unique_id_selection) - 1]]$unique_id)
+    },
+    error = function(e) {
+      shinyalert("ERROR!", "You've reached the end of the selection, please go the other way!", type = "error", confirmButtonCol = "#337ab7")
+    })
+  })
+
+  observeEvent(input$down_ladder, {
+    tryCatch({
+      updatePickerInput(session, "unique_id_selection", selected = if (which(names(upload_data$fsa_list()) == input$unique_id_selection) + 1 > length(names(upload_data$fsa_list())))
+        upload_data$fsa_list()[[which(names(upload_data$fsa_list()) == input$unique_id_selection)]]$unique_id
+        else upload_data$fsa_list()[[which(names(upload_data$fsa_list()) == input$unique_id_selection) + 1]]$unique_id)
+    },
+    error = function(e) {
+      shinyalert("ERROR!", "You've reached the end of the selection, please go the other way!", type = "error", confirmButtonCol = "#337ab7")
+    })
   })
 
   #have a reactive list that gets updated when you change the stuff
