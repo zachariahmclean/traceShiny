@@ -47,6 +47,39 @@ idleTimer();", 10800*1000, 10800, 10800*1000)
 #Upload size restriction
 options(shiny.maxRequestSize = 100000*1024^2)
 
+###Form
+basicInfoForm <- list(
+  id = "basicinfo",
+  questions = list(
+    list(id = "name", type = "text", title = "Name", mandatory = TRUE,
+         hint = "Please leave your name"),
+    list(id = "institution", type = "text", title = "Affliated Institution/Company", mandatory = TRUE,
+         hint = "Please leave your affliated institution"),
+    list(id = "email", type = "text", title = "Email", mandatory = TRUE,
+         hint = "Please leave your email so we can contact you"),
+    list(id = "comments", type = "special_text", title = "Query/Comment",
+         hint = "Please leave a message"),
+    list(id = "terms", type = "checkbox", title = "All information you submit will be confidential and will only be visible to the maintainers of the app. I agree to these terms")
+  ),
+  storage = list(
+    type = STORAGE_TYPES$FLATFILE,
+    path = "responses"
+  ),
+  name = "",
+  password = "ditto",
+  reset = TRUE,
+  validations = list(
+    list(condition = "nchar(input$name) >= 3",
+         message = "Name must be at least 3 characters"),
+    list(condition = "nchar(input$institution) >= 3",
+         message = "Institution must be at least 3 characters"),
+    list(condition = "grepl('@', input$email)",
+         message = "Please enter a valid email address"),
+    list(condition = "input$terms == TRUE",
+         message = "You must agree to the terms")
+  )
+)
+
 sidebar <- dashboardSidebar(
   width = 250,
 
@@ -304,7 +337,12 @@ body <- dashboardBody(
             box(id = "HelpBox", title = strong("Help"), status = "warning", solidHeader = F,
                 collapsible = T, width = 12,
 
-                includeHTML("data/help_tab/help.html")
+                h4(includeHTML("data/help_tab/help.html")),
+
+                fluidRow(
+                column(4,
+                       h4(formUI(basicInfoForm))
+                ))
             ),
 
             box(id = "LoadedPackagesBox", title = strong("Loaded Packages"), status = "warning", solidHeader = F,
