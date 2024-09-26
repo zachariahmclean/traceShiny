@@ -11,10 +11,20 @@ library(DT)
 library(plotly)
 library(shinyWidgets)
 library(trace)
+library(dplyr)
+library(caret)
+library(assertr)
 
 ####GLOBAL ENVIROMENT####
 # Options for Spinner
 options(spinner.color="#0275D8", spinner.color.background="#ffffff", spinner.size=3)
+
+#Colours
+safe_colorblind_palette <- c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499",
+                             "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888")
+color = grDevices::colors()[grep('gr(a|e)y', grDevices::colors(), invert = T)]
+color = color[-grep("white", color)]
+color = c(safe_colorblind_palette, color)
 
 #Java code
 options(java.parameters = "-Xss2560k")
@@ -63,9 +73,9 @@ basicInfoForm <- list(
   ),
   storage = list(
     type = STORAGE_TYPES$FLATFILE,
-    path = "responses"
+    path = "/home/shinyproxy/responses"
   ),
-  name = "",
+  name = "Contact Form",
   password = "ditto",
   reset = TRUE,
   validations = list(
@@ -119,6 +129,7 @@ body <- dashboardBody(
   extendShinyjs(text = jsboxcollapsecode, functions = c("collapse")),
   add_busy_spinner(spin = "fading-circle", position = "bottom-left", color = "#337ab7", height = "100px", width = "100px", margins = c(10,60)),
   tags$head(tags$style(HTML(".small-box {background-color: #e8ebe9 !important; color: #000000 !important; }"))),
+  tags$style(HTML(".vscomp-dropbox-container  {z-index:99999 !important;}")),
 
   #Font size for validate
   tags$head(
@@ -322,7 +333,11 @@ body <- dashboardBody(
 
     tabItem(tabName = "Analysis",
             fluidRow(
-              column(12,
+              column(3,
+                     Analysis_box_ui3("fe")
+                     #Analysis_box_ui2_2("fe")
+                     ),
+              column(9,
               Analysis_box_ui1("fe"))
             ),
             fluidRow(
@@ -337,22 +352,23 @@ body <- dashboardBody(
             box(id = "HelpBox", title = strong("Help"), status = "warning", solidHeader = F,
                 collapsible = T, width = 12,
 
-                h4(includeHTML("data/help_tab/help.html")),
-
                 fluidRow(
-                column(4,
-                       h4(formUI(basicInfoForm))
-                ))
-            ),
+                  column(6,
+                         h4(includeHTML("data/help_tab/help.html"))
+                         ),
+                         column(6,
+                                h4(formUI(basicInfoForm))
+                         ))
+                ),
 
-            box(id = "LoadedPackagesBox", title = strong("Loaded Packages"), status = "warning", solidHeader = F,
-                collapsible = T, width = 12,
-                verbatimTextOutput("sessionInfo")
+                box(id = "LoadedPackagesBox", title = strong("Loaded Packages"), status = "warning", solidHeader = F,
+                    collapsible = T, width = 12,
+                    verbatimTextOutput("sessionInfo")
+                )
             )
-    )
 
-    )
   )
+)
 
     ui <- function () {dashboardPage(
       dashboardHeader(
