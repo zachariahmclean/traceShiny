@@ -3,35 +3,6 @@ Analysis_box_ui1 <- function(id) {
       collapsible = T, width = NULL,
 
       fluidRow(
-        column(4,
-               virtualSelectInput("Analysis_samples", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Plot to Overlay')),
-                                  choices = NULL,
-                                  multiple = T,
-                                  selected = NULL,
-                                  search = T,
-                                  hideClearButton = F,
-                                  placeholder = "Please select your samples"
-               )
-        ),
-
-        column(2,
-               radioGroupButtons(
-                 inputId = "peaks_traces",
-                 label = h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Show Peaks or Traces')),
-                 choices = c("Peaks",
-                             "Traces"),
-                 justified = TRUE,
-                 selected = "Peaks"
-               )
-        ),
-        column(6,
-               sliderInput("HeightAnalysis", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Plot Height')),
-                           min = 1, max = 100,
-                           value = 20, step = 1)
-        )
-      ),
-
-      fluidRow(
         column(1,
                numericInput("xlim1_analysis", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">X min')),
                             value = 0)),
@@ -45,7 +16,20 @@ Analysis_box_ui1 <- function(id) {
 
         column(1,
                numericInput("ylim2_analysis", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Y max')),
-                            value = 2000))),
+                            value = 2000)),
+
+        column(4,
+               sliderInput("opacity", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Opacity')),
+                           min = 0, max = 1,
+                           value = 0.6, step = 0.1)
+        ),
+
+        column(4,
+               sliderInput("HeightAnalysis", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Plot Height')),
+                           min = 1, max = 100,
+                           value = 20, step = 1)
+        )
+      ),
 
       withSpinner(htmlOutput("overlay_plotUI"))
   )
@@ -73,6 +57,24 @@ Analysis_box_ui3 <- function(id) {
 
       fluidRow(
         column(12,
+               radioGroupButtons(
+                 inputId = "peaks_traces",
+                 label = h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Show Peaks or Traces')),
+                 choices = c("Peaks",
+                             "Traces"),
+                 justified = TRUE,
+                 selected = "Peaks"
+               ),
+
+               virtualSelectInput("Analysis_samples", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Plot to Overlay')),
+                                  choices = NULL,
+                                  multiple = T,
+                                  selected = NULL,
+                                  search = T,
+                                  hideClearButton = F,
+                                  placeholder = "Please select your samples"
+               ),
+
                virtualSelectInput("group_samples", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Group Samples By')),
                                   choices = "unique_id",
                                   multiple = T,
@@ -206,7 +208,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
       if (input$line_show == TRUE) {
         p <- ggplot(reactive_analysis$trace, aes(x=calculated_repeats, y=height_corrected, colour = plot)) +
           geom_smooth(method = "loess", span=input$span, level=input$CI, se = input$CI_show) +
-          geom_line(alpha = 0.5) +
+          geom_line(alpha = input$opacity) +
           xlim(c(input$xlim1_analysis, input$xlim2_analysis)) +
           ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
           scale_color_manual(values= color) +
@@ -215,7 +217,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
       }
       else {
         p <- ggplot(reactive_analysis$trace, aes(x=calculated_repeats, y=height_corrected, colour = plot)) +
-          geom_line(alpha = 0.5) +
+          geom_line(alpha = input$opacity) +
           xlim(c(input$xlim1_analysis, input$xlim2_analysis)) +
           ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
           scale_color_manual(values= color) +
@@ -281,7 +283,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
 
       if (input$line_show == TRUE) {
         p <- ggplot(reactive_analysis$trace, aes(x=repeats, y=height_corrected, colour = plot)) +
-          geom_point(alpha = 0.9) +
+          geom_point(alpha = input$opacity) +
           geom_smooth(method = "loess", span=input$span, level=input$CI, se = input$CI_show) +
           xlim(c(input$xlim1_analysis, input$xlim2_analysis)) +
           ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
@@ -291,7 +293,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
       }
       else {
         p <- ggplot(reactive_analysis$trace, aes(x=repeats, y=height_corrected, colour = plot)) +
-          geom_point(alpha = 0.9) +
+          geom_point(alpha = input$opacity) +
           xlim(c(input$xlim1_analysis, input$xlim2_analysis)) +
           ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
           scale_color_manual(values= color) +
