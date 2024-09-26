@@ -12,7 +12,6 @@ library(plotly)
 library(shinyWidgets)
 library(trace)
 library(dplyr)
-library(caret)
 library(assertr)
 
 ####GLOBAL ENVIROMENT####
