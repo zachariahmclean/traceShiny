@@ -18,13 +18,6 @@ library(assertr)
 # Options for Spinner
 options(spinner.color="#0275D8", spinner.color.background="#ffffff", spinner.size=3)
 
-#Colours
-safe_colorblind_palette <- c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499",
-                             "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888")
-color = grDevices::colors()[grep('gr(a|e)y', grDevices::colors(), invert = T)]
-color = color[-grep("white", color)]
-color = c(safe_colorblind_palette, color)
-
 #Java code
 options(java.parameters = "-Xss2560k")
 

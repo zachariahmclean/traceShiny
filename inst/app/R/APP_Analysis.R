@@ -86,6 +86,7 @@ Analysis_box_ui3 <- function(id) {
 
                pickerInput("normalize", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Normalization Method')),
                            choices = c("None", "Zach", "Ricardo")),
+               materialSwitch("dot_show", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Show peaks/traces')), value = TRUE, status = "primary"),
                materialSwitch("line_show", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Show Best Fit Line')), value = FALSE, status = "primary"),
 
                conditionalPanel(
@@ -111,6 +112,13 @@ Analysis_box_ui3 <- function(id) {
 analysis_server <- function(input, output, session, continue_module, upload_data, ladder_module, peaks_module, metrics_module) {
 
   reactive_analysis <- reactiveValues()
+
+  #Colours
+  safe_colorblind_palette <- c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499",
+                               "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888")
+  color = grDevices::colors()[grep('gr(a|e)y', grDevices::colors(), invert = T)]
+  color = color[-grep("white", color)]
+  color = c(safe_colorblind_palette, color)
 
   observe({
     updateVirtualSelect("Analysis_samples", choices = names(upload_data$fsa_list()))
@@ -153,10 +161,11 @@ analysis_server <- function(input, output, session, continue_module, upload_data
     if (input$peaks_traces == "Traces") {
       trace <- trace::extract_trace_table(peaks_module$index_list())
 
+      trace <- mutate(trace, Normalised_Signal = signal)
+
       trace <- trace[which(trace$unique_id %in% input$Analysis_samples),]
 
       if (input$normalize == "None") {
-        trace <- mutate(trace, height_corrected = signal)
 
         if (!is.null(upload_data$metadata_table())) {
           trace <- left_join(trace, upload_data$metadata_table())
@@ -175,7 +184,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
 
         trace <- left_join(trace, lookup)
 
-        trace <- mutate(trace, height_corrected = signal/norm_factor)
+        trace <- mutate(trace, Normalised_Signal = signal/norm_factor)
 
         if (!is.null(upload_data$metadata_table())) {
           trace <- left_join(trace, upload_data$metadata_table())
@@ -194,7 +203,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
 
         trace <- left_join(trace, lookup)
 
-        trace <- mutate(trace, height_corrected = signal/norm_factor)
+        trace <- mutate(trace, Normalised_Signal = signal/norm_factor)
 
         if (!is.null(upload_data$metadata_table())) {
           trace <- left_join(trace, upload_data$metadata_table())
@@ -206,23 +215,52 @@ analysis_server <- function(input, output, session, continue_module, upload_data
       }
 
       if (input$line_show == TRUE) {
-        p <- ggplot(reactive_analysis$trace, aes(x=calculated_repeats, y=height_corrected, colour = plot)) +
+        if (input$dot_show == TRUE) {
+        p <- ggplot(reactive_analysis$trace, aes(x=calculated_repeats, y=Normalised_Signal, colour = plot)) +
           geom_smooth(method = "loess", span=input$span, level=input$CI, se = input$CI_show) +
           geom_line(alpha = input$opacity) +
+          xlab("Repeats") +
+          ylab(if (input$normalize == "None") "Signal" else "Normalised_Signal") +
           xlim(c(input$xlim1_analysis, input$xlim2_analysis)) +
           ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
           scale_color_manual(values= color) +
           labs(colour = paste(input$group_samples, collapse = ":")) +
           theme_bw()
+        }
+        else {
+          p <- ggplot(reactive_analysis$trace, aes(x=calculated_repeats, y=Normalised_Signal, colour = plot)) +
+            geom_smooth(method = "loess", span=input$span, level=input$CI, se = input$CI_show) +
+            xlab("Repeats") +
+            ylab(if (input$normalize == "None") "Signal" else "Normalised_Signal") +
+            xlim(c(input$xlim1_analysis, input$xlim2_analysis)) +
+            ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
+            scale_color_manual(values= color) +
+            labs(colour = paste(input$group_samples, collapse = ":")) +
+            theme_bw()
+        }
       }
       else {
-        p <- ggplot(reactive_analysis$trace, aes(x=calculated_repeats, y=height_corrected, colour = plot)) +
+        if (input$dot_show == TRUE) {
+        p <- ggplot(reactive_analysis$trace, aes(x=calculated_repeats, y=Normalised_Signal, colour = plot)) +
           geom_line(alpha = input$opacity) +
+          xlab("Repeats") +
+          ylab(if (input$normalize == "None") "Signal" else "Normalised_Signal") +
           xlim(c(input$xlim1_analysis, input$xlim2_analysis)) +
           ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
           scale_color_manual(values= color) +
           labs(colour = paste(input$group_samples, collapse = ":")) +
           theme_bw()
+        }
+        else {
+          p <- ggplot(reactive_analysis$trace, aes(x=calculated_repeats, y=Normalised_Signal, colour = plot)) +
+            xlab("Repeats") +
+            ylab(if (input$normalize == "None") "Signal" else "Normalised_Signal") +
+            xlim(c(input$xlim1_analysis, input$xlim2_analysis)) +
+            ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
+            scale_color_manual(values= color) +
+            labs(colour = paste(input$group_samples, collapse = ":")) +
+            theme_bw()
+        }
       }
       ggplotly(p)
     }
@@ -232,11 +270,12 @@ analysis_server <- function(input, output, session, continue_module, upload_data
       trace <- trace[which(trace$unique_id %in% input$Analysis_samples),]
 
       if (input$normalize == "None") {
-        trace <- mutate(trace, height_corrected = height)
 
         if (!is.null(upload_data$metadata_table())) {
         trace <- left_join(trace, upload_data$metadata_table())
         }
+
+        trace <- mutate(trace, Normalised_Signal = height)
 
         trace$plot <- col_concat(as.data.frame(trace[, which(colnames(trace) %in% input$group_samples)]), sep = ":")
 
@@ -251,7 +290,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
 
         trace <- left_join(trace, lookup)
 
-        trace <- mutate(trace, height_corrected = height/norm_factor)
+        trace <- mutate(trace, Normalised_Signal = height/norm_factor)
 
         if (!is.null(upload_data$metadata_table())) {
           trace <- left_join(trace, upload_data$metadata_table())
@@ -270,7 +309,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
 
         trace <- left_join(trace, lookup)
 
-        trace <- mutate(trace, height_corrected = height/norm_factor)
+        trace <- mutate(trace, Normalised_Signal = height/norm_factor)
 
         if (!is.null(upload_data$metadata_table())) {
           trace <- left_join(trace, upload_data$metadata_table())
@@ -282,23 +321,52 @@ analysis_server <- function(input, output, session, continue_module, upload_data
       }
 
       if (input$line_show == TRUE) {
-        p <- ggplot(reactive_analysis$trace, aes(x=repeats, y=height_corrected, colour = plot)) +
+        if (input$dot_show == TRUE) {
+        p <- ggplot(reactive_analysis$trace, aes(x=repeats, y=Normalised_Signal, colour = plot)) +
           geom_point(alpha = input$opacity) +
+          xlab("Repeats") +
+          ylab(if (input$normalize == "None") "Signal" else "Normalised_Signal") +
           geom_smooth(method = "loess", span=input$span, level=input$CI, se = input$CI_show) +
           xlim(c(input$xlim1_analysis, input$xlim2_analysis)) +
           ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
           scale_color_manual(values= color) +
           labs(colour = paste(input$group_samples, collapse = ":")) +
           theme_bw()
+        }
+        else {
+          p <- ggplot(reactive_analysis$trace, aes(x=repeats, y=Normalised_Signal, colour = plot)) +
+            xlab("Repeats") +
+            ylab(if (input$normalize == "None") "Signal" else "Normalised_Signal") +
+            geom_smooth(method = "loess", span=input$span, level=input$CI, se = input$CI_show) +
+            xlim(c(input$xlim1_analysis, input$xlim2_analysis)) +
+            ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
+            scale_color_manual(values= color) +
+            labs(colour = paste(input$group_samples, collapse = ":")) +
+            theme_bw()
+        }
       }
       else {
-        p <- ggplot(reactive_analysis$trace, aes(x=repeats, y=height_corrected, colour = plot)) +
-          geom_point(alpha = input$opacity) +
+        if (input$dot_show == TRUE) {
+        p <- ggplot(reactive_analysis$trace, aes(x=repeats, y=Normalised_Signal, colour = plot)) +
+          geom_point(alpha = input$opacity)+
+          xlab("Repeats") +
+          ylab(if (input$normalize == "None") "Signal" else "Normalised_Signal") +
           xlim(c(input$xlim1_analysis, input$xlim2_analysis)) +
           ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
           scale_color_manual(values= color) +
           labs(colour = paste(input$group_samples, collapse = ":")) +
           theme_bw()
+        }
+        else {
+          p <- ggplot(reactive_analysis$trace, aes(x=repeats, y=Normalised_Signal, colour = plot)) +
+            xlab("Repeats") +
+            ylab(if (input$normalize == "None") "Signal" else "Normalised_Signal") +
+            xlim(c(input$xlim1_analysis, input$xlim2_analysis)) +
+            ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
+            scale_color_manual(values= color) +
+            labs(colour = paste(input$group_samples, collapse = ":")) +
+            theme_bw()
+        }
       }
       ggplotly(p)
     }
@@ -310,7 +378,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
     df <- dplyr::left_join(upload_data$metadata_table(), metrics_module$metrics_table())
     }
     else {
-      df <- metrics_module$metrics_table()
+      df <- arrange(metrics_module$metrics_table(), unique_id)
     }
 
     datatable(df,
