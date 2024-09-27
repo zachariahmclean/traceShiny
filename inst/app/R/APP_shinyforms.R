@@ -1,5 +1,4 @@
 library(shiny)
-library(shinyAce)
 library(mailR)
 
 # Test whether a given object is a valid non-empty list
