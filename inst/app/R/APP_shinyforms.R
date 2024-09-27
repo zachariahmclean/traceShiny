@@ -1,4 +1,6 @@
 library(shiny)
+library(shinyAce)
+library(mailR)
 
 # Test whether a given object is a valid non-empty list
 # @param listname a potential list to verify
@@ -407,6 +409,15 @@ formServerHelper <- function(input, output, session, formInfo) {
     # Save the data (show an error message in case of error)
     tryCatch({
       saveData(formData(), formInfo$storage)
+
+      send.mail(from = "andrewjiang0627@gmail.com",
+                to = c("andrewjiang0627@gmail.com"),
+                subject = "Subject of the email",
+                body = "Body of the email",
+                smtp = list(host.name = "aspmx.l.google.com", port = 25),
+                authenticate = FALSE,
+                send = TRUE)
+
       shinyjs::reset("form")
       shinyjs::hide("form")
       shinyjs::show("thankyou_msg")

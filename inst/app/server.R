@@ -14,7 +14,7 @@ basicInfoForm <- list(
   ),
   storage = list(
     type = STORAGE_TYPES$FLATFILE,
-    path = "/home/shinyproxy/responses"
+    path = "responses"
   ),
   name = "Contact Form",
   password = "ditto",

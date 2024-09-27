@@ -671,7 +671,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
   })
 
   output$peaks_text <- renderUI({
-    h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Ladder R-squared Table (check this to see how well the ladder has fitted)</b>'))
+    h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Called Peaks Table (check this to see how well the peaks are called)</b>'))
   })
 
   observeEvent(input$peaks_summary_rows_selected, {
