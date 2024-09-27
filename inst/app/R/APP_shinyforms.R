@@ -1,5 +1,5 @@
 library(shiny)
-library(mailR)
+library(sendmailR)
 
 # Test whether a given object is a valid non-empty list
 # @param listname a potential list to verify
@@ -409,13 +409,15 @@ formServerHelper <- function(input, output, session, formInfo) {
     tryCatch({
       saveData(formData(), formInfo$storage)
 
-      send.mail(from = "andrewjiang0627@gmail.com",
-                to = c("andrewjiang0627@gmail.com"),
-                subject = "Subject of the email",
-                body = "Body of the email",
-                smtp = list(host.name = "aspmx.l.google.com", port = 25),
-                authenticate = FALSE,
-                send = TRUE)
+      # With authentication and SSL
+      sendmail(from="andrewjiang0627@gmail.com",
+               to=c("andrewjiang0627@gmail.com"),
+               subject="SMTP auth test",
+               msg=paste0(formData()),
+               engine = "curl",
+               engineopts = list(username = "andrewjiang0627", password = "xuarowiturdzceuj"),
+               control=list(smtpServer="smtp://smtp.gmail.com:587", verbose = TRUE)
+      )
 
       shinyjs::reset("form")
       shinyjs::hide("form")
