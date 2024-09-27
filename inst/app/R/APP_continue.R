@@ -32,6 +32,11 @@ continue_server <- function(input, output, session) {
                        return(NULL)
                      }
 
+                     if (!is.null(reactive_continue$fsa_list)) {
+                       shinyalert("ERROR!", "You already have a file loaded, please click the refresh button on the top to delete all data and start from fresh.", type = "error", confirmButtonCol = "#337ab7")
+                     }
+                     else {
+
                      library(trace)
 
                      removeModal()
@@ -165,6 +170,7 @@ continue_server <- function(input, output, session) {
                                                                       menuItem("Find Peaks", icon = icon("mountain"), tabName = "FindPeaks", selected = F),
                                                                       menuItem("Instability Metrics", icon = icon("water-ladder"), tabName = "InstabilityMetrics", selected = T),
                                                                       menuItem("Analysis", icon = icon("magnifying-glass-chart"), tabName = "Analysis", selected = F)))
+                     }
 
                    })
     },
