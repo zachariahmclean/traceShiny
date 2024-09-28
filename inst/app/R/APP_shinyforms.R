@@ -412,7 +412,7 @@ formServerHelper <- function(input, output, session, formInfo) {
       # With authentication and SSL
       sendmail(from="andrewjiang0627@gmail.com",
                to=c("andrewjiang0627@gmail.com"),
-               subject="SMTP auth test",
+               subject="traceShiny Query",
                msg=paste0(formData()),
                engine = "curl",
                engineopts = list(username = "andrewjiang0627", password = "xuarowiturdzceuj"),
