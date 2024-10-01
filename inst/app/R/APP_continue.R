@@ -111,7 +111,7 @@ continue_server <- function(input, output, session) {
                      updateNumericInput(session, "max_bp_size", value = max_bp_size)
                      updateNumericInput(session, "smoothing_window", value = smoothing_window_peaks)
                      updateNumericInput(session, "minimum_peak_signal", value = minimum_peak_signal)
-                     updateMaterialSwitch(session, "batchcorrectionswitch", value = batchcorrectionswitch)
+                     updatePickerInput(session, "batchcorrectionswitch", selected = batchcorrectionswitch)
                      updateNumericInput(session, "peak_region_size_gap_threshold", value = peak_region_size_gap_threshold)
                      updateNumericInput(session, "peak_region_height_threshold_multiplier", value = peak_region_height_threshold_multiplier)
                      updateNumericInput(session, "assay_size_without_repeat", value = assay_size_without_repeat)
@@ -146,6 +146,7 @@ continue_server <- function(input, output, session) {
                      reactive_continue$size <- size
                      reactive_continue$sample_traces_size <- sample_traces_size
                      reactive_continue$sample_traces_repeats <- sample_traces_repeats
+                     reactive_continue$batchcorrectionswitch <- batchcorrectionswitch
                      reactive_continue$sample_subset_metrics <- sample_subset_metrics
                      reactive_continue$sample_subset2 <- sample_subset2
                      reactive_continue$Index_Table <- Index_Table
@@ -191,7 +192,10 @@ continue_server <- function(input, output, session) {
     sample_subset_metrics = reactive(reactive_continue$sample_subset_metrics),
     sample_subset2 = reactive(reactive_continue$sample_subset2),
     Index_Table = reactive(reactive_continue$Index_Table),
-    Index_Table_original = reactive(reactive_continue$Index_Table_original)
+    Index_Table_original = reactive(reactive_continue$Index_Table_original),
+    sample_traces_size = reactive(reactive_continue$sample_traces_size),
+    sample_traces_repeats = reactive(reactive_continue$sample_traces_repeats),
+    batchcorrectionswitch = reactive(reactive_continue$batchcorrectionswitch)
   ))
 
 }

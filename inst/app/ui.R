@@ -59,6 +59,8 @@ basicInfoForm <- list(
          hint = "Please leave your affliated institution"),
     list(id = "email", type = "text", title = "Email", mandatory = TRUE,
          hint = "Please leave your email so we can contact you"),
+    list(id = "Error_message", type = "text", title = "Error Message (If Applicable)", mandatory = FALSE,
+         hint = "Please leave the error message that was observed (we can use this to help you reach a solution faster)"),
     list(id = "comments", type = "special_text", title = "Query/Comment",
          hint = "Please leave a message"),
     list(id = "terms", type = "checkbox", title = "All information you submit will be confidential and will only be visible to the maintainers of the app. I agree to these terms")

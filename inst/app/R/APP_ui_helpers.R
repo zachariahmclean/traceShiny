@@ -10,7 +10,7 @@ help_click <- function (id, helpfile) {
         h4(includeHTML(helpfile)),
         easyClose = TRUE,
         footer = NULL,
-        size = "xl"
+        size = "l"
       ))
     })
   })
@@ -29,7 +29,7 @@ update_click <- function (id) {
         includeHTML("./data/help/Updates.html"),
         easyClose = TRUE,
         footer = NULL,
-        size = "xl",
+        size = "l"
       ))
     })
   })

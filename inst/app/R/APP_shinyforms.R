@@ -235,6 +235,15 @@ formServerHelper <- function(input, output, session, formInfo) {
                control=list(smtpServer="smtp://smtp.gmail.com:587", verbose = TRUE)
       )
 
+      sendmail(from="traceshiny@gmail.com",
+               to=paste0(formData()[3]),
+               subject="traceShiny Inquiry Recieved",
+               msg="This is an automated email confirming that your query/comment about traceShiny app has been recieved.",
+               engine = "curl",
+               engineopts = list(username = "traceshiny", password = "qoeu wmjg nmqu ltax"),
+               control=list(smtpServer="smtp://smtp.gmail.com:587", verbose = TRUE)
+      )
+
       shinyjs::reset("form")
       shinyjs::hide("form")
       shinyjs::show("thankyou_msg")

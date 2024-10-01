@@ -176,6 +176,15 @@ upload_data_box_server <- function(input, output, session, continue_module) {
       else {
         reactive$fsa_list <- trace::cell_line_fsa_list
 
+        # fsa_list <- lapply(cell_line_fsa_list[91:94], function(x) x$clone())
+        #
+        # find_ladders(fsa_list,
+        #              show_progress_bar = FALSE)
+        #
+        # fsa_list[[1]]$trace_bp_df[which(round(fsa_list[[1]]$trace_bp_df$size, 2) == 418.25), "signal"] <- 4000
+        #
+        # reactive$fsa_list <- fsa_list
+
         shinyjs::show("LoadBox2")
         shinyjs::show("LoadBox5")
         shinyjs::hide("NextButtonLoad")
@@ -198,6 +207,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
       }
       else {
         reactive$metadata_table <- trace::metadata
+        #reactive$metadata_table <- trace::metadata[91:94, ]
         shinyjs::show("LoadBox2")
         shinyjs::show("LoadBox5")
         shinyjs::show("LoadBox3")
@@ -268,7 +278,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                    })
     },
     error = function(e) {
-      shinyalert("ERROR!", "File is not in correct format.", type = "error", confirmButtonCol = "#337ab7")
+      shinyalert("ERROR!", e$message, type = "error", confirmButtonCol = "#337ab7")
     })
   })
 
@@ -329,7 +339,8 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                            any(grepl("metrics_group_id", colnames(reactive$metadata_table))) &&
                            any(grepl("metrics_baseline_control", colnames(reactive$metadata_table))) &&
                            any(grepl("batch_run_id", colnames(reactive$metadata_table))) &&
-                           any(grepl("batch_sample_id", colnames(reactive$metadata_table)))
+                           any(grepl("batch_sample_id", colnames(reactive$metadata_table))) &&
+                           any(grepl("batch_sample_modal_repeat", colnames(reactive$metadata_table)))
                        )
                        {
                          reactive$metadata_table <- reactive$metadata_table[match(names(reactive$fsa_list), reactive$metadata_table$unique_id),]
@@ -397,7 +408,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                    })
     },
     error = function(e) {
-      shinyalert("ERROR!", "File is not in correct format. Please check if your file is in csv (comma separated values) format", type = "error", confirmButtonCol = "#337ab7")
+      shinyalert("ERROR!", e$message, type = "error", confirmButtonCol = "#337ab7")
       shinyjs::hide("NextButtonLoad")
     })
   })
@@ -470,7 +481,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                    })
     },
     error = function(e) {
-      shinyalert("ERROR!", "Something broke... Panic!", type = "error", confirmButtonCol = "#337ab7")
+      shinyalert("ERROR!", e$message, type = "error", confirmButtonCol = "#337ab7")
     })
   })
 

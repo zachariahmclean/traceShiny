@@ -279,7 +279,7 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
                    })
     },
     error = function(e) {
-      shinyalert("ERROR!", "Fewer ladder peaks than reference ladder sizes were identified for some samples. Adjust settings/ladder sizes to ensure the expected number of peaks are found.", type = "error", confirmButtonCol = "#337ab7")
+      shinyalert("ERROR!", e$message, type = "error", confirmButtonCol = "#337ab7")
     })
   })
 

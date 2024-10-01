@@ -90,7 +90,8 @@ peaks_box_ui2 <- function(id) {
 
                fluidRow(
                  column(12,
-                        materialSwitch("batchcorrectionswitch", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Apply Batch Correction')), value = FALSE, status = "primary")
+                        pickerInput("batchcorrectionswitch", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Batch Correction')),
+                                    choices = c("none", "batch", "repeat"), selected = "none")
                  )
                ),
 
@@ -113,7 +114,7 @@ peaks_box_ui2 <- function(id) {
                         conditionalPanel(
                           condition = 'input.advancesettings_Peaks == true',
                           pickerInput("repeat_calling_algorithm", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Repeat Calling Algorithm')),
-                                      choices = c("simple", "fft", "size_period"), selected = "simple")
+                                      choices = c("none", "fft", "size_period"), selected = "none")
                         )
                  )
                ),
@@ -211,8 +212,7 @@ peaks_box_ui4 <- function(id) {
         column(3,
                sliderInput("HeightBatch", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Plot Height')),
                            min = 1, max = 100,
-                           value = 20, step = 1)
-        )
+                           value = 20, step = 1))
       ),
 
       htmlOutput("BatchWarning"),
@@ -223,7 +223,16 @@ peaks_box_ui4 <- function(id) {
         column(6,
                h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>After Batch Correction</b>')))
       ),
-      withSpinner(htmlOutput("plot_traces_BatchUI"))
+      withSpinner(htmlOutput("plot_traces_BatchUI")),
+
+      fluidRow(
+        column(3,
+               pickerInput("sample_subset_Repeat", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select run_id')),
+                           choices = NULL)),
+        column(3,
+               p(style="text-align: left;margin-top:50px;", actionBttn("Manual_peak", "Manually select Correction Peak", size = "lg")))
+        ),
+      plotOutput("correlation_plot", height = 600)
   )
 }
 
@@ -240,6 +249,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
       reactive_peaks$peaks <- continue_module$index_list()
       reactive_peaks$sample_traces_size <- continue_module$sample_traces_size
       reactive_peaks$sample_traces_repeats <- continue_module$sample_traces_repeats
+      reactive_peaks$batchcorrectionswitch <- continue_module$batchcorrectionswitch
     }
   })
 
@@ -272,6 +282,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
         shinyjs::show("PeaksBox3")
         shinyjs::show("batchcorrectionswitch")
         updatePickerInput(session, "sample_subset_Batch", choices = na.omit(unique(upload_data$metadata_table()$batch_sample_id)))
+        updatePickerInput(session, "sample_subset_Repeat", choices = na.omit(unique(upload_data$metadata_table()$batch_run_id)))
       }
       else {
         shinyjs::hide("PeaksBox3")
@@ -293,11 +304,23 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
         shinyjs::show("PeaksBox3")
         shinyjs::show("batchcorrectionswitch")
         updatePickerInput(session, "sample_subset_Batch", choices = na.omit(unique(upload_data$metadata_table()$batch_sample_id)))
+        updatePickerInput(session, "sample_subset_Repeat", choices = na.omit(unique(upload_data$metadata_table()$batch_run_id)))
       }
       else {
         shinyjs::hide("PeaksBox3")
         shinyjs::hide("batchcorrectionswitch")
       }
+    }
+
+    if (input$batchcorrectionswitch == "none" | input$batchcorrectionswitch == "batch") {
+      shinyjs::hide("sample_subset_Repeat")
+      shinyjs::hide("correlation_plot")
+      shinyjs::hide("Manual_peak")
+    }
+    else {
+      shinyjs::show("sample_subset_Repeat")
+      shinyjs::show("correlation_plot")
+      shinyjs::show("Manual_peak")
     }
   })
 
@@ -342,7 +365,8 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                          fragments_list = reactive_peaks$peaks,
                          metadata_data.frame = upload_data$metadata_table(),
                          unique_id = "unique_id",
-                         metrics_baseline_control = "metrics_baseline_control"
+                         metrics_baseline_control = "metrics_baseline_control",
+                         batch_sample_modal_repeat = "batch_sample_modal_repeat"
                        )
                      }
 
@@ -358,13 +382,15 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                                   repeat_calling_algorithm_peak_assignment_scan_window = input$repeat_calling_algorithm_peak_assignment_scan_window,
                                   repeat_calling_algorithm_size_period = input$repeat_calling_algorithm_size_period,
                                   force_whole_repeat_units = if(input$force_whole_repeat_units == "YES") TRUE else FALSE,
-                                  batch_correction = input$batchcorrectionswitch)
+                                  correction = input$batchcorrectionswitch)
 
 
                      assign_index_peaks(
                        reactive_peaks$peaks,
                        grouped = if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) TRUE else FALSE
                      )
+
+                     reactive_peaks$batchcorrectionswitch <- input$batchcorrectionswitch
 
                      shinyjs::show("NextButtonPeaks")
 
@@ -385,12 +411,21 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                    })
     },
     error = function(e) {
-      shinyalert("ERROR!", "Analysis Failed, please check if the previous steps were completed successfully.", type = "error", confirmButtonCol = "#337ab7")
+      shinyalert("ERROR!", e$message, type = "error", confirmButtonCol = "#337ab7")
     })
   })
 
   observe({
-    if (input$repeat_calling_algorithm == "simple") {
+    if (!is.null(reactive_peaks$peaks)) {
+    updateNumericInput(session, "xlim1", value = reactive_peaks$peaks[[input$sample_subset]]$get_allele_peak()$allele_repeat - 50)
+    updateNumericInput(session, "xlim2", value = reactive_peaks$peaks[[input$sample_subset]]$get_allele_peak()$allele_repeat + 50)
+    updateNumericInput(session, "ylim1", value = -100)
+    updateNumericInput(session, "ylim2", value = reactive_peaks$peaks[[input$sample_subset]]$get_allele_peak()$allele_height + 100)
+    }
+  })
+
+  observe({
+    if (input$repeat_calling_algorithm == "none") {
       shinyjs::hide("repeat_calling_algorithm_size_window_around_allele")
       shinyjs::hide("repeat_calling_algorithm_size_period")
       shinyjs::hide("repeat_calling_algorithm_peak_assignment_scan_window")
@@ -433,6 +468,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     fragments <- reactive_peaks$peaks[[input$sample_subset]]
     xlim = c(input$xlim1, input$xlim2)
     ylim = c(input$ylim1, input$ylim2)
+
     height_color_threshold = 0.05
     plot_title = NULL
 
@@ -471,21 +507,25 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                 x = ~x, y = ~signal,
                 type = "scatter",
                 mode = "lines",
-                height = (300 + input$HeightPeaks*20)) %>%
+                height = (300 + input$HeightPeaks*20),
+                name = paste0(gsub(".fsa", "", unique(fragments$unique_id)), "")) %>%
           add_markers(x = peaks_above$x,
                       y = peaks_above$height,
-                      colors = "blue") %>%
+                      colors = "blue",
+                      name = paste0(gsub(".fsa", "", unique(fragments$unique_id)), " All Peaks")) %>%
           # add_markers(x = peaks_below$x,
           #             y = peaks_below$height,
           #             colors = "purple") %>%
           add_markers(x = tallest_peak_x,
                       y = tallest_peak_height,
-                      colors = "green") %>%
+                      colors = "green",
+                      name = paste0(gsub(".fsa", "", unique(fragments$unique_id)), " Modal Peak")) %>%
           add_segments(x = peak_table$repeats,
                        y = peak_table$height,
                        xend = peak_table$calculated_repeats,
                        yend = peak_table$height,
-                       line = list(dash = "dash")) %>%
+                       line = list(dash = "dash"),
+                       name = paste0(gsub(".fsa", "", unique(fragments$unique_id)), " Force Whole Repeats")) %>%
           layout(title = ifelse(is.null(plot_title), fragments$unique_id, plot_title),
                  xaxis = list(title = "Repeats",
                               range = xlim),
@@ -499,7 +539,8 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
               x = ~x, y = ~signal,
               type = "scatter",
               mode = "lines",
-              height = (300 + input$HeightPeaks*20)) %>%
+              height = (300 + input$HeightPeaks*20),
+              name = paste0(gsub(".fsa", "", unique(fragments$unique_id)), "")) %>%
         layout(title = ifelse(is.null(plot_title), fragments$unique_id, plot_title),
                xaxis = list(title = "Repeats",
                             range = xlim),
@@ -535,33 +576,13 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     validate(
       need(!is.null(reactive_peaks$peaks), 'Please Run The Analysis First'))
 
-    fragments_list = reactive_peaks$peaks
-    sample_subset = NULL
-    x_axis = "repeats"
-    n_facet_col  = 1
-    xlim = NULL
+    fragments_list <- reactive_peaks$peaks
+
+    xlim = c(input$xlim1, input$xlim2)
+    ylim = c(input$ylim1, input$ylim2)
 
     size_standard_fragments <- sapply(fragments_list, function(x) x$batch_sample_id)
     controls_fragments_list <- fragments_list[which(!is.na(size_standard_fragments))]
-
-    if (length(unique(na.omit(size_standard_fragments))) == 0) {
-      stop(
-        call. = FALSE,
-        "There are no samples with batch_sample_id assigned. Check that the batch_sample_id has been added to the samples via add_metadata()."
-      )
-    }
-
-    if (!is.null(sample_subset)) {
-      sample_subset <- sapply(controls_fragments_list, function(x) x$batch_sample_id %in% sample_subset)
-      controls_fragments_list <- controls_fragments_list[which(sample_subset)]
-
-      if (length(controls_fragments_list) == 0) {
-        stop(
-          call. = FALSE,
-          "After subsetting the samples with the provided id, no samples were left. Check that you provided the correct id or that the batch_sample_id has been added to the samples."
-        )
-      }
-    }
 
     size_standard_fragments_sample_groups <- sapply(controls_fragments_list, function(x) x$batch_sample_id)
 
@@ -587,47 +608,96 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     # normalize signal to samples have the same maximum
     sample_traces_size <- lapply(sample_traces_size, function(x){
       x$signal <- x$signal - min(x$signal)
-      x$rel_signal <- x$signal / max(x$signal)
+      x$rel_signal <- x$signal / max(x[which(x$calculated_repeats > input$assay_size_without_repeat),]$signal)
       return(x)
     })
 
     sample_traces_repeats <- lapply(sample_traces_repeats, function(x){
       x$signal <- x$signal - min(x$signal)
-      x$rel_signal <- x$signal / max(x$signal)
+      x$rel_signal <- x$signal / max(x[which(x$calculated_repeats > input$assay_size_without_repeat),]$signal)
       return(x)
     })
 
     reactive_peaks$sample_traces_size <- sample_traces_size
     reactive_peaks$sample_traces_repeats <- sample_traces_repeats
 
+    # add points onto plot showing peaks
+    peak_table_peaks <- lapply(sample_fragments, function(y) {
+      df <- y$trace_bp_df
+      df$x <- (df$size - input$assay_size_without_repeat)/input$repeat_size
+      df <- df[which(df$x < xlim[2] & df$x > xlim[1]), ]
+      return(df)
+    })
+
+    peak_table_repeats <- lapply(sample_fragments, function(y) {
+      df <- y$repeat_table_df
+      df$x <- df$repeats
+      df <- df[which(df$x < xlim[2] & df$x > xlim[1]), ]
+      return(df)
+    })
+
+    peak_table_peaks_tallest <- lapply(peak_table_peaks, function(y) {
+      tallest_peak_height <- y[which(y$signal == max(y[which(y$calculated_repeats > input$assay_size_without_repeat),]$signal)), "x"]
+      return(tallest_peak_height)
+    })
+
+    peak_table_repeats_tallest <- lapply(peak_table_repeats, function(y) {
+      tallest_peak_height <- y[which(y$height == max(y$height)), "x"]
+      return(tallest_peak_height)
+    })
+
+    xlim_corrected = c(peak_table_repeats_tallest[[1]]-50, peak_table_repeats_tallest[[1]]+50)
+    ylim_corrected = c(-0.2, 1.2)
+
     #Size
     p1 <- plot_ly(height = (300 + input$HeightBatch*20)) %>%
       layout(title = sample_traces_size[[1]]$batch_sample_id,
-             xaxis = list(title = "Repeat"),
-             yaxis = list(title = "Signal")
+             xaxis = list(title = "Repeat",
+                          range = xlim_corrected),
+             yaxis = list(title = "Signal",
+                          range = ylim_corrected)
       )
 
     ## Add the traces one at a time
     for (i in 1:n_dfs) {
       p1 <- p1 %>% add_trace(y = sample_traces_size[[i]]$rel_signal, x = ((sample_traces_size[[i]]$x - input$assay_size_without_repeat)/input$repeat_size), name = gsub(".fsa", "", unique(sample_traces_size[[i]]$unique_id)),
-                             mode="lines")
+                             mode="lines") %>%
+        add_markers(x = peak_table_peaks_tallest[[i]],
+                    y = 1,
+                    colors = "green",
+                    name = paste0(gsub(".fsa", "", unique(sample_traces_size[[i]]$unique_id)), " Modal Peak"))
     }
 
     #Repeats
     p2 <- plot_ly(height = (300 + input$HeightBatch*20)) %>%
       layout(title = sample_traces_repeats[[1]]$batch_sample_id,
-             xaxis = list(title = "Repeat"),
-             yaxis = list(title = "Signal")
+             xaxis = list(title = "Repeat",
+                          range = xlim_corrected),
+             yaxis = list(title = "Signal",
+                          range = ylim_corrected)
       )
 
     ## Add the traces one at a time
     for (i in 1:n_dfs) {
       p2 <- p2 %>% add_trace(y = sample_traces_repeats[[i]]$rel_signal, x = sample_traces_repeats[[i]]$x, name = gsub(".fsa", "", unique(sample_traces_repeats[[i]]$unique_id)),
-                             mode="lines")
+                             mode="lines") %>%
+        add_markers(x = peak_table_repeats_tallest[[i]],
+                    y = 1,
+                    colors = "green",
+                    name = paste0(gsub(".fsa", "", unique(sample_traces_repeats[[i]]$unique_id)), " Modal Peak"))
     }
 
     subplot(p1, p2)
 
+  })
+
+  output$correlation_plot <- renderPlot({
+    validate(
+      need(!is.null(reactive_peaks$peaks), 'Please Run The Analysis First'))
+    validate(
+      need(reactive_peaks$batchcorrectionswitch == "repeat", 'Please Re-Run The Analysis First'))
+
+    trace::plot_repeat_correction_model(reactive_peaks$peaks, input$sample_subset_Repeat)
   })
 
   observeEvent(input$up_peak, {
@@ -646,6 +716,28 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
       updatePickerInput(session, "sample_subset", selected = if (which(names(upload_data$fsa_list()) == input$sample_subset) + 1 > length(names(upload_data$fsa_list())))
         upload_data$fsa_list()[[which(names(upload_data$fsa_list()) == input$sample_subset)]]$unique_id
         else upload_data$fsa_list()[[which(names(upload_data$fsa_list()) == input$sample_subset) + 1]]$unique_id)
+    },
+    error = function(e) {
+      shinyalert("ERROR!", "You've reached the end of the selection, please go the other way!", type = "error", confirmButtonCol = "#337ab7")
+    })
+  })
+
+  observeEvent(input$up_peak_Manual, {
+    tryCatch({
+      updatePickerInput(session, "sample_subset_Manual", selected = if (which(names(upload_data$fsa_list()) == input$sample_subset_Manual) - 1 == 0)
+        upload_data$fsa_list()[[which(names(upload_data$fsa_list()) == input$sample_subset_Manual)]]$unique_id
+        else upload_data$fsa_list()[[which(names(upload_data$fsa_list()) == input$sample_subset_Manual) - 1]]$unique_id)
+    },
+    error = function(e) {
+      shinyalert("ERROR!", "You've reached the end of the selection, please go the other way!", type = "error", confirmButtonCol = "#337ab7")
+    })
+  })
+
+  observeEvent(input$down_peak_Manual, {
+    tryCatch({
+      updatePickerInput(session, "sample_subset_Manual", selected = if (which(names(upload_data$fsa_list()) == input$sample_subset_Manual) + 1 > length(names(upload_data$fsa_list())))
+        upload_data$fsa_list()[[which(names(upload_data$fsa_list()) == input$sample_subset_Manual)]]$unique_id
+        else upload_data$fsa_list()[[which(names(upload_data$fsa_list()) == input$sample_subset_Manual) + 1]]$unique_id)
     },
     error = function(e) {
       shinyalert("ERROR!", "You've reached the end of the selection, please go the other way!", type = "error", confirmButtonCol = "#337ab7")
@@ -685,6 +777,160 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     else{
       return()
     }
+  })
+
+  observeEvent(input$Manual_peak, {
+    showModal(modalDialog(
+      title = strong("Manual Peak Correction"),
+      fluidRow(
+        column(4,
+               pickerInput("sample_subset_Manual", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Samples')),
+                           choices = names(upload_data$fsa_list()), selected = names(upload_data$fsa_list())[1])),
+
+        column(2,
+               actionButton("up_peak_Manual", NULL, icon("arrow-up"), style='text-align: left; margin-top:50px; font-size:200%'),
+               br(),
+               actionButton("down_peak_Manual", NULL, icon("arrow-down"), style='text-align: left; margin-top:-20px; font-size:200%')),
+        column(6,
+               sliderInput("HeightPeaks_Manual", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Plot Height')),
+                           min = 1, max = 100,
+                           value = 20, step = 1)
+        )),
+      withSpinner(htmlOutput("plot_tracesUI_Manual")),
+      fluidRow(
+        column(12,
+        numericInput("Modal_Peak", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Modal Repeat for correction (can be manually changed)')),
+                     value = reactive_peaks$peaks[[1]]$get_allele_peak()$allele_repeat)
+        ),
+        actionBttn("Manual_peak_start", "SET")
+      ),
+      easyClose = TRUE,
+      footer = NULL,
+      size = "l"
+    ))
+  })
+
+  observeEvent(input$sample_subset_Manual, {
+    updateNumericInput(session, "Modal_Peak", value = reactive_peaks$peaks[[input$sample_subset_Manual]]$get_allele_peak()$allele_repeat)
+  })
+
+  observeEvent(input$Manual_peak_start, {
+    tryCatch({
+      reactive_peaks$peaks <- find_fragments(reactive_peaks$peaks,
+                                             smoothing_window = input$smoothing_window,
+                                             minimum_peak_signal = input$minimum_peak_signal,
+                                             min_bp_size = input$min_bp_size,
+                                             max_bp_size = input$max_bp_size
+      )
+
+      if (!is.null(upload_data$metadata_table())) {
+
+        add_metadata(
+          fragments_list = reactive_peaks$peaks,
+          metadata_data.frame = upload_data$metadata_table(),
+          unique_id = "unique_id",
+          metrics_baseline_control = "metrics_baseline_control",
+          batch_sample_modal_repeat = "batch_sample_modal_repeat"
+        )
+      }
+
+      find_alleles(reactive_peaks$peaks,
+                   peak_region_size_gap_threshold = input$peak_region_size_gap_threshold,
+                   peak_region_height_threshold_multiplier = input$peak_region_height_threshold_multiplier)
+
+      call_repeats(fragments_list = reactive_peaks$peaks,
+                   assay_size_without_repeat = input$assay_size_without_repeat,
+                   repeat_size = input$repeat_size,
+                   repeat_calling_algorithm = input$repeat_calling_algorithm,
+                   repeat_calling_algorithm_size_window_around_allele = input$repeat_calling_algorithm_size_window_around_allele,
+                   repeat_calling_algorithm_peak_assignment_scan_window = input$repeat_calling_algorithm_peak_assignment_scan_window,
+                   repeat_calling_algorithm_size_period = input$repeat_calling_algorithm_size_period,
+                   force_whole_repeat_units = if(input$force_whole_repeat_units == "YES") TRUE else FALSE,
+                   correction = input$batchcorrectionswitch)
+
+      reactive_peaks$peaks[[input$sample_subset_Manual]]$set_allele_peak(unit = "repeats", value = input$Modal_Peak)
+
+      call_repeats(fragments_list = reactive_peaks$peaks,
+                   assay_size_without_repeat = input$assay_size_without_repeat,
+                   repeat_size = input$repeat_size,
+                   repeat_calling_algorithm = input$repeat_calling_algorithm,
+                   repeat_calling_algorithm_size_window_around_allele = input$repeat_calling_algorithm_size_window_around_allele,
+                   repeat_calling_algorithm_peak_assignment_scan_window = input$repeat_calling_algorithm_peak_assignment_scan_window,
+                   repeat_calling_algorithm_size_period = input$repeat_calling_algorithm_size_period,
+                   force_whole_repeat_units = if(input$force_whole_repeat_units == "YES") TRUE else FALSE,
+                   correction = input$batchcorrectionswitch)
+
+
+      assign_index_peaks(
+        reactive_peaks$peaks,
+        grouped = if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) TRUE else FALSE
+      )
+    },
+    error = function(e) {
+      shinyalert("ERROR!", e$message, type = "error", confirmButtonCol = "#337ab7")
+    })
+  })
+
+  output$plot_tracesUI_Manual <- renderUI({
+    plotlyOutput("plot_traces_Manual", height = (300 + input$HeightPeaks_Manual*20))
+  })
+
+  output$plot_traces_Manual <- renderPlotly({
+
+    if (is.null(reactive_peaks$peaks)) {
+      # Return a blank plot if object is missing
+      return(plotly::plot_ly())
+    }
+
+    fragments <- reactive_peaks$peaks[[input$sample_subset_Manual]]
+    xlim = c(input$xlim1, input$xlim2)
+    ylim = c(input$ylim1, input$ylim2)
+    height_color_threshold = 0.05
+    plot_title = NULL
+
+    data <- fragments$trace_bp_df
+    data$x <- data$calculated_repeats
+
+    if (!is.null(xlim)) {
+      data <- data[which(data$x < xlim[2] & data$x > xlim[1]), ]
+    }
+
+      # add points onto plot showing peaks
+      peak_table <- fragments$repeat_table_df
+      peak_table$x <- peak_table$repeats
+
+      if (!is.null(xlim)) {
+        peak_table <- peak_table[which(peak_table$x < xlim[2] & peak_table$x > xlim[1]), ]
+      }
+
+      tallest_peak_height <- peak_table[which(peak_table$height == max(peak_table$height)), "height"]
+      tallest_peak_x <- peak_table[which(peak_table$height == tallest_peak_height), "x"]
+      if (!is.null(fragments$get_allele_peak()$allele_height) && !is.na(fragments$get_allele_peak()$allele_height)) {
+        tallest_peak_height <- fragments$get_allele_peak()$allele_height
+        tallest_peak_x <- fragments$get_allele_peak()$allele_repeat
+      }
+
+      peaks_above <- peak_table[which(peak_table$height > tallest_peak_height * height_color_threshold), ]
+      peaks_below <- peak_table[which(peak_table$height < tallest_peak_height * height_color_threshold), ]
+
+      if (!is.null(peak_table$repeats) && !is.null(peak_table$calculated_repeats)) {
+        plot_ly(data = data,
+                x = ~x, y = ~signal,
+                type = "scatter",
+                mode = "lines",
+                height = (300 + input$HeightPeaks_Manual*20),
+                name = paste0(gsub(".fsa", "", unique(fragments$unique_id)), "")) %>%
+          add_markers(x = tallest_peak_x,
+                      y = tallest_peak_height,
+                      colors = "green",
+                      name = paste0(gsub(".fsa", "", unique(fragments$unique_id)), " Modal Peak")) %>%
+          layout(title = ifelse(is.null(plot_title), fragments$unique_id, plot_title),
+                 xaxis = list(title = "Repeats",
+                              range = xlim),
+                 yaxis = list(title = "Signal",
+                              range = ylim)
+          )
+      }
   })
 
   return(list(

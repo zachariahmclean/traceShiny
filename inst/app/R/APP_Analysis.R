@@ -126,6 +126,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
   })
 
   observeEvent(input$normalize, {
+    if (!is.null(peaks_module$index_list())) {
     if (input$normalize == "Zach") {
       updateNumericInput(session, "ylim1_analysis", value = -0.2)
     }
@@ -133,17 +134,27 @@ analysis_server <- function(input, output, session, continue_module, upload_data
       updateNumericInput(session, "ylim1_analysis", value = -0.02)
     }
     else if (input$normalize == "None") {
-      updateNumericInput(session, "ylim1_analysis", value = -200)
+      updateNumericInput(session, "ylim1_analysis", value = -100)
     }
 
     if (input$normalize == "Zach") {
-      updateNumericInput(session, "ylim2_analysis", value = 2)
+      updateNumericInput(session, "ylim2_analysis", value = 1.2)
     }
     else if (input$normalize == "Ricardo") {
-      updateNumericInput(session, "ylim2_analysis", value = 0.4)
+      updateNumericInput(session, "ylim2_analysis", value = 0.3)
     }
     else if (input$normalize == "None") {
-      updateNumericInput(session, "ylim2_analysis", value = 2000)
+      updateNumericInput(session, "ylim2_analysis", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_height + 100)
+    }
+    }
+  })
+
+  observe({
+    if (!is.null(peaks_module$index_list())) {
+      updateNumericInput(session, "xlim1_analysis", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat - 50)
+      updateNumericInput(session, "xlim2_analysis", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat + 50)
+      updateNumericInput(session, "ylim1_analysis", value = -100)
+      updateNumericInput(session, "ylim2_analysis", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_height + 100)
     }
   })
 

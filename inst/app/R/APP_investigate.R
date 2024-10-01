@@ -257,7 +257,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                           "repeat_calling_algorithm_size_window_around_allele = ", paste(input$repeat_calling_algorithm_size_window_around_allele), ", ",
                           "repeat_calling_algorithm_size_period = ", paste(input$repeat_calling_algorithm_size_period), ", ",
                           "force_whole_repeat_units = ", paste(ifelse(input$force_whole_repeat_units == "YES", "TRUE", "FALSE")), ", ",
-                          "batch_correction = ", paste(input$batchcorrectionswitch), ")"
+                          "correction = ", paste(input$batchcorrectionswitch), ")"
                           ))
 
       strIndex <- ifelse (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control)),
@@ -456,6 +456,15 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
   })
 
   observe({
+    if (!is.null(peaks_module$index_list())) {
+      updateNumericInput(session, "xlim1_metrics", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat - 50)
+      updateNumericInput(session, "xlim2_metrics", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat + 50)
+      updateNumericInput(session, "ylim1_metrics", value = -100)
+      updateNumericInput(session, "ylim2_metrics", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_height + 100)
+    }
+  })
+
+  observe({
     if (is.null(upload_data$metadata_table())) {
       shinyjs::hide("sample_subset2")
       shinyjs::show("IndexRepeat1")
@@ -536,7 +545,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                    })
     },
     error = function(e) {
-      shinyalert("ERROR!", "Analysis Failed, please check if the previous steps were completed successfully.", type = "error", confirmButtonCol = "#337ab7")
+      shinyalert("ERROR!", e$message, type = "error", confirmButtonCol = "#337ab7")
     })
   })
 
@@ -639,21 +648,25 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                   x = ~x, y = ~signal,
                   type = "scatter",
                   mode = "lines",
-                  height = (300 + input$HeightPeaks_metrics*20)) %>%
+                  height = (300 + input$HeightPeaks_metrics*20),
+                  name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), "")) %>%
             add_markers(x = peaks_above$x,
                         y = peaks_above$height,
-                        colors = "blue") %>%
+                        colors = "blue",
+                        name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " All Peaks")) %>%
             # add_markers(x = peaks_below$x,
             #             y = peaks_below$height,
             #             colors = "purple") %>%
             add_markers(x = tallest_peak_x,
                         y = tallest_peak_height,
-                        colors = "green") %>%
+                        colors = "green",
+                        name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Modal Peak")) %>%
             add_segments(x = peak_table$repeats,
                          y = peak_table$height,
                          xend = peak_table$calculated_repeats,
                          yend = peak_table$height,
-                         line = list(dash = "dash")) %>%
+                         line = list(dash = "dash"),
+                         name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Force Whole Repeats")) %>%
             layout(title = ifelse(is.null(plot_title), peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id, plot_title),
                    xaxis = list(title = "Repeats",
                                 range = xlim),
@@ -677,7 +690,8 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                 x = ~x, y = ~signal,
                 type = "scatter",
                 mode = "lines",
-                height = (300 + input$HeightPeaks_metrics*20)) %>%
+                height = (300 + input$HeightPeaks_metrics*20),
+                name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), "")) %>%
           layout(title = ifelse(is.null(plot_title), peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id, plot_title),
                  xaxis = list(title = "Repeats",
                               range = xlim),
@@ -705,21 +719,25 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                   x = ~x, y = ~signal,
                   type = "scatter",
                   mode = "lines",
-                  height = (300 + input$HeightPeaks_metrics*20)) %>%
+                  height = (300 + input$HeightPeaks_metrics*20),
+                  name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), "")) %>%
             add_markers(x = peaks_above$x,
                         y = peaks_above$height,
-                        colors = "blue") %>%
+                        colors = "blue",
+                        name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " All Peak")) %>%
             # add_markers(x = peaks_below$x,
             #             y = peaks_below$height,
             #             colors = "purple") %>%
             add_markers(x = tallest_peak_x,
                         y = tallest_peak_height,
-                        colors = "green") %>%
+                        colors = "green",
+                        name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Modal Peak")) %>%
             add_segments(x = peak_table$repeats,
                          y = peak_table$height,
                          xend = peak_table$calculated_repeats,
                          yend = peak_table$height,
-                         line = list(dash = "dash")) %>%
+                         line = list(dash = "dash"),
+                         name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Force Whole Repeats")) %>%
             layout(title = ifelse(is.null(plot_title), peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id, plot_title),
                    xaxis = list(title = "Repeats",
                                 range = xlim),
@@ -743,7 +761,8 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                 x = ~x, y = ~signal,
                 type = "scatter",
                 mode = "lines",
-                height = (300 + input$HeightPeaks_metrics*20)) %>%
+                height = (300 + input$HeightPeaks_metrics*20),
+                name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), "")) %>%
           layout(title = ifelse(is.null(plot_title), peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id, plot_title),
                  xaxis = list("Repeats",
                               range = xlim),
@@ -769,21 +788,25 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                   x = ~x, y = ~signal,
                   type = "scatter",
                   mode = "lines",
-                  height = (300 + input$HeightPeaks_metrics*20)) %>%
+                  height = (300 + input$HeightPeaks_metrics*20),
+                  name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), "")) %>%
             add_markers(x = peaks_above$x,
                         y = peaks_above$height,
-                        colors = "blue") %>%
+                        colors = "blue",
+                        name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " All Peaks")) %>%
             # add_markers(x = peaks_below$x,
             #             y = peaks_below$height,
             #             colors = "purple") %>%
             add_markers(x = tallest_peak_x,
                         y = tallest_peak_height,
-                        colors = "green") %>%
+                        colors = "green",
+                        name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Modal Peak")) %>%
             add_segments(x = peak_table$repeats,
                          y = peak_table$height,
                          xend = peak_table$calculated_repeats,
                          yend = peak_table$height,
-                         line = list(dash = "dash")) %>%
+                         line = list(dash = "dash"),
+                         name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Force Whole Repeats")) %>%
             layout(title = ifelse(is.null(plot_title), peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id, plot_title),
                    xaxis = list(title = "Repeats",
                                 range = xlim),
@@ -807,7 +830,8 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                 x = ~x, y = ~signal,
                 type = "scatter",
                 mode = "lines",
-                height = (300 + input$HeightPeaks_metrics*20)) %>%
+                height = (300 + input$HeightPeaks_metrics*20),
+                name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), "")) %>%
           layout(title = ifelse(is.null(plot_title), peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id, plot_title),
                  xaxis = list(title = "Repeats",
                               range = xlim),
@@ -889,21 +913,25 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                 type = "scatter",
                 mode = "lines",
                 source = "plot_peak2",
-                height = (300 + input$HeightPeaks_metrics*20)) %>%
+                height = (300 + input$HeightPeaks_metrics*20),
+                name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset2]]$unique_id)), "")) %>%
           add_markers(x = peaks_above$x,
                       y = peaks_above$height,
-                      colors = "blue") %>%
+                      colors = "blue",
+                      name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset2]]$unique_id)), " All Peaks")) %>%
           # add_markers(x = peaks_below$x,
           #             y = peaks_below$height,
           #             colors = "purple") %>%
           add_markers(x = tallest_peak_x,
                       y = tallest_peak_height,
-                      colors = "green") %>%
+                      colors = "green",
+                      name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset2]]$unique_id)), " Modal Peak")) %>%
           add_segments(x = peak_table$repeats,
                        y = peak_table$height,
                        xend = peak_table$calculated_repeats,
                        yend = peak_table$height,
-                       line = list(dash = "dash")) %>%
+                       line = list(dash = "dash"),
+                       name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset2]]$unique_id)), " Force Whole Repeats")) %>%
           layout(title = ifelse(is.null(plot_title), peaks_module$index_list()[[input$sample_subset2]]$unique_id, plot_title),
                  xaxis = list(title = "Repeats",
                               range = xlim),
@@ -923,7 +951,8 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
               type = "scatter",
               mode = "lines",
               source = "plot_peak2",
-              height = (300 + input$HeightPeaks_metrics*20)) %>%
+              height = (300 + input$HeightPeaks_metrics*20),
+              name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset2]]$unique_id)), "")) %>%
         layout(title = ifelse(is.null(plot_title), peaks_module$index_list()[[input$sample_subset2]]$unique_id, plot_title),
                xaxis = list(title = "Repeats",
                             range = xlim),
