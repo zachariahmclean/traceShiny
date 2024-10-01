@@ -401,6 +401,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                      shinyjs::hide("MetricsBox2")
                      shinyjs::hide("MetricsBox3")
                      shinyjs::hide("MetricsBox4")
+                     shinyjs::hide("NextButtonMetrics")
 
                      output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
                                                                       menuItem("Upload", icon = icon("spinner"), tabName = "Upload"),
@@ -412,11 +413,12 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     },
     error = function(e) {
       shinyalert("ERROR!", e$message, type = "error", confirmButtonCol = "#337ab7")
+      reactive_peaks$peaks <- NULL
     })
   })
 
   observe({
-    if (!is.null(reactive_peaks$peaks)) {
+    if (!is.null(reactive_peaks$peaks) && !is.null(input$sample_subset)) {
     updateNumericInput(session, "xlim1", value = reactive_peaks$peaks[[input$sample_subset]]$get_allele_peak()$allele_repeat - 50)
     updateNumericInput(session, "xlim2", value = reactive_peaks$peaks[[input$sample_subset]]$get_allele_peak()$allele_repeat + 50)
     updateNumericInput(session, "ylim1", value = -100)
@@ -440,7 +442,20 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
       shinyjs::show("repeat_calling_algorithm_size_period")
       shinyjs::show("repeat_calling_algorithm_peak_assignment_scan_window")
     }
+  })
 
+  observe({
+    if (!is.null(upload_data$metadata_table())) {
+      if (all(is.na(upload_data$metadata_table()$batch_sample_modal_repeat)) && all(is.na(upload_data$metadata_table()$batch_sample_id))) {
+        updatePickerInput(session, "batchcorrectionswitch", choices = c("none"))
+      }
+      else if (all(is.na(upload_data$metadata_table()$batch_sample_modal_repeat)) && all(!is.na(upload_data$metadata_table()$batch_sample_id))) {
+        updatePickerInput(session, "batchcorrectionswitch", choices = c("none", "batch"))
+      }
+      else if (all(!is.na(upload_data$metadata_table()$batch_sample_modal_repeat)) && all(!is.na(upload_data$metadata_table()$batch_sample_id))) {
+        updatePickerInput(session, "batchcorrectionswitch", choices = c("none", "batch", "repeat"))
+      }
+    }
   })
 
   observe({
@@ -868,6 +883,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     },
     error = function(e) {
       shinyalert("ERROR!", e$message, type = "error", confirmButtonCol = "#337ab7")
+      reactive_peaks$peaks <- NULL
     })
   })
 

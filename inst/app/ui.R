@@ -317,7 +317,12 @@ body <- dashboardBody(
             fluidRow(
               column(3,
                      metrics_box_ui2("fe"),
-                     metrics_box_ui5("fe")),
+                     metrics_box_ui5("fe"),
+              p(style="text-align: center;", actionBttn("NextButtonMetrics", "CLICK HERE FOR SOME COOL PLOTS",
+                                                        style = "jelly",
+                                                        color = "primary",
+                                                        icon = icon("play"), block = T))
+              ),
               column(9,
                      metrics_box_ui4("fe"),
                      metrics_box_ui3("fe")

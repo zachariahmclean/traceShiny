@@ -280,6 +280,7 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
     },
     error = function(e) {
       shinyalert("ERROR!", e$message, type = "error", confirmButtonCol = "#337ab7")
+      reactive_ladder$ladder <- NULL
     })
   })
 

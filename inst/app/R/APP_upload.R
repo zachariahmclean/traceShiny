@@ -216,8 +216,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
       }
     }
     else if(input$DataUploadMeta == F) {
-      shinyjs::hide("LoadBox4")
-      shinyjs::hide("NextButtonLoad")
+      reactive$metadata_table <- NULL
     }
   })
 
@@ -279,6 +278,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
     },
     error = function(e) {
       shinyalert("ERROR!", e$message, type = "error", confirmButtonCol = "#337ab7")
+      reactive$fsa_list <- NULL
     })
   })
 
@@ -409,6 +409,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
     },
     error = function(e) {
       shinyalert("ERROR!", e$message, type = "error", confirmButtonCol = "#337ab7")
+      reactive$metadata_table <- NULL
       shinyjs::hide("NextButtonLoad")
     })
   })

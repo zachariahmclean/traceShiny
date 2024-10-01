@@ -257,7 +257,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                           "repeat_calling_algorithm_size_window_around_allele = ", paste(input$repeat_calling_algorithm_size_window_around_allele), ", ",
                           "repeat_calling_algorithm_size_period = ", paste(input$repeat_calling_algorithm_size_period), ", ",
                           "force_whole_repeat_units = ", paste(ifelse(input$force_whole_repeat_units == "YES", "TRUE", "FALSE")), ", ",
-                          "correction = ", paste(input$batchcorrectionswitch), ")"
+                          "correction = ", "'", paste(input$batchcorrectionswitch), "')"
                           ))
 
       strIndex <- ifelse (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control)),
@@ -377,6 +377,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
     shinyjs::show("MetricsBox1")
     shinyjs::show("MetricsBox2")
     shinyjs::show("MetricsBox3")
+    shinyjs::hide("NextButtonMetrics")
 
     output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
                                                      menuItem("Upload", icon = icon("spinner"), tabName = "Upload"),
@@ -428,6 +429,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
     shinyjs::hide("MetricsBox2")
     shinyjs::hide("MetricsBox3")
     shinyjs::hide("MetricsBox4")
+    shinyjs::hide("NextButtonMetrics")
 
     output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
                                                      menuItem("Upload", icon = icon("spinner"), tabName = "Upload"),
@@ -456,7 +458,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
   })
 
   observe({
-    if (!is.null(peaks_module$index_list())) {
+    if (!is.null(peaks_module$index_list()) && !is.null(input$sample_subset_metrics)) {
       updateNumericInput(session, "xlim1_metrics", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat - 50)
       updateNumericInput(session, "xlim2_metrics", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat + 50)
       updateNumericInput(session, "ylim1_metrics", value = -100)
@@ -529,6 +531,8 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                        repeat_range = seq(input$repeat_range1 , input$repeat_range2, input$repeat_range3)
                      )
 
+                     shinyjs::show("NextButtonMetrics")
+
                      reactive_metrics$Index_Table_original <- reactive_metrics$Index_Table
 
                      if(input$AnalysisBox1$collapsed == TRUE) {
@@ -546,6 +550,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
     },
     error = function(e) {
       shinyalert("ERROR!", e$message, type = "error", confirmButtonCol = "#337ab7")
+      reactive_metrics$df <- NULL
     })
   })
 

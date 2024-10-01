@@ -125,6 +125,17 @@ analysis_server <- function(input, output, session, continue_module, upload_data
     updateVirtualSelect("group_samples", choices = colnames(upload_data$metadata_table()))
   })
 
+  observeEvent(input$NextButtonMetrics, {
+
+    output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
+                                                     menuItem("Upload", icon = icon("spinner"), tabName = "Upload"),
+                                                     menuItem("Find Ladders", icon = icon("water-ladder"), tabName = "FindLadders", selected = F),
+                                                     menuItem("Find Peaks", icon = icon("mountain"), tabName = "FindPeaks", selected = F),
+                                                     menuItem("Instability Metrics", icon = icon("table"), tabName = "InstabilityMetrics", selected = F),
+                                                     menuItem("Analysis", icon = icon("magnifying-glass-chart"), tabName = "Analysis", selected = T,
+                                                              badgeColor = "green", badgeLabel = "new")))
+  })
+
   observeEvent(input$normalize, {
     if (!is.null(peaks_module$index_list())) {
     if (input$normalize == "Zach") {
@@ -150,7 +161,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
   })
 
   observe({
-    if (!is.null(peaks_module$index_list())) {
+    if (!is.null(peaks_module$index_list()) && !is.null(input$sample_subset_metrics)) {
       updateNumericInput(session, "xlim1_analysis", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat - 50)
       updateNumericInput(session, "xlim2_analysis", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat + 50)
       updateNumericInput(session, "ylim1_analysis", value = -100)
