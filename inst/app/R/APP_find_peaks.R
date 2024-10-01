@@ -445,20 +445,6 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
   })
 
   observe({
-    if (!is.null(upload_data$metadata_table())) {
-      if (all(is.na(upload_data$metadata_table()$batch_sample_modal_repeat)) && all(is.na(upload_data$metadata_table()$batch_sample_id))) {
-        updatePickerInput(session, "batchcorrectionswitch", choices = c("none"))
-      }
-      else if (all(is.na(upload_data$metadata_table()$batch_sample_modal_repeat)) && all(!is.na(upload_data$metadata_table()$batch_sample_id))) {
-        updatePickerInput(session, "batchcorrectionswitch", choices = c("none", "batch"))
-      }
-      else if (all(!is.na(upload_data$metadata_table()$batch_sample_modal_repeat)) && all(!is.na(upload_data$metadata_table()$batch_sample_id))) {
-        updatePickerInput(session, "batchcorrectionswitch", choices = c("none", "batch", "repeat"))
-      }
-    }
-  })
-
-  observe({
     updatePickerInput(session, "sample_subset", choices = names(upload_data$fsa_list()))
   })
 
@@ -800,7 +786,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
       fluidRow(
         column(4,
                pickerInput("sample_subset_Manual", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Samples')),
-                           choices = names(upload_data$fsa_list()), selected = names(upload_data$fsa_list())[1])),
+                           choices = upload_data$metadata_table()[which(!is.na(upload_data$metadata_table()$batch_sample_modal_repeat)),]$unique_id, selected = upload_data$metadata_table()[which(!is.na(upload_data$metadata_table()$batch_sample_modal_repeat)),]$unique_id[1])),
 
         column(2,
                actionButton("up_peak_Manual", NULL, icon("arrow-up"), style='text-align: left; margin-top:50px; font-size:200%'),
@@ -929,6 +915,9 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
       peaks_above <- peak_table[which(peak_table$height > tallest_peak_height * height_color_threshold), ]
       peaks_below <- peak_table[which(peak_table$height < tallest_peak_height * height_color_threshold), ]
 
+      xlim_corrected = c(tallest_peak_x[[1]]-50, tallest_peak_x[[1]]+50)
+      ylim_corrected = c(-100, tallest_peak_height + 100)
+
       if (!is.null(peak_table$repeats) && !is.null(peak_table$calculated_repeats)) {
         plot_ly(data = data,
                 x = ~x, y = ~signal,
@@ -942,9 +931,9 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                       name = paste0(gsub(".fsa", "", unique(fragments$unique_id)), " Modal Peak")) %>%
           layout(title = ifelse(is.null(plot_title), fragments$unique_id, plot_title),
                  xaxis = list(title = "Repeats",
-                              range = xlim),
+                              range = xlim_corrected),
                  yaxis = list(title = "Signal",
-                              range = ylim)
+                              range = ylim_corrected)
           )
       }
   })
