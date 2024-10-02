@@ -232,7 +232,7 @@ peaks_box_ui4 <- function(id) {
         column(3,
                p(style="text-align: left;margin-top:50px;", actionBttn("Manual_peak", "Manually select Correction Peak", size = "lg")))
         ),
-      plotOutput("correlation_plot", height = 600)
+      plotlyOutput("correlation_plot", height = 800)
   )
 }
 
@@ -247,9 +247,9 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
   observe({
     if(!is.null(continue_module$index_list())) {
       reactive_peaks$peaks <- continue_module$index_list()
-      reactive_peaks$sample_traces_size <- continue_module$sample_traces_size
-      reactive_peaks$sample_traces_repeats <- continue_module$sample_traces_repeats
-      reactive_peaks$batchcorrectionswitch <- continue_module$batchcorrectionswitch
+      reactive_peaks$sample_traces_size <- continue_module$sample_traces_size()
+      reactive_peaks$sample_traces_repeats <- continue_module$sample_traces_repeats()
+      reactive_peaks$batchcorrectionswitch <- continue_module$batchcorrectionswitch()
     }
   })
 
@@ -692,13 +692,13 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
   })
 
-  output$correlation_plot <- renderPlot({
+  output$correlation_plot <- renderPlotly({
     validate(
       need(!is.null(reactive_peaks$peaks), 'Please Run The Analysis First'))
     validate(
-      need(reactive_peaks$batchcorrectionswitch == "repeat", 'Please Re-Run The Analysis First'))
+      need(reactive_peaks$batchcorrectionswitch %in% "repeat", 'Please Re-Run The Analysis First'))
 
-    trace::plot_repeat_correction_model(reactive_peaks$peaks, input$sample_subset_Repeat)
+    plot_repeat_correction_model(reactive_peaks$peaks, input$sample_subset_Repeat)
   })
 
   observeEvent(input$up_peak, {
@@ -825,7 +825,6 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
       )
 
       if (!is.null(upload_data$metadata_table())) {
-
         add_metadata(
           fragments_list = reactive_peaks$peaks,
           metadata_data.frame = upload_data$metadata_table(),

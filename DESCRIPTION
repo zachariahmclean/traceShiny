@@ -14,6 +14,7 @@ Imports:
     dashboardthemes,
     dplyr,
     DT,
+    ggpubr,
     methods,
     plotly,
     R6,

@@ -366,3 +366,55 @@ extract_fragments <- function(fragments_list) {
 
   return(extracted_df)
 }
+
+plot_repeat_correction_model <- function(fragments_list, batch_run_id_subset = NULL) {
+  # Check if all models in the list are the same
+  first_model_df <- fragments_list[[1]]$.__enclos_env__$private$repeat_correction_mod
+  identical_model_test <- logical(length(fragments_list))
+  for (i in seq_along(fragments_list)) {
+    identical_model_test[i] <- identical(first_model_df, fragments_list[[i]]$.__enclos_env__$private$repeat_correction_mod)
+  }
+
+  if (!all(identical_model_test)) {
+    stop("The supplied fragments list must come from the same 'call_repeats' function output", call. = FALSE)
+  }
+
+  controls_repeats_df <- fragments_list[[1]]$.__enclos_env__$private$repeat_correction_mod$model
+  controls_repeats_df$unique_id <- sub("\\.[0-9]+$", "", row.names(controls_repeats_df))
+  # add back in batch_run_id if it's not there (because a different lm is made when just one run)
+  # assume that all the samples are the same batch since they have identical model
+  if(!"batch_run_id" %in% names(controls_repeats_df)){
+    controls_repeats_df$batch_run_id <- rep(fragments_list[[1]]$batch_run_id, nrow(controls_repeats_df))
+  }
+
+  # Plotting
+  unique_batch_run_ids <- unique(controls_repeats_df$batch_run_id)
+
+  if(!is.null(batch_run_id_subset) && is.numeric(batch_run_id_subset)){
+    if(batch_run_id_subset > length(unique_batch_run_ids)){
+      stop(call. = FALSE, paste0("The 'batch_run_id_subset' number was too large. There are only ",length(unique_batch_run_ids), " 'batch_run_id'."))
+    }
+    unique_batch_run_ids <- unique_batch_run_ids[batch_run_id_subset]
+  } else if(is.character(batch_run_id_subset)){
+    unique_batch_run_ids <- unique_batch_run_ids[which(unique_batch_run_ids %in% batch_run_id_subset)]
+  }
+
+  for (i in 1:length(unique_batch_run_ids)) {
+    plate_data <- controls_repeats_df[which(controls_repeats_df$batch_run_id == unique_batch_run_ids[i]),]
+  }
+
+  p <- ggplot(plate_data, aes(x=size, y=validated_repeats)) +
+    geom_smooth(method = "lm") +
+    geom_point(aes(x=size, y=validated_repeats, colour = unique_id,
+                   text=paste0("Repeats: ", size)),
+               shape = 21, fill = "white", size = 5, stroke = 1, alpha = 0.8) +
+    stat_regline_equation(output.type = "text", label.x.npc = 0.5, label.y.npc = 0.8) +
+    stat_cor(output.type = "text", label.x.npc = 0.5, label.y.npc = 0.9) +
+    scale_shape(solid = FALSE) +
+    xlab("Repeats") +
+    ylab("User Supplied Repeat Length") +
+    theme_bw()
+
+  ggplotly(p, tooltip="text")
+
+}

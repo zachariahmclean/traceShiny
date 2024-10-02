@@ -31,6 +31,9 @@ observeEvent(input$startbuttonintro, {
                  incProgress(0.2, detail = "Loading Packages")
 
                  library(trace)
+                 library(dplyr)
+                 library(assertr)
+                 library(ggpubr)
 
                  incProgress(0.8)
 

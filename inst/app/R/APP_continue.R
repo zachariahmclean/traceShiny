@@ -37,7 +37,10 @@ continue_server <- function(input, output, session) {
                      }
                      else {
 
-                     library(trace)
+                       library(trace)
+                       library(dplyr)
+                       library(assertr)
+                       library(ggpubr)
 
                      removeModal()
 

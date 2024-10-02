@@ -7,12 +7,9 @@ library(dashboardthemes)
 library(shinybusy)
 library(shinycssloaders)
 library(shinydashboardPlus)
+library(shinyWidgets)
 library(DT)
 library(plotly)
-library(shinyWidgets)
-library(trace)
-library(dplyr)
-library(assertr)
 
 ####GLOBAL ENVIROMENT####
 # Options for Spinner
@@ -378,7 +375,7 @@ body <- dashboardBody(
       body,
       md = TRUE,
       skin = "black",
-      title = "Instability",
+      title = "traceShiny",
       footer = dashboardFooter(right = h6("Created by: Andrew Jiang & Zachariah Mclean", br(), "Github: zachariahmclean/instability", br(), "MGH Centre of Genomic Research", br(), "MGH & Harvard Medical School"),
                                left = p(img(id="CGM_logo", src="CGM-Logo.webp", width="8%", style = "margin-right: 30px"), img(id="MGH", src="MGHRI_2C_RGB_nobgrd.webp", width="10%", style = "margin-right: 30px"),
                                         img(id="Harvard", src="hms_logo_final_rgb_0-3.webp", width="10%")))
