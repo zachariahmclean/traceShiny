@@ -618,7 +618,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
     plot_title = NULL
 
     #there must be a simpler way of the following if else below
-      data <- peaks_module$index_list()[[input$sample_subset_metrics]]$trace_bp_df
+      data <- arrange(peaks_module$index_list()[[input$sample_subset_metrics]]$trace_bp_df, size)
       data$x <- data$calculated_repeats
 
     if (!is.null(xlim)) {
@@ -658,10 +658,11 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
             add_markers(x = peaks_above$x,
                         y = peaks_above$height,
                         colors = "blue",
-                        name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " All Peaks")) %>%
-            # add_markers(x = peaks_below$x,
-            #             y = peaks_below$height,
-            #             colors = "purple") %>%
+                        name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Peaks Above Threshold")) %>%
+            add_markers(x = peaks_below$x,
+                        y = peaks_below$height,
+                        colors = "purple",
+                        name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Peaks Below Threshold")) %>%
             add_markers(x = tallest_peak_x,
                         y = tallest_peak_height,
                         colors = "green",
@@ -729,10 +730,11 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
             add_markers(x = peaks_above$x,
                         y = peaks_above$height,
                         colors = "blue",
-                        name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " All Peak")) %>%
-            # add_markers(x = peaks_below$x,
-            #             y = peaks_below$height,
-            #             colors = "purple") %>%
+                        name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Peak Above Threshold")) %>%
+            add_markers(x = peaks_below$x,
+                        y = peaks_below$height,
+                        colors = "purple",
+                        name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Peaks Below Threshold")) %>%
             add_markers(x = tallest_peak_x,
                         y = tallest_peak_height,
                         colors = "green",
@@ -798,10 +800,11 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
             add_markers(x = peaks_above$x,
                         y = peaks_above$height,
                         colors = "blue",
-                        name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " All Peaks")) %>%
-            # add_markers(x = peaks_below$x,
-            #             y = peaks_below$height,
-            #             colors = "purple") %>%
+                        name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Peaks Above Threshold")) %>%
+            add_markers(x = peaks_below$x,
+                        y = peaks_below$height,
+                        colors = "purple",
+                        name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Peaks Below Threshold")) %>%
             add_markers(x = tallest_peak_x,
                         y = tallest_peak_height,
                         colors = "green",
@@ -883,7 +886,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
     plot_title = NULL
 
     #there must be a simpler way of the following if else below
-      data <- peaks_module$index_list()[[input$sample_subset2]]$trace_bp_df
+      data <- arrange(peaks_module$index_list()[[input$sample_subset2]]$trace_bp_df, size)
       data$x <- data$calculated_repeats
 
     if (!is.null(xlim)) {
@@ -923,10 +926,11 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
           add_markers(x = peaks_above$x,
                       y = peaks_above$height,
                       colors = "blue",
-                      name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset2]]$unique_id)), " All Peaks")) %>%
-          # add_markers(x = peaks_below$x,
-          #             y = peaks_below$height,
-          #             colors = "purple") %>%
+                      name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset2]]$unique_id)), " Peaks Above Threshold")) %>%
+          add_markers(x = peaks_below$x,
+                      y = peaks_below$height,
+                      colors = "purple",
+                      name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset2]]$unique_id)), " Peaks Below Threshold")) %>%
           add_markers(x = tallest_peak_x,
                       y = tallest_peak_height,
                       colors = "green",

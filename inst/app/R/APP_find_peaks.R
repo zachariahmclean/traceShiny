@@ -473,7 +473,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     height_color_threshold = 0.05
     plot_title = NULL
 
-    data <- fragments$trace_bp_df
+    data <- arrange(fragments$trace_bp_df, size)
     data$x <- data$calculated_repeats
 
     if (!is.null(xlim)) {
@@ -513,10 +513,11 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
           add_markers(x = peaks_above$x,
                       y = peaks_above$height,
                       colors = "blue",
-                      name = paste0(gsub(".fsa", "", unique(fragments$unique_id)), " All Peaks")) %>%
-          # add_markers(x = peaks_below$x,
-          #             y = peaks_below$height,
-          #             colors = "purple") %>%
+                      name = paste0(gsub(".fsa", "", unique(fragments$unique_id)), " Peaks Above Threshold")) %>%
+          add_markers(x = peaks_below$x,
+                      y = peaks_below$height,
+                      colors = "purple",
+                      name = paste0(gsub(".fsa", "", unique(fragments$unique_id)), " Peaks Below Threshold")) %>%
           add_markers(x = tallest_peak_x,
                       y = tallest_peak_height,
                       colors = "green",
@@ -592,13 +593,13 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     sample_fragments <- split_by_sample[[input$sample_subset_Batch]]
 
     sample_traces_size <- lapply(sample_fragments, function(y) {
-      df <- y$trace_bp_df
+      df <- arrange(y$trace_bp_df, size)
       df$x <- df$size
       return(df)
     })
 
     sample_traces_repeats <- lapply(sample_fragments, function(y) {
-      df <- y$trace_bp_df
+      df <- arrange(y$trace_bp_df, size)
       df$x <- df$calculated_repeats
       return(df)
     })
@@ -624,7 +625,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
     # add points onto plot showing peaks
     peak_table_peaks <- lapply(sample_fragments, function(y) {
-      df <- y$trace_bp_df
+      df <- arrange(y$trace_bp_df, size)
       df$x <- (df$size - input$assay_size_without_repeat)/input$repeat_size
       df <- df[which(df$x < xlim[2] & df$x > xlim[1]), ]
       return(df)
@@ -889,7 +890,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     height_color_threshold = 0.05
     plot_title = NULL
 
-    data <- fragments$trace_bp_df
+    data <- arrange(fragments$trace_bp_df, size)
     data$x <- data$calculated_repeats
 
     if (!is.null(xlim)) {

@@ -240,7 +240,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
         if (input$dot_show == TRUE) {
         p <- ggplot(reactive_analysis$trace, aes(x=calculated_repeats, y=Normalised_Signal, colour = plot)) +
           geom_smooth(method = "loess", span=input$span, level=input$CI, se = input$CI_show) +
-          geom_line(alpha = input$opacity) +
+          geom_line(aes(group = unique_id), alpha = input$opacity) +
           xlab("Repeats") +
           ylab(if (input$normalize == "None") "Signal" else "Normalised_Signal") +
           xlim(c(input$xlim1_analysis, input$xlim2_analysis)) +
@@ -264,7 +264,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
       else {
         if (input$dot_show == TRUE) {
         p <- ggplot(reactive_analysis$trace, aes(x=calculated_repeats, y=Normalised_Signal, colour = plot)) +
-          geom_line(alpha = input$opacity) +
+          geom_line(aes(group = unique_id), alpha = input$opacity) +
           xlab("Repeats") +
           ylab(if (input$normalize == "None") "Signal" else "Normalised_Signal") +
           xlim(c(input$xlim1_analysis, input$xlim2_analysis)) +
