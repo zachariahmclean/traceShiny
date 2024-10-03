@@ -614,7 +614,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
 
     xlim = c(input$xlim1_metrics, input$xlim2_metrics)
     ylim = c(input$ylim1_metrics, input$ylim2_metrics)
-    height_color_threshold = 0.05
+    height_color_threshold = input$minimum_peak_signal
     plot_title = NULL
 
     #there must be a simpler way of the following if else below
@@ -641,8 +641,8 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
           tallest_peak_x <- peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat
         }
 
-        peaks_above <- peak_table[which(peak_table$height > tallest_peak_height * height_color_threshold), ]
-        peaks_below <- peak_table[which(peak_table$height < tallest_peak_height * height_color_threshold), ]
+        peaks_above <- peak_table[which(peak_table$height > height_color_threshold), ]
+        peaks_below <- peak_table[which(peak_table$height < height_color_threshold), ]
 
     }
 
@@ -655,17 +655,17 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                   mode = "lines",
                   height = (300 + input$HeightPeaks_metrics*20),
                   name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), "")) %>%
-            add_markers(x = peaks_above$x,
+            add_trace(x = peaks_above$x,
                         y = peaks_above$height,
-                        colors = "blue",
+                      mode = "markers",
                         name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Peaks Above Threshold")) %>%
-            add_markers(x = peaks_below$x,
+            add_trace(x = peaks_below$x,
                         y = peaks_below$height,
-                        colors = "purple",
+                      mode = "markers",
                         name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Peaks Below Threshold")) %>%
-            add_markers(x = tallest_peak_x,
+            add_trace(x = tallest_peak_x,
                         y = tallest_peak_height,
-                        colors = "green",
+                      mode = "markers",
                         name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Modal Peak")) %>%
             add_segments(x = peak_table$repeats,
                          y = peak_table$height,
@@ -727,17 +727,17 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                   mode = "lines",
                   height = (300 + input$HeightPeaks_metrics*20),
                   name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), "")) %>%
-            add_markers(x = peaks_above$x,
+            add_trace(x = peaks_above$x,
                         y = peaks_above$height,
-                        colors = "blue",
+                      mode = "markers",
                         name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Peak Above Threshold")) %>%
-            add_markers(x = peaks_below$x,
+            add_trace(x = peaks_below$x,
                         y = peaks_below$height,
-                        colors = "purple",
+                      mode = "markers",
                         name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Peaks Below Threshold")) %>%
-            add_markers(x = tallest_peak_x,
+            add_trace(x = tallest_peak_x,
                         y = tallest_peak_height,
-                        colors = "green",
+                      mode = "markers",
                         name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Modal Peak")) %>%
             add_segments(x = peak_table$repeats,
                          y = peak_table$height,
@@ -797,17 +797,17 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                   mode = "lines",
                   height = (300 + input$HeightPeaks_metrics*20),
                   name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), "")) %>%
-            add_markers(x = peaks_above$x,
+            add_trace(x = peaks_above$x,
                         y = peaks_above$height,
-                        colors = "blue",
+                      mode = "markers",
                         name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Peaks Above Threshold")) %>%
-            add_markers(x = peaks_below$x,
+            add_trace(x = peaks_below$x,
                         y = peaks_below$height,
-                        colors = "purple",
+                      mode = "markers",
                         name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Peaks Below Threshold")) %>%
-            add_markers(x = tallest_peak_x,
+            add_trace(x = tallest_peak_x,
                         y = tallest_peak_height,
-                        colors = "green",
+                      mode = "markers",
                         name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Modal Peak")) %>%
             add_segments(x = peak_table$repeats,
                          y = peak_table$height,
@@ -882,7 +882,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
 
     xlim = c(input$xlim1_metrics, input$xlim2_metrics)
     ylim = c(input$ylim1_metrics, input$ylim2_metrics)
-    height_color_threshold = 0.05
+    height_color_threshold = input$minimum_peak_signal
     plot_title = NULL
 
     #there must be a simpler way of the following if else below
@@ -909,8 +909,8 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
           tallest_peak_x <- peaks_module$index_list()[[input$sample_subset2]]$get_allele_peak()$allele_repeat
         }
 
-        peaks_above <- peak_table[which(peak_table$height > tallest_peak_height * height_color_threshold), ]
-        peaks_below <- peak_table[which(peak_table$height < tallest_peak_height * height_color_threshold), ]
+        peaks_above <- peak_table[which(peak_table$height > height_color_threshold), ]
+        peaks_below <- peak_table[which(peak_table$height < height_color_threshold), ]
 
       }
 
@@ -923,17 +923,17 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                 source = "plot_peak2",
                 height = (300 + input$HeightPeaks_metrics*20),
                 name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset2]]$unique_id)), "")) %>%
-          add_markers(x = peaks_above$x,
+          add_trace(x = peaks_above$x,
                       y = peaks_above$height,
-                      colors = "blue",
+                    mode = "markers",
                       name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset2]]$unique_id)), " Peaks Above Threshold")) %>%
-          add_markers(x = peaks_below$x,
+          add_trace(x = peaks_below$x,
                       y = peaks_below$height,
-                      colors = "purple",
+                    mode = "markers",
                       name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset2]]$unique_id)), " Peaks Below Threshold")) %>%
-          add_markers(x = tallest_peak_x,
+          add_trace(x = tallest_peak_x,
                       y = tallest_peak_height,
-                      colors = "green",
+                    mode = "markers",
                       name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset2]]$unique_id)), " Modal Peak")) %>%
           add_segments(x = peak_table$repeats,
                        y = peak_table$height,

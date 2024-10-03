@@ -231,7 +231,7 @@ peaks_box_ui4 <- function(id) {
                            choices = NULL)),
         column(3,
                p(style="text-align: left;margin-top:50px;", actionBttn("Manual_peak", "Manually select Correction Peak", size = "lg")))
-        ),
+      ),
       plotlyOutput("correlation_plot", height = 800)
   )
 }
@@ -419,10 +419,10 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
   observe({
     if (!is.null(reactive_peaks$peaks) && !is.null(input$sample_subset)) {
-    updateNumericInput(session, "xlim1", value = reactive_peaks$peaks[[input$sample_subset]]$get_allele_peak()$allele_repeat - 50)
-    updateNumericInput(session, "xlim2", value = reactive_peaks$peaks[[input$sample_subset]]$get_allele_peak()$allele_repeat + 50)
-    updateNumericInput(session, "ylim1", value = -100)
-    updateNumericInput(session, "ylim2", value = reactive_peaks$peaks[[input$sample_subset]]$get_allele_peak()$allele_height + 100)
+      updateNumericInput(session, "xlim1", value = reactive_peaks$peaks[[input$sample_subset]]$get_allele_peak()$allele_repeat - 50)
+      updateNumericInput(session, "xlim2", value = reactive_peaks$peaks[[input$sample_subset]]$get_allele_peak()$allele_repeat + 50)
+      updateNumericInput(session, "ylim1", value = -100)
+      updateNumericInput(session, "ylim2", value = reactive_peaks$peaks[[input$sample_subset]]$get_allele_peak()$allele_height + 100)
     }
   })
 
@@ -497,8 +497,9 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
         tallest_peak_x <- fragments$get_allele_peak()$allele_repeat
       }
 
-      peaks_above <- peak_table[which(peak_table$height > tallest_peak_height * height_color_threshold), ]
-      peaks_below <- peak_table[which(peak_table$height < tallest_peak_height * height_color_threshold), ]
+
+      peaks_above <- peak_table[which(peak_table$height > input$minimum_peak_signal), ]
+      peaks_below <- peak_table[which(peak_table$height < input$minimum_peak_signal), ]
 
     }
 
@@ -510,18 +511,18 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                 mode = "lines",
                 height = (300 + input$HeightPeaks*20),
                 name = paste0(gsub(".fsa", "", unique(fragments$unique_id)), "")) %>%
-          add_markers(x = peaks_above$x,
-                      y = peaks_above$height,
-                      colors = "blue",
-                      name = paste0(gsub(".fsa", "", unique(fragments$unique_id)), " Peaks Above Threshold")) %>%
-          add_markers(x = peaks_below$x,
-                      y = peaks_below$height,
-                      colors = "purple",
-                      name = paste0(gsub(".fsa", "", unique(fragments$unique_id)), " Peaks Below Threshold")) %>%
-          add_markers(x = tallest_peak_x,
-                      y = tallest_peak_height,
-                      colors = "green",
-                      name = paste0(gsub(".fsa", "", unique(fragments$unique_id)), " Modal Peak")) %>%
+          add_trace(x = peaks_above$x,
+                    y = peaks_above$height,
+                    mode = "markers",
+                    name = paste0(gsub(".fsa", "", unique(fragments$unique_id)), " Peaks Above Threshold")) %>%
+          add_trace(x = peaks_below$x,
+                    y = peaks_below$height,
+                    mode = "markers",
+                    name = paste0(gsub(".fsa", "", unique(fragments$unique_id)), " Peaks Below Threshold")) %>%
+          add_trace(x = tallest_peak_x,
+                    y = tallest_peak_height,
+                    mode = "markers",
+                    name = paste0(gsub(".fsa", "", unique(fragments$unique_id)), " Modal Peak")) %>%
           add_segments(x = peak_table$repeats,
                        y = peak_table$height,
                        xend = peak_table$calculated_repeats,
@@ -664,10 +665,10 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     for (i in 1:n_dfs) {
       p1 <- p1 %>% add_trace(y = sample_traces_size[[i]]$rel_signal, x = ((sample_traces_size[[i]]$x - input$assay_size_without_repeat)/input$repeat_size), name = gsub(".fsa", "", unique(sample_traces_size[[i]]$unique_id)),
                              mode="lines") %>%
-        add_markers(x = peak_table_peaks_tallest[[i]],
-                    y = 1,
-                    colors = "green",
-                    name = paste0(gsub(".fsa", "", unique(sample_traces_size[[i]]$unique_id)), " Modal Peak"))
+        add_trace(x = peak_table_peaks_tallest[[i]],
+                  y = 1,
+                  mode = "markers",
+                  name = paste0(gsub(".fsa", "", unique(sample_traces_size[[i]]$unique_id)), " Modal Peak"))
     }
 
     #Repeats
@@ -683,10 +684,10 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     for (i in 1:n_dfs) {
       p2 <- p2 %>% add_trace(y = sample_traces_repeats[[i]]$rel_signal, x = sample_traces_repeats[[i]]$x, name = gsub(".fsa", "", unique(sample_traces_repeats[[i]]$unique_id)),
                              mode="lines") %>%
-        add_markers(x = peak_table_repeats_tallest[[i]],
-                    y = 1,
-                    colors = "green",
-                    name = paste0(gsub(".fsa", "", unique(sample_traces_repeats[[i]]$unique_id)), " Modal Peak"))
+        add_trace(x = peak_table_repeats_tallest[[i]],
+                  y = 1,
+                  mode = "markers",
+                  name = paste0(gsub(".fsa", "", unique(sample_traces_repeats[[i]]$unique_id)), " Modal Peak"))
     }
 
     subplot(p1, p2)
@@ -801,8 +802,8 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
       withSpinner(htmlOutput("plot_tracesUI_Manual")),
       fluidRow(
         column(12,
-        numericInput("Modal_Peak", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Modal Repeat for correction (can be manually changed)')),
-                     value = reactive_peaks$peaks[[1]]$get_allele_peak()$allele_repeat)
+               numericInput("Modal_Peak", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Modal Repeat for correction (can be manually changed)')),
+                            value = reactive_peaks$peaks[[1]]$get_allele_peak()$allele_repeat)
         ),
         actionBttn("Manual_peak_start", "SET")
       ),
@@ -887,7 +888,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     fragments <- reactive_peaks$peaks[[input$sample_subset_Manual]]
     xlim = c(input$xlim1, input$xlim2)
     ylim = c(input$ylim1, input$ylim2)
-    height_color_threshold = 0.05
+    height_color_threshold = input$minimum_peak_signal
     plot_title = NULL
 
     data <- arrange(fragments$trace_bp_df, size)
@@ -897,45 +898,45 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
       data <- data[which(data$x < xlim[2] & data$x > xlim[1]), ]
     }
 
-      # add points onto plot showing peaks
-      peak_table <- fragments$repeat_table_df
-      peak_table$x <- peak_table$repeats
+    # add points onto plot showing peaks
+    peak_table <- fragments$repeat_table_df
+    peak_table$x <- peak_table$repeats
 
-      if (!is.null(xlim)) {
-        peak_table <- peak_table[which(peak_table$x < xlim[2] & peak_table$x > xlim[1]), ]
-      }
+    if (!is.null(xlim)) {
+      peak_table <- peak_table[which(peak_table$x < xlim[2] & peak_table$x > xlim[1]), ]
+    }
 
-      tallest_peak_height <- peak_table[which(peak_table$height == max(peak_table$height)), "height"]
-      tallest_peak_x <- peak_table[which(peak_table$height == tallest_peak_height), "x"]
-      if (!is.null(fragments$get_allele_peak()$allele_height) && !is.na(fragments$get_allele_peak()$allele_height)) {
-        tallest_peak_height <- fragments$get_allele_peak()$allele_height
-        tallest_peak_x <- fragments$get_allele_peak()$allele_repeat
-      }
+    tallest_peak_height <- peak_table[which(peak_table$height == max(peak_table$height)), "height"]
+    tallest_peak_x <- peak_table[which(peak_table$height == tallest_peak_height), "x"]
+    if (!is.null(fragments$get_allele_peak()$allele_height) && !is.na(fragments$get_allele_peak()$allele_height)) {
+      tallest_peak_height <- fragments$get_allele_peak()$allele_height
+      tallest_peak_x <- fragments$get_allele_peak()$allele_repeat
+    }
 
-      peaks_above <- peak_table[which(peak_table$height > tallest_peak_height * height_color_threshold), ]
-      peaks_below <- peak_table[which(peak_table$height < tallest_peak_height * height_color_threshold), ]
+    peaks_above <- peak_table[which(peak_table$height > height_color_threshold), ]
+    peaks_below <- peak_table[which(peak_table$height < height_color_threshold), ]
 
-      xlim_corrected = c(tallest_peak_x[[1]]-50, tallest_peak_x[[1]]+50)
-      ylim_corrected = c(-100, tallest_peak_height + 100)
+    xlim_corrected = c(tallest_peak_x[[1]]-50, tallest_peak_x[[1]]+50)
+    ylim_corrected = c(-100, tallest_peak_height + 100)
 
-      if (!is.null(peak_table$repeats) && !is.null(peak_table$calculated_repeats)) {
-        plot_ly(data = data,
-                x = ~x, y = ~signal,
-                type = "scatter",
-                mode = "lines",
-                height = (300 + input$HeightPeaks_Manual*20),
-                name = paste0(gsub(".fsa", "", unique(fragments$unique_id)), "")) %>%
-          add_markers(x = tallest_peak_x,
-                      y = tallest_peak_height,
-                      colors = "green",
-                      name = paste0(gsub(".fsa", "", unique(fragments$unique_id)), " Modal Peak")) %>%
-          layout(title = ifelse(is.null(plot_title), fragments$unique_id, plot_title),
-                 xaxis = list(title = "Repeats",
-                              range = xlim_corrected),
-                 yaxis = list(title = "Signal",
-                              range = ylim_corrected)
-          )
-      }
+    if (!is.null(peak_table$repeats) && !is.null(peak_table$calculated_repeats)) {
+      plot_ly(data = data,
+              x = ~x, y = ~signal,
+              type = "scatter",
+              mode = "lines",
+              height = (300 + input$HeightPeaks_Manual*20),
+              name = paste0(gsub(".fsa", "", unique(fragments$unique_id)), "")) %>%
+        add_trace(x = tallest_peak_x,
+                  y = tallest_peak_height,
+                  mode = "markers",
+                  name = paste0(gsub(".fsa", "", unique(fragments$unique_id)), " Modal Peak")) %>%
+        layout(title = ifelse(is.null(plot_title), fragments$unique_id, plot_title),
+               xaxis = list(title = "Repeats",
+                            range = xlim_corrected),
+               yaxis = list(title = "Signal",
+                            range = ylim_corrected)
+        )
+    }
   })
 
   return(list(
