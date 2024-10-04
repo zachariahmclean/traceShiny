@@ -421,7 +421,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     if (!is.null(reactive_peaks$peaks) && !is.null(input$sample_subset)) {
       updateNumericInput(session, "xlim1", value = reactive_peaks$peaks[[input$sample_subset]]$get_allele_peak()$allele_repeat - 50)
       updateNumericInput(session, "xlim2", value = reactive_peaks$peaks[[input$sample_subset]]$get_allele_peak()$allele_repeat + 50)
-      updateNumericInput(session, "ylim1", value = -100)
+      updateNumericInput(session, "ylim1", value = -200)
       updateNumericInput(session, "ylim2", value = reactive_peaks$peaks[[input$sample_subset]]$get_allele_peak()$allele_height + 100)
     }
   })
@@ -917,7 +917,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     peaks_below <- peak_table[which(peak_table$height < height_color_threshold), ]
 
     xlim_corrected = c(tallest_peak_x[[1]]-50, tallest_peak_x[[1]]+50)
-    ylim_corrected = c(-100, tallest_peak_height + 100)
+    ylim_corrected = c(-200, tallest_peak_height + 100)
 
     if (!is.null(peak_table$repeats) && !is.null(peak_table$calculated_repeats)) {
       plot_ly(data = data,
