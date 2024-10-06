@@ -252,10 +252,9 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
       strRepeats <- paste("##Find Repeats", "\n",
                           paste0("call_repeats(fragments_list, assay_size_without_repeat = ", paste(input$assay_size_without_repeat), ", ",
                           "repeat_size = ", paste(input$repeat_size), ", ",
-                          "repeat_calling_algorithm = ", "'", paste(input$repeat_calling_algorithm), "'", ", ",
-                          "repeat_calling_algorithm_peak_assignment_scan_window = ", paste(input$repeat_calling_algorithm_peak_assignment_scan_window), ", ",
-                          "repeat_calling_algorithm_size_window_around_allele = ", paste(input$repeat_calling_algorithm_size_window_around_allele), ", ",
-                          "repeat_calling_algorithm_size_period = ", paste(input$repeat_calling_algorithm_size_period), ", ",
+                          "force_repeat_pattern = ", "'", paste(input$force_repeat_pattern), "'", ", ",
+                          "force_repeat_pattern_scan_window = ", paste(input$force_repeat_pattern_scan_window), ", ",
+                          "force_repeat_pattern_size_period = ", paste(input$force_repeat_pattern_size_period), ", ",
                           "force_whole_repeat_units = ", paste(ifelse(input$force_whole_repeat_units == "YES", "TRUE", "FALSE")), ", ",
                           "correction = ", "'", paste(input$batchcorrectionswitch), "')"
                           ))
@@ -1110,10 +1109,9 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
       assay_size_without_repeat <- peaks_module$assay_size_without_repeat()
       repeat_size <- peaks_module$repeat_size()
       force_whole_repeat_units <- peaks_module$force_whole_repeat_units()
-      repeat_calling_algorithm <- peaks_module$repeat_calling_algorithm()
-      repeat_calling_algorithm_size_window_around_allele <- peaks_module$repeat_calling_algorithm_size_window_around_allele()
-      repeat_calling_algorithm_size_period <- peaks_module$repeat_calling_algorithm_size_period()
-      repeat_calling_algorithm_peak_assignment_scan_window <- peaks_module$repeat_calling_algorithm_peak_assignment_scan_window()
+      force_repeat_pattern <- peaks_module$force_repeat_pattern()
+      force_repeat_pattern_size_period <- peaks_module$force_repeat_pattern_size_period()
+      force_repeat_pattern_scan_window <- peaks_module$force_repeat_pattern_scan_window()
       sample_traces_size <- peaks_module$sample_traces_size()
       sample_traces_repeats <- peaks_module$sample_traces_repeats()
 
@@ -1140,8 +1138,8 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
       save("laddertable", "fsa_list", "metadata_table", "DataUpload", "DataUploadMeta", "Ladder_switch",
            "ladders", "scan", "size", "LadderChannel", "SignalChannel", "LadderSizes", "spikeswitch", "spikelocation", "zerofloor", "ladderselectionwindow", "smoothingwindow", "maxcombinations", "minimum_peak_signal_ladder", "minimum_peak_signal_number", "scan_subset", "scan_subset1", "scan_subset2",
            "index_list", "min_bp_size", "max_bp_size", "smoothing_window_peaks", "minimum_peak_signal", "batchcorrectionswitch", "peak_region_size_gap_threshold",
-           "peak_region_height_threshold_multiplier", "assay_size_without_repeat", "repeat_size", "force_whole_repeat_units", "repeat_calling_algorithm", "repeat_calling_algorithm_size_window_around_allele",
-           "repeat_calling_algorithm_size_period", "repeat_calling_algorithm_peak_assignment_scan_window", "sample_traces_size", "sample_traces_repeats",
+           "peak_region_height_threshold_multiplier", "assay_size_without_repeat", "repeat_size", "force_whole_repeat_units", "force_repeat_pattern",
+           "force_repeat_pattern_size_period", "force_repeat_pattern_scan_window", "sample_traces_size", "sample_traces_repeats",
            "instability_metrics", "peak_threshold", "window_around_index_peak_min", "window_around_index_peak_max", "repeat_range1", "repeat_range2", "repeat_range3", "percentile_range1", "percentile_range2", "percentile_range3",
            "sample_subset2", "sample_subset_metrics", "Package_version", "Index_Table", "Index_Table_original",
            file = file)

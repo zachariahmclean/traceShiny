@@ -20,23 +20,46 @@ column of the metadata. Multiple samples can be
 <code>metrics_baseline_control</code>, which can be helpful for the
 average repeat gain metric to have a more accurate representation of the
 average repeat at the start of the experiment.</p></li>
-<li><p>(optional) Using common sample(s) across fragment analysis runs
-to correct systematic batch effects that occur with repeat-containing
-amplicons in capillary electrophoresis. There are slight fluctuations of
-size across runs for amplicons containing repeats that result in
-systematic differences around 1-3 base pairs. So, if samples are to be
-analyzed for different runs, the absolute bp size is not comparable
-unless this batch effect is corrected. This is only relevant when the
-absolute size of a amplicons are compared for grouping metrics as
-described above (otherwise instability metrics are all relative and it
-doesn’t matter that there’s systematic batch effects across runs) or
-when plotting traces from different runs. This correction can be
-achieved by running a couple of samples in every fragment analysis run,
-or having a single run that takes a couple of samples from every run
-together, thereby linking them. These samples are then indicated in the
-metadata with <code>batch_run_id</code> (to group samples by fragment
-analysis run) and <code>batch_sample_id</code> (to enable linking
-samples across batches).</p></li>
+<li><p>(optional) There are two main correction approaches that are
+somewhat related: either ‘batch’ or ‘repeat’ in
+<code>call_repeats()</code>.</p>
+<ul>
+<li><p>Batch correction is relatively simple and just requires you to
+link samples across batches by indicating them from metadata. But even
+though the repeat size that is return will be precise, it will not be
+accurate and underestimates the real repeat length. This correction can
+be achieved by running a couple of samples in every fragment analysis
+run, or having a single run that takes a couple of samples from every
+run together, thereby linking them. These samples are indicated with
+batch_run_id (to group samples by fragment analysis run) and
+batch_sample_id (to enable linking samples across batches).</p></li>
+<li><p>By contrast, repeat correction can be used to accurately call
+repeat lengths (which also corrects the batch effects). However, the
+repeat correction will only be as good as your sample(s) used to call
+the repeat length.</p>
+<ul>
+<li><p>With how repeat correction works in this app, it’s helpful to i)
+use the same samples across multiple runs (visualizations help you check
+that correction is consistent across runs), and ii) using multiple
+samples for correction for each run (helpful to help validate that each
+sample was called correctly).</p></li>
+<li><p>Similar to batch correction, batch_run_id (to group samples by
+fragment analysis run) and batch_sample_id (to enable linking samples
+across batches) are used, but importantly batch_sample_modal_repeat is
+also set. The batch_sample_modal_repeat is the validated repeat length
+of the modal repeat of the sample. This validated repeat length is then
+used to call the repeat length of the modal repeat for each sample (by
+each batch_run_id). Importantly, this correction requires you to know
+with confidence the repeat length of the modal peak of the sample.
+Therefore it’s important that the sample used for repeat correction has
+a clear and prominent modal peak. If the repeat length is very long,
+it’s common for the modal peak of a sample to change so if you use this
+feature you’re going to have to understand the shape of the distribution
+of your sample and double check that the correct peak has been called as
+the modal peak. If the incorrect peak is called there are ways to
+visualize that correct that in this app.</p></li>
+</ul></li>
+</ul></li>
 </ul>
 <p>Prepare a file (eg spreadsheet saved as .csv) with the following
 columns. Use the specified column names below:</p>
@@ -78,17 +101,23 @@ length, or day-zero sample in cell line experiments)</td>
 </tr>
 <tr class="even">
 <td>batch_run_id</td>
-<td><code>call_repeats</code>, allows setting
-<code>batch_correction</code></td>
+<td><code>call_repeats</code>, allows setting <code>batch</code> or
+<code>repeat</code> correction</td>
 <td>This groups the samples by batch. Provide a value for each fragment
 analysis run (eg date).</td>
 </tr>
 <tr class="odd">
 <td>batch_sample_id</td>
-<td><code>call_repeats</code>, allows setting
-<code>batch_correction</code></td>
-<td>This groups the samples across batches. Give a unique sample id to
+<td><code>call_repeats</code>, allows setting <code>batch</code> or
+<code>repeat</code> correction</td>
+<td>This groups the sample across batches. Give a unique sample id to
 each different sample.</td>
+</tr>
+<tr class="even">
+<td>batch_sample_modal_repeat</td>
+<td><code>call_repeats</code>, allows setting <code>repeat</code>
+correction</td>
+<td>The validated repeat length of the modal repeat of the sample.</td>
 </tr>
 </tbody>
 </table>

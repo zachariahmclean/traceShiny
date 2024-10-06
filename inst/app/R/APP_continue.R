@@ -119,10 +119,9 @@ continue_server <- function(input, output, session) {
                      updateNumericInput(session, "peak_region_height_threshold_multiplier", value = peak_region_height_threshold_multiplier)
                      updateNumericInput(session, "assay_size_without_repeat", value = assay_size_without_repeat)
                      updateRadioGroupButtons(session, "force_whole_repeat_units", selected = force_whole_repeat_units)
-                     updatePickerInput(session,"repeat_calling_algorithm", selected = repeat_calling_algorithm)
-                     updateNumericInput(session, "repeat_calling_algorithm_size_window_around_allele", value = repeat_calling_algorithm_size_window_around_allele)
-                     updateNumericInput(session, "repeat_calling_algorithm_size_period", value = repeat_calling_algorithm_size_period)
-                     updateNumericInput(session, "repeat_calling_algorithm_peak_assignment_scan_window", value = repeat_calling_algorithm_peak_assignment_scan_window)
+                     updatePickerInput(session,"force_repeat_pattern", selected = force_repeat_pattern)
+                     updateNumericInput(session, "force_repeat_pattern_size_period", value = force_repeat_pattern_size_period)
+                     updateNumericInput(session, "force_repeat_pattern_scan_window", value = force_repeat_pattern_scan_window)
 
                      incProgress(9/10, detail = "Setting up instability metrics settings")
 

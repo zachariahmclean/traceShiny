@@ -111,31 +111,31 @@ peaks_box_ui2 <- function(id) {
                         )
                  ),
                  column(6,
-                        conditionalPanel(
-                          condition = 'input.advancesettings_Peaks == true',
-                          pickerInput("repeat_calling_algorithm", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Repeat Calling Algorithm')),
-                                      choices = c("none", "fft", "size_period"), selected = "none")
+                        radioGroupButtons(
+                          inputId = "force_repeat_pattern",
+                          label = h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Force repeat pattern')),
+                          choices = c("YES",
+                                      "NO"),
+                          checkIcon = list(
+                            yes = tags$i(class = "fa fa-circle",
+                                         style = "color: steelblue"),
+                            no = tags$i(class = "fa fa-circle-o",
+                                        style = "color: steelblue")),
+                          selected = "NO"
                         )
                  )
                ),
-
                conditionalPanel(
                  condition = 'input.advancesettings_Peaks == true',
                  fluidRow(
                    column(6,
-                          numericInput("repeat_calling_algorithm_size_window_around_allele", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Size Window Around Allele')),
+                          numericInput("force_repeat_pattern_size_period", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Force repeat pattern size period')),
                                        min = 1,
-                                       value = 15, step = 1)
+                                       value = NA_real_, # is set below based on repeat_size
+                                       step = 1)
                    ),
                    column(6,
-                          numericInput("repeat_calling_algorithm_peak_assignment_scan_window", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Peak Assignment Scan Window')),
-                                       min = 1,
-                                       value = 3, step = 1)
-                   )
-                 ),
-                 fluidRow(
-                   column(6,
-                          numericInput("repeat_calling_algorithm_size_period", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Size Period')),
+                          numericInput("force_repeat_pattern_scan_window", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Force repeat pattern scan window')),
                                        min = 1,
                                        value = 3, step = 1)
                    )
@@ -377,12 +377,12 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                      call_repeats(fragments_list = reactive_peaks$peaks,
                                   assay_size_without_repeat = input$assay_size_without_repeat,
                                   repeat_size = input$repeat_size,
-                                  repeat_calling_algorithm = input$repeat_calling_algorithm,
-                                  repeat_calling_algorithm_size_window_around_allele = input$repeat_calling_algorithm_size_window_around_allele,
-                                  repeat_calling_algorithm_peak_assignment_scan_window = input$repeat_calling_algorithm_peak_assignment_scan_window,
-                                  repeat_calling_algorithm_size_period = input$repeat_calling_algorithm_size_period,
                                   force_whole_repeat_units = if(input$force_whole_repeat_units == "YES") TRUE else FALSE,
-                                  correction = input$batchcorrectionswitch)
+                                  correction = input$batchcorrectionswitch,
+                                  force_repeat_pattern = if(input$force_repeat_pattern == "YES") TRUE else FALSE,
+                                  force_repeat_pattern_size_period = input$force_repeat_pattern_size_period,
+                                  force_repeat_pattern_scan_window = input$force_repeat_pattern_scan_window
+                                  )
 
 
                      assign_index_peaks(
@@ -427,20 +427,13 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
   })
 
   observe({
-    if (input$repeat_calling_algorithm == "none") {
-      shinyjs::hide("repeat_calling_algorithm_size_window_around_allele")
-      shinyjs::hide("repeat_calling_algorithm_size_period")
-      shinyjs::hide("repeat_calling_algorithm_peak_assignment_scan_window")
-    }
-    else if (input$repeat_calling_algorithm == "fft") {
-      shinyjs::show("repeat_calling_algorithm_size_window_around_allele")
-      shinyjs::hide("repeat_calling_algorithm_size_period")
-      shinyjs::show("repeat_calling_algorithm_peak_assignment_scan_window")
-    }
-    else if (input$repeat_calling_algorithm == "size_period") {
-      shinyjs::show("repeat_calling_algorithm_size_window_around_allele")
-      shinyjs::show("repeat_calling_algorithm_size_period")
-      shinyjs::show("repeat_calling_algorithm_peak_assignment_scan_window")
+    if (input$force_repeat_pattern == "NO") {
+      shinyjs::hide("force_repeat_pattern_size_period")
+      shinyjs::hide("force_repeat_pattern_scan_window")
+    } else {
+      updateNumericInput(session, "force_repeat_pattern_size_period", value = input$repeat_size * 0.93)
+      shinyjs::show("force_repeat_pattern_size_period")
+      shinyjs::show("force_repeat_pattern_scan_window")
     }
   })
 
@@ -843,24 +836,24 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
       call_repeats(fragments_list = reactive_peaks$peaks,
                    assay_size_without_repeat = input$assay_size_without_repeat,
                    repeat_size = input$repeat_size,
-                   repeat_calling_algorithm = input$repeat_calling_algorithm,
-                   repeat_calling_algorithm_size_window_around_allele = input$repeat_calling_algorithm_size_window_around_allele,
-                   repeat_calling_algorithm_peak_assignment_scan_window = input$repeat_calling_algorithm_peak_assignment_scan_window,
-                   repeat_calling_algorithm_size_period = input$repeat_calling_algorithm_size_period,
                    force_whole_repeat_units = if(input$force_whole_repeat_units == "YES") TRUE else FALSE,
-                   correction = input$batchcorrectionswitch)
+                   correction = input$batchcorrectionswitch,
+                   force_repeat_pattern = if(input$force_repeat_pattern == "YES") TRUE else FALSE,
+                   force_repeat_pattern_size_period = input$force_repeat_pattern_size_period,
+                   force_repeat_pattern_scan_window = input$force_repeat_pattern_scan_window
+                   )
 
       reactive_peaks$peaks[[input$sample_subset_Manual]]$set_allele_peak(unit = "repeats", value = input$Modal_Peak)
 
       call_repeats(fragments_list = reactive_peaks$peaks,
                    assay_size_without_repeat = input$assay_size_without_repeat,
                    repeat_size = input$repeat_size,
-                   repeat_calling_algorithm = input$repeat_calling_algorithm,
-                   repeat_calling_algorithm_size_window_around_allele = input$repeat_calling_algorithm_size_window_around_allele,
-                   repeat_calling_algorithm_peak_assignment_scan_window = input$repeat_calling_algorithm_peak_assignment_scan_window,
-                   repeat_calling_algorithm_size_period = input$repeat_calling_algorithm_size_period,
                    force_whole_repeat_units = if(input$force_whole_repeat_units == "YES") TRUE else FALSE,
-                   correction = input$batchcorrectionswitch)
+                   correction = input$batchcorrectionswitch,
+                   force_repeat_pattern = if(input$force_repeat_pattern == "YES") TRUE else FALSE,
+                   force_repeat_pattern_size_period = input$force_repeat_pattern_size_period,
+                   force_repeat_pattern_scan_window = input$force_repeat_pattern_scan_window
+                   )
 
 
       assign_index_peaks(
@@ -953,10 +946,9 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     assay_size_without_repeat = reactive(input$assay_size_without_repeat),
     repeat_size = reactive(input$repeat_size),
     force_whole_repeat_units = reactive(input$force_whole_repeat_units),
-    repeat_calling_algorithm = reactive(input$repeat_calling_algorithm),
-    repeat_calling_algorithm_size_window_around_allele = reactive(input$repeat_calling_algorithm_size_window_around_allele),
-    repeat_calling_algorithm_size_period = reactive(input$repeat_calling_algorithm_size_period),
-    repeat_calling_algorithm_peak_assignment_scan_window = reactive(input$repeat_calling_algorithm_peak_assignment_scan_window)
+    force_repeat_pattern = reactive(input$force_repeat_pattern),
+    force_repeat_pattern_size_period = reactive(input$force_repeat_pattern_size_period),
+    force_repeat_pattern_scan_window = reactive(input$force_repeat_pattern_scan_window)
   ))
 
 }
