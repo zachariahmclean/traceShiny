@@ -87,8 +87,15 @@ Analysis_box_ui3 <- function(id) {
                pickerInput("normalize", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Normalization Method')),
                            choices = c("None", "Zach", "Ricardo")),
 
-               numericInput("threshold", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Only take into account peaks/traces beyond this repreat')),
-                            value = 10),
+               htmlOutput("Normalization_settings"),
+               fluidRow(
+                 column(6,
+                        numericInput("threshold_min", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Min Repeat Size')),
+                                     value = 10)),
+                 column(6,
+                        numericInput("threshold_max", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Max Repeat Size')),
+                                     value = 500))
+               ),
                materialSwitch("dot_show", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Show peaks/traces')), value = TRUE, status = "primary"),
                materialSwitch("line_show", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Show Best Fit Line')), value = FALSE, status = "primary"),
 
@@ -97,14 +104,14 @@ Analysis_box_ui3 <- function(id) {
                  numericInput("span", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Span')),
                               value = 0.1, max = 1,
                               step = 0.01),
-               materialSwitch("CI_show", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Show Confidence Intervals')), value = FALSE, status = "primary"),
+                 materialSwitch("CI_show", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Show Confidence Intervals')), value = FALSE, status = "primary"),
 
-               conditionalPanel(
-                 condition = 'input.CI_show == true',
-                 numericInput("CI", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Confidence Interval')),
-                              value = 0.95, max = 1,
-                              step = 0.01)
-               )
+                 conditionalPanel(
+                   condition = 'input.CI_show == true',
+                   numericInput("CI", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Confidence Interval')),
+                                value = 0.95, max = 1,
+                                step = 0.01)
+                 )
                )
         ))
   )
@@ -115,8 +122,8 @@ analysis_server <- function(input, output, session, continue_module, upload_data
   reactive_analysis <- reactiveValues()
 
   #Colours
-  safe_colorblind_palette <- c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499",
-                               "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888")
+  safe_colorblind_palette <- c("#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499",
+                               "#44AA99", "#999933", "#882255", "#88CCEE", "#661100", "#6699CC", "#888888")
   color = grDevices::colors()[grep('gr(a|e)y', grDevices::colors(), invert = T)]
   color = color[-grep("white", color)]
   color = c(safe_colorblind_palette, color)
@@ -137,36 +144,44 @@ analysis_server <- function(input, output, session, continue_module, upload_data
                                                               badgeColor = "green", badgeLabel = "new")))
   })
 
+  output$Normalization_settings <- renderUI({
+    h4(HTML('<b><h4 style = "text-align:justify;">Normalization Settings</b>'))
+  })
+
   observe({
     if (input$normalize == "None") {
-    shinyjs::hide("threshold")
+      shinyjs::hide("threshold_min")
+      shinyjs::hide("threshold_max")
+      shinyjs::hide("Normalization_settings")
     }
     else {
-      shinyjs::show("threshold")
+      shinyjs::show("threshold_max")
+      shinyjs::show("threshold_min")
+      shinyjs::show("Normalization_settings")
     }
   })
 
   observeEvent(input$normalize, {
     if (!is.null(peaks_module$index_list())) {
-    if (input$normalize == "Zach") {
-      updateNumericInput(session, "ylim1_analysis", value = -0.3)
-    }
-    else if (input$normalize == "Ricardo") {
-      updateNumericInput(session, "ylim1_analysis", value = -0.03)
-    }
-    else if (input$normalize == "None") {
-      updateNumericInput(session, "ylim1_analysis", value = -200)
-    }
+      if (input$normalize == "Zach") {
+        updateNumericInput(session, "ylim1_analysis", value = -0.3)
+      }
+      else if (input$normalize == "Ricardo") {
+        updateNumericInput(session, "ylim1_analysis", value = -0.03)
+      }
+      else if (input$normalize == "None") {
+        updateNumericInput(session, "ylim1_analysis", value = -200)
+      }
 
-    if (input$normalize == "Zach") {
-      updateNumericInput(session, "ylim2_analysis", value = 1.2)
-    }
-    else if (input$normalize == "Ricardo") {
-      updateNumericInput(session, "ylim2_analysis", value = 0.3)
-    }
-    else if (input$normalize == "None") {
-      updateNumericInput(session, "ylim2_analysis", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_height + 100)
-    }
+      if (input$normalize == "Zach") {
+        updateNumericInput(session, "ylim2_analysis", value = 1.2)
+      }
+      else if (input$normalize == "Ricardo") {
+        updateNumericInput(session, "ylim2_analysis", value = 0.3)
+      }
+      else if (input$normalize == "None") {
+        updateNumericInput(session, "ylim2_analysis", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_height + 100)
+      }
     }
   })
 
@@ -209,7 +224,8 @@ analysis_server <- function(input, output, session, continue_module, upload_data
       }
 
       else if (input$normalize == "Ricardo") {
-        lookup <- trace[trace$calculated_repeats > input$threshold, ]
+        lookup <- trace[trace$calculated_repeats > input$threshold_min, ]
+        lookup <- lookup[lookup$calculated_repeats < input$threshold_max, ]
 
         lookup <- lookup %>% group_by(unique_id) %>% dplyr::summarise(sum(signal))
         colnames(lookup)[2] <- c("norm_factor")
@@ -228,7 +244,8 @@ analysis_server <- function(input, output, session, continue_module, upload_data
       }
 
       else if (input$normalize == "Zach") {
-        lookup <- trace[trace$calculated_repeats > input$threshold, ]
+        lookup <- trace[trace$calculated_repeats > input$threshold_min, ]
+        lookup <- lookup[lookup$calculated_repeats < input$threshold_max, ]
 
         lookup <- lookup %>% group_by(unique_id) %>% dplyr::summarise(max(signal))
         colnames(lookup)[2] <- c("norm_factor")
@@ -248,26 +265,26 @@ analysis_server <- function(input, output, session, continue_module, upload_data
 
       if (input$line_show == TRUE) {
         if (input$dot_show == TRUE) {
-        p <- ggplot(reactive_analysis$trace, aes(x=calculated_repeats, y=Normalised_Signal, colour = plot,
-                                                 text=paste0("Repeats: ", calculated_repeats, "\n",
-                                                             if (input$normalize == "None") "Signal: " else "Normalised_Signal: ", Normalised_Signal, "\n",
-                                                             "Grouping: ", plot))) +
-          geom_smooth(aes(x=calculated_repeats, y=Normalised_Signal), inherit.aes = FALSE, method = "loess", span=input$span, level=input$CI, se = input$CI_show) +
-          geom_line(aes(group = unique_id), alpha = input$opacity) +
-          xlab("Repeats") +
-          ylab(if (input$normalize == "None") "Signal" else "Normalised_Signal") +
-          xlim(c(input$xlim1_analysis, input$xlim2_analysis)) +
-          ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
-          scale_color_manual(values= color) +
-          labs(colour = paste(input$group_samples, collapse = ":")) +
-          theme_bw()
+          p <- ggplot(reactive_analysis$trace, aes(x=calculated_repeats, y=Normalised_Signal, colour = plot,
+                                                   text=paste0("Repeats: ", calculated_repeats, "\n",
+                                                               if (input$normalize == "None") "Signal: " else "Normalised_Signal: ", Normalised_Signal, "\n",
+                                                               "Grouping: ", plot))) +
+            geom_smooth(aes(x=calculated_repeats, y=Normalised_Signal, colour = plot), inherit.aes = FALSE, method = "loess", span=input$span, level=input$CI, se = input$CI_show) +
+            geom_line(aes(group = unique_id), alpha = input$opacity) +
+            xlab("Repeats") +
+            ylab(if (input$normalize == "None") "Signal" else "Normalised_Signal") +
+            xlim(c(input$xlim1_analysis, input$xlim2_analysis)) +
+            ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
+            scale_color_manual(values= color) +
+            labs(colour = paste(input$group_samples, collapse = ":")) +
+            theme_bw()
         }
         else {
           p <- ggplot(reactive_analysis$trace, aes(x=calculated_repeats, y=Normalised_Signal, colour = plot,
                                                    text=paste0("Repeats: ", calculated_repeats, "\n",
                                                                if (input$normalize == "None") "Signal: " else "Normalised_Signal: ", Normalised_Signal, "\n",
                                                                "Grouping: ", plot))) +
-            geom_smooth(aes(x=calculated_repeats, y=Normalised_Signal), inherit.aes = FALSE, method = "loess", span=input$span, level=input$CI, se = input$CI_show) +
+            geom_smooth(aes(x=calculated_repeats, y=Normalised_Signal, colour = plot), inherit.aes = FALSE, method = "loess", span=input$span, level=input$CI, se = input$CI_show) +
             xlab("Repeats") +
             ylab(if (input$normalize == "None") "Signal" else "Normalised_Signal") +
             xlim(c(input$xlim1_analysis, input$xlim2_analysis)) +
@@ -279,18 +296,18 @@ analysis_server <- function(input, output, session, continue_module, upload_data
       }
       else {
         if (input$dot_show == TRUE) {
-        p <- ggplot(reactive_analysis$trace, aes(x=calculated_repeats, y=Normalised_Signal, colour = plot,
-                                                 text=paste0("Repeats: ", calculated_repeats, "\n",
-                                                             if (input$normalize == "None") "Signal: " else "Normalised_Signal: ", Normalised_Signal, "\n",
-                                                             "Grouping: ", plot))) +
-          geom_line(aes(group = unique_id), alpha = input$opacity) +
-          xlab("Repeats") +
-          ylab(if (input$normalize == "None") "Signal" else "Normalised_Signal") +
-          xlim(c(input$xlim1_analysis, input$xlim2_analysis)) +
-          ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
-          scale_color_manual(values= color) +
-          labs(colour = paste(input$group_samples, collapse = ":")) +
-          theme_bw()
+          p <- ggplot(reactive_analysis$trace, aes(x=calculated_repeats, y=Normalised_Signal, colour = plot,
+                                                   text=paste0("Repeats: ", calculated_repeats, "\n",
+                                                               if (input$normalize == "None") "Signal: " else "Normalised_Signal: ", Normalised_Signal, "\n",
+                                                               "Grouping: ", plot))) +
+            geom_line(aes(group = unique_id), alpha = input$opacity) +
+            xlab("Repeats") +
+            ylab(if (input$normalize == "None") "Signal" else "Normalised_Signal") +
+            xlim(c(input$xlim1_analysis, input$xlim2_analysis)) +
+            ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
+            scale_color_manual(values= color) +
+            labs(colour = paste(input$group_samples, collapse = ":")) +
+            theme_bw()
         }
         else {
           p <- ggplot(reactive_analysis$trace, aes(x=calculated_repeats, y=Normalised_Signal, colour = plot,
@@ -316,7 +333,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
       if (input$normalize == "None") {
 
         if (!is.null(upload_data$metadata_table())) {
-        trace <- left_join(trace, upload_data$metadata_table())
+          trace <- left_join(trace, upload_data$metadata_table())
         }
 
         trace <- mutate(trace, Normalised_Signal = height)
@@ -327,7 +344,8 @@ analysis_server <- function(input, output, session, continue_module, upload_data
       }
 
       else if (input$normalize == "Ricardo") {
-        lookup <- trace[trace$repeats > input$threshold, ]
+        lookup <- trace[trace$repeats > input$threshold_min, ]
+        lookup <- lookup[lookup$repeats < input$threshold_max, ]
 
         lookup <- lookup %>% group_by(unique_id) %>% dplyr::summarise(sum(height))
         colnames(lookup)[2] <- c("norm_factor")
@@ -346,7 +364,8 @@ analysis_server <- function(input, output, session, continue_module, upload_data
       }
 
       else if (input$normalize == "Zach") {
-        lookup <- trace[trace$repeats > input$threshold, ]
+        lookup <- trace[trace$repeats > input$threshold_min, ]
+        lookup <- lookup[lookup$repeats < input$threshold_max, ]
 
         lookup <- lookup %>% group_by(unique_id) %>% dplyr::summarise(max(height))
         colnames(lookup)[2] <- c("norm_factor")
@@ -366,19 +385,19 @@ analysis_server <- function(input, output, session, continue_module, upload_data
 
       if (input$line_show == TRUE) {
         if (input$dot_show == TRUE) {
-        p <- ggplot(reactive_analysis$trace, aes(x=repeats, y=Normalised_Signal, colour = plot,
-                                                 text=paste0("Repeats: ", repeats, "\n",
-                                                             if (input$normalize == "None") "Signal: " else "Normalised_Signal: ", Normalised_Signal, "\n",
-                                                             "Grouping: ", plot))) +
-          geom_point(alpha = input$opacity) +
-          xlab("Repeats") +
-          ylab(if (input$normalize == "None") "Signal" else "Normalised_Signal") +
-          geom_smooth(aes(x=repeats, y=Normalised_Signal), inherit.aes = FALSE, method = "loess", span=input$span, level=input$CI, se = input$CI_show) +
-          xlim(c(input$xlim1_analysis, input$xlim2_analysis)) +
-          ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
-          scale_color_manual(values= color) +
-          labs(colour = paste(input$group_samples, collapse = ":")) +
-          theme_bw()
+          p <- ggplot(reactive_analysis$trace, aes(x=repeats, y=Normalised_Signal, colour = plot,
+                                                   text=paste0("Repeats: ", repeats, "\n",
+                                                               if (input$normalize == "None") "Signal: " else "Normalised_Signal: ", Normalised_Signal, "\n",
+                                                               "Grouping: ", plot))) +
+            geom_point(alpha = input$opacity) +
+            xlab("Repeats") +
+            ylab(if (input$normalize == "None") "Signal" else "Normalised_Signal") +
+            geom_smooth(aes(x=repeats, y=Normalised_Signal, colour = plot), inherit.aes = FALSE, method = "loess", span=input$span, level=input$CI, se = input$CI_show) +
+            xlim(c(input$xlim1_analysis, input$xlim2_analysis)) +
+            ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
+            scale_color_manual(values= color) +
+            labs(colour = paste(input$group_samples, collapse = ":")) +
+            theme_bw()
         }
         else {
           p <- ggplot(reactive_analysis$trace, aes(x=repeats, y=Normalised_Signal, colour = plot,
@@ -387,7 +406,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
                                                                "Grouping: ", plot))) +
             xlab("Repeats") +
             ylab(if (input$normalize == "None") "Signal" else "Normalised_Signal") +
-            geom_smooth(aes(x=repeats, y=Normalised_Signal), inherit.aes = FALSE, method = "loess", span=input$span, level=input$CI, se = input$CI_show) +
+            geom_smooth(aes(x=repeats, y=Normalised_Signal, colour = plot), inherit.aes = FALSE, method = "loess", span=input$span, level=input$CI, se = input$CI_show) +
             xlim(c(input$xlim1_analysis, input$xlim2_analysis)) +
             ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
             scale_color_manual(values= color) +
@@ -397,18 +416,18 @@ analysis_server <- function(input, output, session, continue_module, upload_data
       }
       else {
         if (input$dot_show == TRUE) {
-        p <- ggplot(reactive_analysis$trace, aes(x=repeats, y=Normalised_Signal, colour = plot,
-                                                 text=paste0("Repeats: ", repeats, "\n",
-                                                             if (input$normalize == "None") "Signal: " else "Normalised_Signal: ", Normalised_Signal, "\n",
-                                                             "Grouping: ", plot))) +
-          geom_point(alpha = input$opacity)+
-          xlab("Repeats") +
-          ylab(if (input$normalize == "None") "Signal" else "Normalised_Signal") +
-          xlim(c(input$xlim1_analysis, input$xlim2_analysis)) +
-          ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
-          scale_color_manual(values= color) +
-          labs(colour = paste(input$group_samples, collapse = ":")) +
-          theme_bw()
+          p <- ggplot(reactive_analysis$trace, aes(x=repeats, y=Normalised_Signal, colour = plot,
+                                                   text=paste0("Repeats: ", repeats, "\n",
+                                                               if (input$normalize == "None") "Signal: " else "Normalised_Signal: ", Normalised_Signal, "\n",
+                                                               "Grouping: ", plot))) +
+            geom_point(alpha = input$opacity)+
+            xlab("Repeats") +
+            ylab(if (input$normalize == "None") "Signal" else "Normalised_Signal") +
+            xlim(c(input$xlim1_analysis, input$xlim2_analysis)) +
+            ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
+            scale_color_manual(values= color) +
+            labs(colour = paste(input$group_samples, collapse = ":")) +
+            theme_bw()
         }
         else {
           p <- ggplot(reactive_analysis$trace, aes(x=repeats, y=Normalised_Signal, colour = plot,
@@ -431,7 +450,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
   output$metrics_table_analysis <- DT::renderDataTable({
 
     if (!is.null(upload_data$metadata_table())) {
-    df <- dplyr::left_join(upload_data$metadata_table(), metrics_module$metrics_table())
+      df <- dplyr::left_join(upload_data$metadata_table(), metrics_module$metrics_table())
     }
     else {
       df <- arrange(metrics_module$metrics_table(), unique_id)

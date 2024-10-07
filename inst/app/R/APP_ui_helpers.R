@@ -25,7 +25,7 @@ update_click <- function (id) {
   moduleServer(id, function(input, output, session) {
     observeEvent(input$updates, {
       showModal(modalDialog(
-        title = strong("ICARUS CHANGE LOG"),
+        title = strong("traceShiny CHANGE LOG"),
         includeHTML("./data/help/Updates.html"),
         easyClose = TRUE,
         footer = NULL,

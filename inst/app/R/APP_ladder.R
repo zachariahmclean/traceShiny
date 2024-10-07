@@ -181,7 +181,12 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
     }
     else if (!is.null(upload_data$metadata_table())) {
       if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
+        if (input$group_controls == TRUE) {
         updatePickerInput(session, "sample_subset_metrics", choices = upload_data$metadata_table()[-which(upload_data$metadata_table()$metrics_baseline_control == TRUE),]$unique_id)
+        }
+        else {
+          updatePickerInput(session, "sample_subset_metrics", choices = upload_data$metadata_table()$unique_id)
+        }
       }
       else {
         updatePickerInput(session, "sample_subset_metrics", choices = upload_data$metadata_table()$unique_id)

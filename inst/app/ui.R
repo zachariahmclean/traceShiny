@@ -150,12 +150,6 @@ body <- dashboardBody(
   }
   '))),
 
-  tags$a(href="javascript:history.go(0)",
-         popify(tags$i(class="fa fa-refresh fa-5x"),
-                title = "",
-                content = "Click here to delete all data and restart the Shiny session",
-                placement = "right")),
-
   tags$head(tags$style(
     "html {height: 100%; overflow-y: scroll;}"
   )),

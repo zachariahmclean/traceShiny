@@ -90,7 +90,7 @@ peaks_box_ui2 <- function(id) {
 
                fluidRow(
                  column(12,
-                        pickerInput("batchcorrectionswitch", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Batch Correction')),
+                        pickerInput("batchcorrectionswitch", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Correction')),
                                     choices = c("none", "batch", "repeat"), selected = "none")
                  )
                ),
@@ -202,7 +202,7 @@ peaks_box_ui3 <- function(id) {
 }
 
 peaks_box_ui4 <- function(id) {
-  box(id = "PeaksBox3", title = strong("Batch Correction Trace"), status = "warning", solidHeader = F,
+  box(id = "PeaksBox3", title = strong("Correction Trace"), status = "warning", solidHeader = F,
       collapsible = T, collapsed = T, width = 12,
 
       fluidRow(
@@ -219,9 +219,9 @@ peaks_box_ui4 <- function(id) {
 
       fluidRow(
         column(6,
-               h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Before Batch Correction</b>'))),
+               h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Before Correction</b>'))),
         column(6,
-               h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>After Batch Correction</b>')))
+               h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>After Correction</b>')))
       ),
       withSpinner(htmlOutput("plot_traces_BatchUI")),
 
@@ -232,7 +232,14 @@ peaks_box_ui4 <- function(id) {
         column(3,
                p(style="text-align: left;margin-top:50px;", actionBttn("Manual_peak", "Manually select Correction Peak", size = "lg")))
       ),
-      plotlyOutput("correlation_plot", height = 800)
+
+      fluidRow(
+        column(6,
+               plotlyOutput("correlation_plot", height = 800)
+        ),
+        column(6,
+               dataTableOutput("correlation_summary"))
+      )
   )
 }
 
@@ -315,11 +322,13 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     if (input$batchcorrectionswitch == "none" | input$batchcorrectionswitch == "batch") {
       shinyjs::hide("sample_subset_Repeat")
       shinyjs::hide("correlation_plot")
+      shinyjs::hide("correlation_summary")
       shinyjs::hide("Manual_peak")
     }
     else {
       shinyjs::show("sample_subset_Repeat")
       shinyjs::show("correlation_plot")
+      shinyjs::show("correlation_summary")
       shinyjs::show("Manual_peak")
     }
   })
@@ -382,12 +391,6 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                                   force_repeat_pattern = if(input$force_repeat_pattern == "YES") TRUE else FALSE,
                                   force_repeat_pattern_size_period = input$force_repeat_pattern_size_period,
                                   force_repeat_pattern_scan_window = input$force_repeat_pattern_scan_window
-                                  )
-
-
-                     assign_index_peaks(
-                       reactive_peaks$peaks,
-                       grouped = if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) TRUE else FALSE
                      )
 
                      reactive_peaks$batchcorrectionswitch <- input$batchcorrectionswitch
@@ -466,7 +469,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     height_color_threshold = 0.05
     plot_title = NULL
 
-    data <- arrange(fragments$trace_bp_df, size)
+    data <- fragments$trace_bp_df
     data$x <- data$calculated_repeats
 
     if (!is.null(xlim)) {
@@ -587,13 +590,13 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     sample_fragments <- split_by_sample[[input$sample_subset_Batch]]
 
     sample_traces_size <- lapply(sample_fragments, function(y) {
-      df <- arrange(y$trace_bp_df, size)
+      df <- y$trace_bp_df
       df$x <- df$size
       return(df)
     })
 
     sample_traces_repeats <- lapply(sample_fragments, function(y) {
-      df <- arrange(y$trace_bp_df, size)
+      df <- y$trace_bp_df
       df$x <- df$calculated_repeats
       return(df)
     })
@@ -619,7 +622,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
     # add points onto plot showing peaks
     peak_table_peaks <- lapply(sample_fragments, function(y) {
-      df <- arrange(y$trace_bp_df, size)
+      df <- y$trace_bp_df
       df$x <- (df$size - input$assay_size_without_repeat)/input$repeat_size
       df <- df[which(df$x < xlim[2] & df$x > xlim[1]), ]
       return(df)
@@ -696,6 +699,67 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     plot_repeat_correction_model(reactive_peaks$peaks, input$sample_subset_Repeat)
   })
 
+  output$correlation_summary <- DT::renderDataTable({
+    validate(
+      need(!is.null(reactive_peaks$peaks), 'Please Run The Analysis First'))
+    validate(
+      need(reactive_peaks$batchcorrectionswitch %in% "repeat", 'Please Re-Run The Analysis First'))
+
+    df <-extract_repeat_correction_summary(reactive_peaks$peaks)
+    rownames(df) <- NULL
+
+    ## Colour and values for table colour formatting
+    brks <- seq(0, 0.3, .0001)
+    clrs <- colorRampPalette(c("green", "white", "red"))(length(brks) + 1)
+
+    datatable(df,
+              options = list(scrollX = TRUE,
+                             scrollY = TRUE,
+                             server = TRUE,
+                             paging = TRUE,
+                             pageLength = 15
+              ),
+              selection = 'single',
+              rownames = FALSE) %>%
+      formatStyle(c("abs_avg_residual"), backgroundColor = styleInterval(brks, clrs))
+  })
+
+  observeEvent(input$correlation_summary_rows_selected, {
+    df <-extract_repeat_correction_summary(reactive_peaks$peaks)
+    updatePickerInput(session, "sample_subset_Repeat", selected = df[input$correlation_summary_rows_selected, ]$batch_run_id)
+    updatePickerInput(session, "sample_subset_Batch", selected = df[input$correlation_summary_rows_selected, ]$batch_sample_id)
+  })
+
+  output$correlation_summary2 <- DT::renderDataTable({
+    validate(
+      need(!is.null(reactive_peaks$peaks), 'Please Run The Analysis First'))
+    validate(
+      need(reactive_peaks$batchcorrectionswitch %in% "repeat", 'Please Re-Run The Analysis First'))
+
+    df <-extract_repeat_correction_summary(reactive_peaks$peaks)
+    rownames(df) <- NULL
+
+    ## Colour and values for table colour formatting
+    brks <- seq(0, 0.3, .0001)
+    clrs <- colorRampPalette(c("green", "white", "red"))(length(brks) + 1)
+
+    datatable(df,
+              options = list(scrollX = TRUE,
+                             scrollY = TRUE,
+                             server = TRUE,
+                             paging = TRUE,
+                             pageLength = 15
+              ),
+              selection = 'single',
+              rownames = FALSE) %>%
+      formatStyle(c("abs_avg_residual"), backgroundColor = styleInterval(brks, clrs))
+  })
+
+  observeEvent(input$correlation_summary2_rows_selected, {
+    df <-extract_repeat_correction_summary(reactive_peaks$peaks)
+    updatePickerInput(session, "sample_subset_Manual", selected = df[input$correlation_summary2_rows_selected, ]$unique_id)
+  })
+
   observeEvent(input$up_peak, {
     tryCatch({
       updatePickerInput(session, "sample_subset", selected = if (which(names(upload_data$fsa_list()) == input$sample_subset) - 1 == 0)
@@ -744,7 +808,13 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     validate(
       need(!is.null(reactive_peaks$peaks), 'Please Run The Analysis First'))
 
-    df <- extract_fragment_summary(reactive_peaks$peaks)
+    if (!is.null(upload_data$metadata_table())) {
+      df <- dplyr::left_join(upload_data$metadata_table(), extract_fragment_summary(reactive_peaks$peaks))
+    }
+    else {
+      df <- arrange(extract_fragment_summary(reactive_peaks$peaks), unique_id)
+    }
+
     rownames(df) <- NULL
 
     datatable(df,
@@ -768,7 +838,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
   output$BatchWarning <- renderUI({
     if (all(((reactive_peaks$sample_traces_size[[1]]$x - input$assay_size_without_repeat)/input$repeat_size) == reactive_peaks$sample_traces_repeats[[1]]$x)) {
-      h4(HTML('<h4 style = "text-align:justify;color:#FF0000"><b>Warning: Batch correction not performed the before and after plots will look the same. </b>'))
+      h4(HTML('<h4 style = "text-align:justify;color:#FF0000"><b>Warning: Correction not performed the before and after plots will look the same. </b>'))
     }
     else{
       return()
@@ -792,14 +862,16 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                            min = 1, max = 100,
                            value = 20, step = 1)
         )),
-      withSpinner(htmlOutput("plot_tracesUI_Manual")),
       fluidRow(
-        column(12,
+        column(6,
                numericInput("Modal_Peak", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Modal Repeat for correction (can be manually changed)')),
                             value = reactive_peaks$peaks[[1]]$get_allele_peak()$allele_repeat)
         ),
-        actionBttn("Manual_peak_start", "SET")
+        column(6,
+               p(style="text-align: left;margin-top:30px; margin-left:-100px;", actionBttn("Manual_peak_start", "SET", size = "lg")))
       ),
+      withSpinner(htmlOutput("plot_tracesUI_Manual")),
+      dataTableOutput("correlation_summary2"),
       easyClose = TRUE,
       footer = NULL,
       size = "l"
@@ -841,7 +913,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                    force_repeat_pattern = if(input$force_repeat_pattern == "YES") TRUE else FALSE,
                    force_repeat_pattern_size_period = input$force_repeat_pattern_size_period,
                    force_repeat_pattern_scan_window = input$force_repeat_pattern_scan_window
-                   )
+      )
 
       reactive_peaks$peaks[[input$sample_subset_Manual]]$set_allele_peak(unit = "repeats", value = input$Modal_Peak)
 
@@ -853,12 +925,6 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                    force_repeat_pattern = if(input$force_repeat_pattern == "YES") TRUE else FALSE,
                    force_repeat_pattern_size_period = input$force_repeat_pattern_size_period,
                    force_repeat_pattern_scan_window = input$force_repeat_pattern_scan_window
-                   )
-
-
-      assign_index_peaks(
-        reactive_peaks$peaks,
-        grouped = if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) TRUE else FALSE
       )
     },
     error = function(e) {
@@ -884,7 +950,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     height_color_threshold = input$minimum_peak_signal
     plot_title = NULL
 
-    data <- arrange(fragments$trace_bp_df, size)
+    data <- fragments$trace_bp_df
     data$x <- data$calculated_repeats
 
     if (!is.null(xlim)) {

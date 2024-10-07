@@ -15,20 +15,28 @@ upload_data_box_ui1 <- function(id) {
 upload_data_box_ui2 <- function(id) {
   box(id = "LoadBox2", title = p("Data Upload", help_button("Data_Upload")), status = "warning", solidHeader = F,
       collapsible = T, width = NULL,
-      radioGroupButtons(
-        inputId = "DataUpload",
-        label = h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Upload Method')),
-        choices = c("fsa",
-                    "Peak Table",
-                    "Repeat Table",
-                    "Use Example"),
-        individual = TRUE,
-        checkIcon = list(
-          yes = tags$i(class = "fa fa-circle",
-                       style = "color: steelblue"),
-          no = tags$i(class = "fa fa-circle-o",
-                      style = "color: steelblue")),
-        selected = "fsa"
+      fluidRow(
+        column(12,
+               tags$a(href="javascript:history.go(0)",
+                      popify(tags$i(class="fa fa-refresh fa-5x"),
+                             title = "",
+                             content = "Click here to delete all data and restart the Shiny session",
+                             placement = "right")))),
+      fluidRow(
+        column(12,
+               radioGroupButtons(
+                 inputId = "DataUpload",
+                 label = h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Upload Method')),
+                 choices = c("fsa",
+                             "Use Example"),
+                 individual = TRUE,
+                 checkIcon = list(
+                   yes = tags$i(class = "fa fa-circle",
+                                style = "color: steelblue"),
+                   no = tags$i(class = "fa fa-circle-o",
+                               style = "color: steelblue")),
+                 selected = "fsa"
+               ))
       ),
       conditionalPanel(
         condition = 'input.DataUpload == "fsa"',
