@@ -784,9 +784,12 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
   observeEvent(input$up_peak_Manual, {
     tryCatch({
-      updatePickerInput(session, "sample_subset_Manual", selected = if (which(names(upload_data$fsa_list()) == input$sample_subset_Manual) - 1 == 0)
-        upload_data$fsa_list()[[which(names(upload_data$fsa_list()) == input$sample_subset_Manual)]]$unique_id
-        else upload_data$fsa_list()[[which(names(upload_data$fsa_list()) == input$sample_subset_Manual) - 1]]$unique_id)
+
+      df <- upload_data$metadata_table()[which(!is.na(upload_data$metadata_table()$batch_sample_modal_repeat)),]$unique_id
+
+      updatePickerInput(session, "sample_subset_Manual", selected = if (which(df == input$sample_subset_Manual) - 1 == 0)
+        df[which(df == input$sample_subset_Manual)]
+        else df[which(df == input$sample_subset_Manual) - 1])
     },
     error = function(e) {
       shinyalert("ERROR!", "You've reached the end of the selection, please go the other way!", type = "error", confirmButtonCol = "#337ab7")
@@ -795,9 +798,11 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
   observeEvent(input$down_peak_Manual, {
     tryCatch({
-      updatePickerInput(session, "sample_subset_Manual", selected = if (which(names(upload_data$fsa_list()) == input$sample_subset_Manual) + 1 > length(names(upload_data$fsa_list())))
-        upload_data$fsa_list()[[which(names(upload_data$fsa_list()) == input$sample_subset_Manual)]]$unique_id
-        else upload_data$fsa_list()[[which(names(upload_data$fsa_list()) == input$sample_subset_Manual) + 1]]$unique_id)
+      df <- upload_data$metadata_table()[which(!is.na(upload_data$metadata_table()$batch_sample_modal_repeat)),]$unique_id
+
+      updatePickerInput(session, "sample_subset_Manual", selected = if (which(df == input$sample_subset_Manual) + 1 > length(df))
+        df[which(df == input$sample_subset_Manual)]
+        else df[which(df == input$sample_subset_Manual) +  1])
     },
     error = function(e) {
       shinyalert("ERROR!", "You've reached the end of the selection, please go the other way!", type = "error", confirmButtonCol = "#337ab7")
@@ -865,7 +870,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
       fluidRow(
         column(6,
                numericInput("Modal_Peak", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Modal Repeat for correction (can be manually changed)')),
-                            value = reactive_peaks$peaks[[1]]$get_allele_peak()$allele_repeat)
+                            value = NULL)
         ),
         column(6,
                p(style="text-align: left;margin-top:30px; margin-left:-100px;", actionBttn("Manual_peak_start", "SET", size = "lg")))
@@ -878,8 +883,10 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     ))
   })
 
-  observeEvent(input$sample_subset_Manual, {
+  observe({
+    if (!is.null(reactive_peaks$peaks) && !is.null(input$sample_subset_Manual)) {
     updateNumericInput(session, "Modal_Peak", value = reactive_peaks$peaks[[input$sample_subset_Manual]]$get_allele_peak()$allele_repeat)
+    }
   })
 
   observeEvent(input$Manual_peak_start, {
