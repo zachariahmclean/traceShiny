@@ -692,18 +692,18 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
   output$correlation_plot <- renderPlotly({
     validate(
-      need(!is.null(reactive_peaks$peaks), 'Please Run The Analysis First'))
+      need(!is.null(reactive_peaks$peaks), ''))
     validate(
-      need(reactive_peaks$batchcorrectionswitch %in% "repeat", 'Please Re-Run The Analysis First'))
+      need(reactive_peaks$batchcorrectionswitch %in% "repeat", ''))
 
     plot_repeat_correction_model(reactive_peaks$peaks, input$sample_subset_Repeat)
   })
 
   output$correlation_summary <- DT::renderDataTable({
     validate(
-      need(!is.null(reactive_peaks$peaks), 'Please Run The Analysis First'))
+      need(!is.null(reactive_peaks$peaks), ''))
     validate(
-      need(reactive_peaks$batchcorrectionswitch %in% "repeat", 'Please Re-Run The Analysis First'))
+      need(reactive_peaks$batchcorrectionswitch %in% "repeat", ''))
 
     df <-extract_repeat_correction_summary(reactive_peaks$peaks)
     rownames(df) <- NULL
