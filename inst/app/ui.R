@@ -363,6 +363,11 @@ body <- dashboardBody(
     ui <- function () {dashboardPage(
       dashboardHeader(
         title = img(id="Ditto",src="dancing-ditto-ditto.gif",width="30%"),
+        leftUi = tagList(tags$li(class = "dropdown", p(style="text-align: center; margin-top:10px;", tags$a(href="javascript:history.go(0)",
+                        popify(tags$i(class="fa fa-refresh fa-3x"),
+                               title = "",
+                               content = "Click here to delete all data and restart the Shiny session",
+                               placement = "bottom"))))),
         tags$li(class = "dropdown", p(img(id="CGM", src="cfgm-logo-animated.gif", width="85%"))),
         titleWidth = 250),
       sidebar,

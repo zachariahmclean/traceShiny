@@ -1307,6 +1307,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
       percentile_range3 <- input$percentile_range3
       window_around_index_peak_min <- input$window_around_index_peak_min
       window_around_index_peak_max <- input$window_around_index_peak_max
+      group_controls <- input$group_controls
 
       #Package Version
       Package_version <- sessionInfo()$otherPkgs$traceShiny$Version
@@ -1318,7 +1319,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
            "peak_region_height_threshold_multiplier", "assay_size_without_repeat", "repeat_size", "force_whole_repeat_units", "force_repeat_pattern",
            "force_repeat_pattern_size_period", "force_repeat_pattern_scan_window", "sample_traces_size", "sample_traces_repeats",
            "instability_metrics", "peak_threshold", "window_around_index_peak_min", "window_around_index_peak_max", "repeat_range1", "repeat_range2", "repeat_range3", "percentile_range1", "percentile_range2", "percentile_range3",
-           "sample_subset2", "sample_subset_metrics", "Package_version", "Index_Table", "Index_Table_original",
+           "sample_subset2", "sample_subset_metrics", "Package_version", "Index_Table", "Index_Table_original", "group_controls",
            file = file)
     }
   )

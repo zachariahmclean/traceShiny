@@ -132,6 +132,7 @@ continue_server <- function(input, output, session) {
                      updateNumericInput(session, "repeat_range3", value = repeat_range3)
                      updatePickerInput(session, "sample_subset2", choices = sample_subset2)
                      updatePickerInput(session,"sample_subset_metrics", choices = sample_subset_metrics)
+                     updateMaterialSwitch(session, "group_controls", value = group_controls)
 
                      reactive_continue$laddertable <- laddertable
                      reactive_continue$fsa_list <- fsa_list

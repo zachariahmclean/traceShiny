@@ -18,7 +18,7 @@ upload_data_box_ui2 <- function(id) {
       fluidRow(
         column(12,
                tags$a(href="javascript:history.go(0)",
-                      popify(tags$i(class="fa fa-refresh fa-5x"),
+                      popify(tags$i(class="fa fa-refresh fa-3x"),
                              title = "",
                              content = "Click here to delete all data and restart the Shiny session",
                              placement = "right")))),
