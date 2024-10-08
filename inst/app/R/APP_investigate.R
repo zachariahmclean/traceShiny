@@ -391,6 +391,12 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
         )
       }
     }
+    else {
+      assign_index_peaks(
+        peaks_module$index_list(),
+        grouped = FALSE
+      )
+    }
 
     shinyjs::hide("NextButtonPeaks")
     reactive_metrics$df <- NULL
@@ -418,6 +424,10 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
           updatePickerInput(session, "sample_subset2", choices = upload_data$metadata_table()[which(upload_data$metadata_table()$metrics_group_id == upload_data$metadata_table()[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics),]$metrics_group_id),][which(upload_data$metadata_table()[which(upload_data$metadata_table()$metrics_group_id == upload_data$metadata_table()[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics),]$metrics_group_id),]$metrics_baseline_control == "TRUE"),]$unique_id)
           updatePickerInput(session, "sample_subset_metrics", choices = upload_data$metadata_table()$unique_id)
         }
+      }
+      else {
+        updatePickerInput(session, "sample_subset2", choices = upload_data$metadata_table()[which(upload_data$metadata_table()$metrics_group_id == upload_data$metadata_table()[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics),]$metrics_group_id),][which(upload_data$metadata_table()[which(upload_data$metadata_table()$metrics_group_id == upload_data$metadata_table()[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics),]$metrics_group_id),]$metrics_baseline_control == "TRUE"),]$unique_id)
+        updatePickerInput(session, "sample_subset_metrics", choices = upload_data$metadata_table()$unique_id)
       }
     }
 
@@ -460,6 +470,9 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
         else {
           updatePickerInput(session, "sample_subset_metrics", choices = upload_data$metadata_table()$unique_id)
         }
+      }
+      else {
+        updatePickerInput(session, "sample_subset_metrics", choices = upload_data$metadata_table()$unique_id)
       }
     }
   })
@@ -604,6 +617,12 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                            grouped = FALSE
                          )
                        }
+                     }
+                     else {
+                       assign_index_peaks(
+                         peaks_module$index_list(),
+                         grouped = FALSE
+                       )
                      }
 
                      reactive_metrics$df <- calculate_instability_metrics(
