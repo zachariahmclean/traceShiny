@@ -151,16 +151,11 @@ continue_server <- function(input, output, session) {
                      reactive_continue$Index_Table_original <- Index_Table_original
 
                      if (!is.null(index_list) && !is.null(sample_subset_metrics)) {
-                       updateNumericInput(session, "IndexRepeat1", value = Index_Table[1,]$`Index Repeat`)
+                       updateNumericInput(session, "IndexRepeat1", value = Index_Table[which(Index_Table$`Unique IDs` == sample_subset_metrics[1]),]$`Index Repeat`)
 
                        if (!is.null(sample_subset2)) {
-                         updateNumericInput(session, "IndexRepeat2", value = Index_Table[1,]$`Index Repeat`)
+                         updateNumericInput(session, "IndexRepeat2", value = Index_Table[which(Index_Table$`Unique IDs` == sample_subset2[1]),]$`Index Repeat`)
                        }
-                     }
-
-                     if (!is.null(index_list) && is.na(Index_Table[1,]$`Index Repeat`)) {
-                       updateNumericInput(session, "IndexRepeat1", value = "")
-                       updateNumericInput(session, "IndexRepeat2", value = "")
                      }
 
                      shinyjs::show("LoadBox2")
