@@ -380,8 +380,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
       if (input$group_controls == TRUE) {
         assign_index_peaks(
           peaks_module$index_list(),
-          grouped = TRUE,
-          index_override_dataframe = reactive_metrics$Index_Table[,c(1,4)]
+          grouped = TRUE
         )
       }
       else {

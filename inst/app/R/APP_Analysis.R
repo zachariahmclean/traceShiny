@@ -85,7 +85,7 @@ Analysis_box_ui3 <- function(id) {
                ),
 
                pickerInput("normalize", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Normalization Method')),
-                           choices = c("None", "Zach", "Ricardo")),
+                           choices = c("None", "Highest Peak", "Sum Of All Peaks")),
 
                htmlOutput("Normalization_settings"),
                fluidRow(
@@ -96,6 +96,7 @@ Analysis_box_ui3 <- function(id) {
                         numericInput("threshold_max", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Max Repeat Size')),
                                      value = 500))
                ),
+               materialSwitch("index_normalize", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Set Index Repeat as Zero')), value = FALSE, status = "primary"),
                materialSwitch("dot_show", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Show peaks/traces')), value = TRUE, status = "primary"),
                materialSwitch("line_show", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Show Best Fit Line')), value = FALSE, status = "primary"),
 
@@ -163,20 +164,20 @@ analysis_server <- function(input, output, session, continue_module, upload_data
 
   observeEvent(input$normalize, {
     if (!is.null(peaks_module$index_list())) {
-      if (input$normalize == "Zach") {
+      if (input$normalize == "Highest Peak") {
         updateNumericInput(session, "ylim1_analysis", value = -0.3)
       }
-      else if (input$normalize == "Ricardo") {
+      else if (input$normalize == "Sum Of All Peaks") {
         updateNumericInput(session, "ylim1_analysis", value = -0.03)
       }
       else if (input$normalize == "None") {
         updateNumericInput(session, "ylim1_analysis", value = -200)
       }
 
-      if (input$normalize == "Zach") {
+      if (input$normalize == "Highest Peak") {
         updateNumericInput(session, "ylim2_analysis", value = 1.2)
       }
-      else if (input$normalize == "Ricardo") {
+      else if (input$normalize == "Sum Of All Peaks") {
         updateNumericInput(session, "ylim2_analysis", value = 0.3)
       }
       else if (input$normalize == "None") {
@@ -190,7 +191,56 @@ analysis_server <- function(input, output, session, continue_module, upload_data
       updateNumericInput(session, "xlim1_analysis", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat - 50)
       updateNumericInput(session, "xlim2_analysis", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat + 50)
       updateNumericInput(session, "ylim1_analysis", value = -100)
-      updateNumericInput(session, "ylim2_analysis", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_height + 100)
+      updateNumericInput(session, "ylim2_analysis", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_height + 300)
+
+    if (input$index_normalize == TRUE) {
+      updateNumericInput(session, "xlim1_analysis", value = -50)
+      updateNumericInput(session, "xlim2_analysis", value = 50)
+
+      if (input$normalize == "Highest Peak") {
+        updateNumericInput(session, "ylim1_analysis", value = -0.3)
+      }
+      else if (input$normalize == "Sum Of All Peaks") {
+        updateNumericInput(session, "ylim1_analysis", value = -0.03)
+      }
+      else if (input$normalize == "None") {
+        updateNumericInput(session, "ylim1_analysis", value = -200)
+      }
+
+      if (input$normalize == "Highest Peak") {
+        updateNumericInput(session, "ylim2_analysis", value = 1.2)
+      }
+      else if (input$normalize == "Sum Of All Peaks") {
+        updateNumericInput(session, "ylim2_analysis", value = 0.3)
+      }
+      else if (input$normalize == "None") {
+        updateNumericInput(session, "ylim2_analysis", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_height + 100)
+      }
+    }
+    else {
+      updateNumericInput(session, "xlim1_analysis", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat - 50)
+      updateNumericInput(session, "xlim2_analysis", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat + 50)
+
+      if (input$normalize == "Highest Peak") {
+        updateNumericInput(session, "ylim1_analysis", value = -0.3)
+      }
+      else if (input$normalize == "Sum Of All Peaks") {
+        updateNumericInput(session, "ylim1_analysis", value = -0.03)
+      }
+      else if (input$normalize == "None") {
+        updateNumericInput(session, "ylim1_analysis", value = -200)
+      }
+
+      if (input$normalize == "Highest Peak") {
+        updateNumericInput(session, "ylim2_analysis", value = 1.2)
+      }
+      else if (input$normalize == "Sum Of All Peaks") {
+        updateNumericInput(session, "ylim2_analysis", value = 0.3)
+      }
+      else if (input$normalize == "None") {
+        updateNumericInput(session, "ylim2_analysis", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_height + 100)
+      }
+    }
     }
   })
 
@@ -206,7 +256,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
     }
 
     if (input$peaks_traces == "Traces") {
-      trace <- trace::extract_trace_table(peaks_module$index_list())
+      trace <- extract_trace_table(peaks_module$index_list())
 
       trace <- mutate(trace, Normalised_Signal = signal)
 
@@ -219,11 +269,9 @@ analysis_server <- function(input, output, session, continue_module, upload_data
         }
 
         trace$plot <- col_concat(as.data.frame(trace[, which(colnames(trace) %in% input$group_samples)]), sep = ":")
-
-        reactive_analysis$trace <- trace
       }
 
-      else if (input$normalize == "Ricardo") {
+      else if (input$normalize == "Sum Of All Peaks") {
         lookup <- trace[trace$calculated_repeats > input$threshold_min, ]
         lookup <- lookup[lookup$calculated_repeats < input$threshold_max, ]
 
@@ -239,11 +287,9 @@ analysis_server <- function(input, output, session, continue_module, upload_data
         }
 
         trace$plot <- col_concat(as.data.frame(trace[, which(colnames(trace) %in% input$group_samples)]), sep = ":")
-
-        reactive_analysis$trace <- trace
       }
 
-      else if (input$normalize == "Zach") {
+      else if (input$normalize == "Highest Peak") {
         lookup <- trace[trace$calculated_repeats > input$threshold_min, ]
         lookup <- lookup[lookup$calculated_repeats < input$threshold_max, ]
 
@@ -259,13 +305,17 @@ analysis_server <- function(input, output, session, continue_module, upload_data
         }
 
         trace$plot <- col_concat(as.data.frame(trace[, which(colnames(trace) %in% input$group_samples)]), sep = ":")
-
-        reactive_analysis$trace <- trace
       }
+
+      if (input$index_normalize == TRUE) {
+        trace$calculated_repeats <- trace$calculated_repeats - trace$index_repeat
+      }
+
+      reactive_analysis$trace <- trace
 
       if (input$line_show == TRUE) {
         if (input$dot_show == TRUE) {
-          p <- ggplot(reactive_analysis$trace, aes(x=calculated_repeats, y=Normalised_Signal, colour = plot,
+          p <- ggplot(trace, aes(x=calculated_repeats, y=Normalised_Signal, colour = plot,
                                                    text=paste0("Repeats: ", calculated_repeats, "\n",
                                                                if (input$normalize == "None") "Signal: " else "Normalised_Signal: ", Normalised_Signal, "\n",
                                                                "Grouping: ", plot))) +
@@ -280,7 +330,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
             theme_bw()
         }
         else {
-          p <- ggplot(reactive_analysis$trace, aes(x=calculated_repeats, y=Normalised_Signal, colour = plot,
+          p <- ggplot(trace, aes(x=calculated_repeats, y=Normalised_Signal, colour = plot,
                                                    text=paste0("Repeats: ", calculated_repeats, "\n",
                                                                if (input$normalize == "None") "Signal: " else "Normalised_Signal: ", Normalised_Signal, "\n",
                                                                "Grouping: ", plot))) +
@@ -296,7 +346,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
       }
       else {
         if (input$dot_show == TRUE) {
-          p <- ggplot(reactive_analysis$trace, aes(x=calculated_repeats, y=Normalised_Signal, colour = plot,
+          p <- ggplot(trace, aes(x=calculated_repeats, y=Normalised_Signal, colour = plot,
                                                    text=paste0("Repeats: ", calculated_repeats, "\n",
                                                                if (input$normalize == "None") "Signal: " else "Normalised_Signal: ", Normalised_Signal, "\n",
                                                                "Grouping: ", plot))) +
@@ -310,7 +360,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
             theme_bw()
         }
         else {
-          p <- ggplot(reactive_analysis$trace, aes(x=calculated_repeats, y=Normalised_Signal, colour = plot,
+          p <- ggplot(trace, aes(x=calculated_repeats, y=Normalised_Signal, colour = plot,
                                                    text=paste0("Repeats: ", calculated_repeats, "\n",
                                                                if (input$normalize == "None") "Signal: " else "Normalised_Signal: ", Normalised_Signal, "\n",
                                                                "Grouping: ", plot))) +
@@ -339,11 +389,9 @@ analysis_server <- function(input, output, session, continue_module, upload_data
         trace <- mutate(trace, Normalised_Signal = height)
 
         trace$plot <- col_concat(as.data.frame(trace[, which(colnames(trace) %in% input$group_samples)]), sep = ":")
-
-        reactive_analysis$trace <- trace
       }
 
-      else if (input$normalize == "Ricardo") {
+      else if (input$normalize == "Sum Of All Peaks") {
         lookup <- trace[trace$repeats > input$threshold_min, ]
         lookup <- lookup[lookup$repeats < input$threshold_max, ]
 
@@ -359,11 +407,9 @@ analysis_server <- function(input, output, session, continue_module, upload_data
         }
 
         trace$plot <- col_concat(as.data.frame(trace[, which(colnames(trace) %in% input$group_samples)]), sep = ":")
-
-        reactive_analysis$trace <- trace
       }
 
-      else if (input$normalize == "Zach") {
+      else if (input$normalize == "Highest Peak") {
         lookup <- trace[trace$repeats > input$threshold_min, ]
         lookup <- lookup[lookup$repeats < input$threshold_max, ]
 
@@ -379,13 +425,19 @@ analysis_server <- function(input, output, session, continue_module, upload_data
         }
 
         trace$plot <- col_concat(as.data.frame(trace[, which(colnames(trace) %in% input$group_samples)]), sep = ":")
-
-        reactive_analysis$trace <- trace
       }
+
+      if (input$index_normalize == TRUE) {
+        trace$repeats <- trace$repeats - trace$index_repeat
+      }
+
+      reactive_analysis$trace <- trace
+
 
       if (input$line_show == TRUE) {
         if (input$dot_show == TRUE) {
-          p <- ggplot(reactive_analysis$trace, aes(x=repeats, y=Normalised_Signal, colour = plot,
+
+          p <- ggplot(trace, aes(x=repeats, y=Normalised_Signal, colour = plot,
                                                    text=paste0("Repeats: ", repeats, "\n",
                                                                if (input$normalize == "None") "Signal: " else "Normalised_Signal: ", Normalised_Signal, "\n",
                                                                "Grouping: ", plot))) +
@@ -400,7 +452,8 @@ analysis_server <- function(input, output, session, continue_module, upload_data
             theme_bw()
         }
         else {
-          p <- ggplot(reactive_analysis$trace, aes(x=repeats, y=Normalised_Signal, colour = plot,
+
+          p <- ggplot(trace, aes(x=repeats, y=Normalised_Signal, colour = plot,
                                                    text=paste0("Repeats: ", repeats, "\n",
                                                                if (input$normalize == "None") "Signal: " else "Normalised_Signal: ", Normalised_Signal, "\n",
                                                                "Grouping: ", plot))) +
@@ -415,8 +468,9 @@ analysis_server <- function(input, output, session, continue_module, upload_data
         }
       }
       else {
+
         if (input$dot_show == TRUE) {
-          p <- ggplot(reactive_analysis$trace, aes(x=repeats, y=Normalised_Signal, colour = plot,
+          p <- ggplot(trace, aes(x=repeats, y=Normalised_Signal, colour = plot,
                                                    text=paste0("Repeats: ", repeats, "\n",
                                                                if (input$normalize == "None") "Signal: " else "Normalised_Signal: ", Normalised_Signal, "\n",
                                                                "Grouping: ", plot))) +
@@ -430,7 +484,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
             theme_bw()
         }
         else {
-          p <- ggplot(reactive_analysis$trace, aes(x=repeats, y=Normalised_Signal, colour = plot,
+          p <- ggplot(trace, aes(x=repeats, y=Normalised_Signal, colour = plot,
                                                    text=paste0("Repeats: ", repeats, "\n",
                                                                if (input$normalize == "None") "Signal: " else "Normalised_Signal: ", Normalised_Signal, "\n",
                                                                "Grouping: ", plot))) +
