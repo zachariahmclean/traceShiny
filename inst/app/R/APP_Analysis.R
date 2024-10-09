@@ -373,7 +373,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
             theme_bw()
         }
       }
-      ggplotly(p, tooltip="text")
+      ggplotly(p, tooltip="text", height = (300 + input$HeightAnalysis*20))
     }
     else {
       trace <- extract_fragments(peaks_module$index_list())
@@ -497,7 +497,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
             theme_bw()
         }
       }
-      ggplotly(p, tooltip="text")
+      ggplotly(p, tooltip="text", height = (300 + input$HeightAnalysis*20))
     }
   })
 
