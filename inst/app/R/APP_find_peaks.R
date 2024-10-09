@@ -224,7 +224,13 @@ peaks_box_ui4 <- function(id) {
         column(6,
                h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>After Correction</b>')))
       ),
-      withSpinner(htmlOutput("plot_traces_BatchUI")),
+      withSpinner(htmlOutput("plot_traces_BatchUI"))
+  )
+}
+
+peaks_box_ui5 <- function(id) {
+  box(id = "PeaksBox4", title = strong("Repeat Correction Correlation"), status = "warning", solidHeader = F,
+      collapsible = T, collapsed = F, width = 12,
 
       fluidRow(
         column(3,
@@ -313,6 +319,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
     if (is.null(upload_data$metadata_table())) {
       shinyjs::hide("PeaksBox3")
+      shinyjs::hide("PeaksBox4")
       shinyjs::hide("batchcorrectionswitch")
     }
     else if (!is.null(upload_data$metadata_table())) {
@@ -327,6 +334,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
       }
       else {
         shinyjs::hide("PeaksBox3")
+        shinyjs::hide("PeaksBox4")
         shinyjs::hide("batchcorrectionswitch")
       }
     }
@@ -335,6 +343,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
   observe({
     if (is.null(upload_data$metadata_table())) {
       shinyjs::hide("PeaksBox3")
+      shinyjs::hide("PeaksBox4")
       shinyjs::hide("batchcorrectionswitch")
     }
     else if (!is.null(upload_data$metadata_table())) {
@@ -349,25 +358,16 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
       }
       else {
         shinyjs::hide("PeaksBox3")
+        shinyjs::hide("PeaksBox4")
         shinyjs::hide("batchcorrectionswitch")
       }
     }
 
     if (input$batchcorrectionswitch == "none" | input$batchcorrectionswitch == "batch") {
-      shinyjs::hide("sample_subset_Repeat")
-      shinyjs::hide("correlation_plot")
-      shinyjs::hide("correlation_summary")
-      shinyjs::hide("correlation_text")
-      shinyjs::hide("correlation_text_download")
-      shinyjs::hide("Manual_peak")
+      shinyjs::hide("PeaksBox4")
     }
     else {
-      shinyjs::show("sample_subset_Repeat")
-      shinyjs::show("correlation_plot")
-      shinyjs::show("correlation_summary")
-      shinyjs::show("Manual_peak")
-      shinyjs::show("correlation_text")
-      shinyjs::show("correlation_text_download")
+      shinyjs::show("PeaksBox4")
     }
   })
 
@@ -383,6 +383,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     shinyjs::hide("PeaksBox1")
     shinyjs::hide("PeaksBox2")
     shinyjs::hide("PeaksBox3")
+    shinyjs::hide("PeaksBox4")
     shinyjs::hide("NextButtonPeaks")
 
     output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
@@ -732,18 +733,18 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
   output$correlation_plot <- renderPlotly({
     validate(
-      need(!is.null(reactive_peaks$peaks), ''))
+      need(!is.null(reactive_peaks$peaks), 'Please Run the Analysis First'))
     validate(
-      need(reactive_peaks$batchcorrectionswitch %in% "repeat", ''))
+      need(reactive_peaks$batchcorrectionswitch %in% "repeat", 'Please Re-Run the Analysis First'))
 
     plot_repeat_correction_model(reactive_peaks$peaks, input$sample_subset_Repeat)
   })
 
   output$correlation_summary <- DT::renderDataTable({
     validate(
-      need(!is.null(reactive_peaks$peaks), ''))
+      need(!is.null(reactive_peaks$peaks), 'Please Run the Analysis First'))
     validate(
-      need(reactive_peaks$batchcorrectionswitch %in% "repeat", ''))
+      need(reactive_peaks$batchcorrectionswitch %in% "repeat", 'Please Re-Run the Analysis First'))
 
     df <-extract_repeat_correction_summary(reactive_peaks$peaks)
     rownames(df) <- NULL

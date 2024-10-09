@@ -301,7 +301,11 @@ body <- dashboardBody(
             ),
             fluidRow(
               column(12,
-                     peaks_box_ui4("fe")))
+                     peaks_box_ui4("fe"))),
+            fluidRow(
+              column(12,
+                     peaks_box_ui5("fe"))
+            )
     ),
     tabItem(tabName = "InstabilityMetrics",
             fluidRow(metrics_box_ui1("fe")),

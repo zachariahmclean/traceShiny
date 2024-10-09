@@ -298,6 +298,7 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
                      shinyjs::hide("PeaksBox1")
                      shinyjs::hide("PeaksBox2")
                      shinyjs::hide("PeaksBox3")
+                     shinyjs::hide("PeaksBox4")
                      shinyjs::hide("NextButtonPeaks")
 
                      output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
