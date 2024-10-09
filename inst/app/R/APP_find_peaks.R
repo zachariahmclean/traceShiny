@@ -607,13 +607,13 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     # normalize signal to samples have the same maximum
     sample_traces_size <- lapply(sample_traces_size, function(x){
       x$signal <- x$signal - min(x$signal)
-      x$rel_signal <- x$signal / max(x[which(x$calculated_repeats > input$assay_size_without_repeat),]$signal)
+      x$rel_signal <- x$signal / max(x[which(x$calculated_repeats > (input$min_bp_size - input$assay_size_without_repeat)/input$repeat_size) ,]$signal)
       return(x)
     })
 
     sample_traces_repeats <- lapply(sample_traces_repeats, function(x){
       x$signal <- x$signal - min(x$signal)
-      x$rel_signal <- x$signal / max(x[which(x$calculated_repeats > input$assay_size_without_repeat),]$signal)
+      x$rel_signal <- x$signal / max(x[which(x$calculated_repeats > (input$min_bp_size - input$assay_size_without_repeat)/input$repeat_size),]$signal)
       return(x)
     })
 
@@ -636,7 +636,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     })
 
     peak_table_peaks_tallest <- lapply(peak_table_peaks, function(y) {
-      tallest_peak_height <- y[which(y$signal == max(y[which(y$calculated_repeats > input$assay_size_without_repeat),]$signal)), "x"]
+      tallest_peak_height <- y[which(y$signal == max(y[which(y$calculated_repeats > (input$min_bp_size - input$assay_size_without_repeat)/input$repeat_size),]$signal)), "x"]
       return(tallest_peak_height)
     })
 
