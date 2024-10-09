@@ -129,10 +129,12 @@ ladder_box_ui3 <- function(id) {
 
       fluidRow(
         column(6,
-               htmlOutput("laddertext1")
+               htmlOutput("laddertext1"),
+               p(style="text-align: right;", downloadButton("laddertext1_download"))
         ),
         column(6,
-               htmlOutput("laddertext2")
+               htmlOutput("laddertext2"),
+               p(style="text-align: right;", downloadButton("laddertext2_download"))
         )
       ),
 
@@ -165,6 +167,28 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
     ladders$scan <- continue_module$scan()
     ladders$size <- continue_module$size()
   })
+
+  #Download
+  output$laddertext1_download <- shiny::downloadHandler(
+    filename = function() {
+      paste0(format(Sys.time(), "%Y-%m-%d_%H%M%S"), "_Rsq_table.csv")
+    },
+    content = function(file) {
+      write.csv(rsq_table(), file, row.names = F, col.names = T)
+    }
+  )
+
+  output$laddertext2_download <- shiny::downloadHandler(
+    filename = function() {
+      paste0(format(Sys.time(), "%Y-%m-%d_%H%M%S"), "_Ladder_summary.csv")
+    },
+    content = function(file) {
+      df <- trace::extract_ladder_summary(reactive_ladder$ladder)
+
+      rownames(df) <- NULL
+      write.csv(df, file, row.names = F, col.names = T)
+    }
+  )
 
   observeEvent(input$NextButtonLoad, {
 
@@ -544,6 +568,8 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
       shinyjs::hide("ladder_summary")
       shinyjs::hide("laddertext1")
       shinyjs::hide("laddertext2")
+      shinyjs::hide("laddertext1_download")
+      shinyjs::hide("laddertext2_download")
     }
     else {
       shinyjs::hide("text_no_data1")
@@ -551,6 +577,8 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
       shinyjs::show("ladder_summary")
       shinyjs::show("laddertext1")
       shinyjs::show("laddertext2")
+      shinyjs::show("laddertext1_download")
+      shinyjs::show("laddertext2_download")
     }
   })
 

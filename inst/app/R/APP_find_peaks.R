@@ -197,6 +197,7 @@ peaks_box_ui3 <- function(id) {
       htmlOutput("text_no_data"),
       withSpinner(htmlOutput("plot_tracesUI")),
       htmlOutput("peaks_text"),
+      p(style="text-align: right;", downloadButton("peaks_text_download")),
       dataTableOutput("peaks_summary")
   )
 }
@@ -238,6 +239,8 @@ peaks_box_ui4 <- function(id) {
                plotlyOutput("correlation_plot", height = 800)
         ),
         column(6,
+               htmlOutput("correlation_text"),
+               p(style="text-align: right;", downloadButton("correlation_text_download")),
                dataTableOutput("correlation_summary"))
       )
   )
@@ -259,6 +262,37 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
       reactive_peaks$batchcorrectionswitch <- continue_module$batchcorrectionswitch()
     }
   })
+
+  #Download
+  output$peaks_text_download <- shiny::downloadHandler(
+    filename = function() {
+      paste0(format(Sys.time(), "%Y-%m-%d_%H%M%S"), "_Peaks_Table.csv")
+    },
+    content = function(file) {
+      if (!is.null(upload_data$metadata_table())) {
+        df <- dplyr::left_join(upload_data$metadata_table(), extract_fragment_summary(reactive_peaks$peaks))
+      }
+      else {
+        df <- arrange(extract_fragment_summary(reactive_peaks$peaks), unique_id)
+      }
+
+      rownames(df) <- NULL
+      write.csv(df, file, row.names = F, col.names = T)
+    }
+  )
+
+  output$correlation_text_download <- shiny::downloadHandler(
+    filename = function() {
+      paste0(format(Sys.time(), "%Y-%m-%d_%H%M%S"), "_Repeat_correction_summary.csv")
+    },
+    content = function(file) {
+      if (!is.null(upload_data$metadata_table())) {
+        df <-extract_repeat_correction_summary(reactive_peaks$peaks)
+        rownames(df) <- NULL
+      write.csv(df, file, row.names = F, col.names = T)
+      }
+    }
+  )
 
   observeEvent(input$PeaksBoxSTART, {
 
@@ -323,6 +357,8 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
       shinyjs::hide("sample_subset_Repeat")
       shinyjs::hide("correlation_plot")
       shinyjs::hide("correlation_summary")
+      shinyjs::hide("correlation_text")
+      shinyjs::hide("correlation_text_download")
       shinyjs::hide("Manual_peak")
     }
     else {
@@ -330,6 +366,8 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
       shinyjs::show("correlation_plot")
       shinyjs::show("correlation_summary")
       shinyjs::show("Manual_peak")
+      shinyjs::show("correlation_text")
+      shinyjs::show("correlation_text_download")
     }
   })
 
@@ -553,11 +591,13 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     if (is.null(reactive_peaks$peaks)) {
       shinyjs::show("text_no_data")
       shinyjs::hide("peaks_text")
+      shinyjs::hide("peaks_text_download")
       shinyjs::hide("peaks_summary")
     }
     else {
       shinyjs::hide("text_no_data")
       shinyjs::show("peaks_text")
+      shinyjs::show("peaks_text_download")
       shinyjs::show("peaks_summary")
     }
   })
@@ -835,6 +875,10 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
   output$peaks_text <- renderUI({
     h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Called Peaks Table (check this to see how well the peaks are called)</b>'))
+  })
+
+  output$correlation_text <- renderUI({
+    h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Repeat Correction Summary (for plot on the left)</b>'))
   })
 
   observeEvent(input$peaks_summary_rows_selected, {

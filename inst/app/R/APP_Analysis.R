@@ -39,17 +39,25 @@ Analysis_box_ui2 <- function(id) {
   box(id = "AnalysisBox2", title = p("Instability Metrics Table"), status = "warning", solidHeader = F,
       collapsible = T, width = NULL,
 
-      withSpinner(DT::dataTableOutput("metrics_table_analysis", width = "100%", height = "400"))
-  )
+      fluidRow(
+        column(6,
+               p(style="text-align: left;", actionButton("clear", "Clear Rows"))
+        ),
+        column(6,
+               p(style="text-align: right;", downloadButton("metrics_table_analysis_download"))
+        )
+      ),
+        withSpinner(DT::dataTableOutput("metrics_table_analysis", width = "100%", height = "400"))
+      )
 }
 
-Analysis_box_ui2_2 <- function(id) {
-  box(id = "AnalysisBox2_2", title = p("Span Modelling"), status = "warning", solidHeader = F,
-      collapsible = T, width = NULL,
-
-      withSpinner(DT::dataTableOutput("span_model", width = "100%", height = "400"))
-  )
-}
+# Analysis_box_ui2_2 <- function(id) {
+#   box(id = "AnalysisBox2_2", title = p("Span Modelling"), status = "warning", solidHeader = F,
+#       collapsible = T, width = NULL,
+#
+#       withSpinner(DT::dataTableOutput("span_model", width = "100%", height = "400"))
+#   )
+# }
 
 Analysis_box_ui3 <- function(id) {
   box(id = "AnalysisBox3", title = p("Settings"), status = "warning", solidHeader = F,
@@ -132,6 +140,28 @@ analysis_server <- function(input, output, session, continue_module, upload_data
   observe({
     updateVirtualSelect("Analysis_samples", choices = names(upload_data$fsa_list()))
     updateVirtualSelect("group_samples", choices = colnames(upload_data$metadata_table()))
+  })
+
+  #Download
+  output$metrics_table_analysis_download <- shiny::downloadHandler(
+    filename = function() {
+      paste0(format(Sys.time(), "%Y-%m-%d_%H%M%S"), "_Instability_Metrics_Table_with_Metadata.csv")
+    },
+    content = function(file) {
+      if (!is.null(upload_data$metadata_table())) {
+        df <- dplyr::left_join(upload_data$metadata_table(), metrics_module$metrics_table())
+      }
+      else {
+        df <- arrange(metrics_module$metrics_table(), unique_id)
+      }
+
+      write.csv(df, file, row.names = F, col.names = T)
+    }
+  )
+
+  observeEvent(input$clear, {
+    proxy %>% selectRows(NULL)
+    updateVirtualSelect("Analysis_samples", choices = names(upload_data$fsa_list()))
   })
 
   observeEvent(input$NextButtonMetrics, {
@@ -500,6 +530,8 @@ analysis_server <- function(input, output, session, continue_module, upload_data
       ggplotly(p, tooltip="text", height = (300 + input$HeightAnalysis*20))
     }
   })
+
+  proxy = dataTableProxy('metrics_table_analysis')
 
   output$metrics_table_analysis <- DT::renderDataTable({
 

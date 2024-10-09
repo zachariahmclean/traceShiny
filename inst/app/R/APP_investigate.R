@@ -85,6 +85,7 @@ metrics_box_ui3 <- function(id) {
   box(id = "MetricsBox2", title = p("Instability Metrics Table"), status = "warning", solidHeader = F,
       collapsible = T, width = NULL,
 
+      p(style="text-align: right;", downloadButton("downloadmetrics2")),
       withSpinner(DT::dataTableOutput("metrics_table", width = "100%", height = "400"))
   )
 }
@@ -165,6 +166,7 @@ metrics_box_ui4 <- function(id) {
       fluidRow(
         column(12,
                h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Index Repeat Table</b>')),
+               p(style="text-align: right;", downloadButton("Index_Table_download")),
                withSpinner(DT::dataTableOutput("Index_Table"))
         )
       )
@@ -299,7 +301,25 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
     }
   )
 
-  #Downloads
+  #Download
+  output$Index_Table_download <- shiny::downloadHandler(
+    filename = function() {
+      paste0(format(Sys.time(), "%Y-%m-%d_%H%M%S"), "_Index_Repeat_Table.csv")
+    },
+    content = function(file) {
+      write.csv(reactive_metrics$Index_Table, file, row.names = F, col.names = T)
+    }
+  )
+
+  output$downloadmetrics2 <- shiny::downloadHandler(
+    filename = function() {
+      paste0(format(Sys.time(), "%Y-%m-%d_%H%M%S"), "_InstabilityMetricsTable", ".csv")
+    },
+    content = function(file) {
+      write.csv(reactive_metrics$df, file, row.names = F, col.names = T)
+    }
+  )
+
   output$downloadmetrics <- shiny::downloadHandler(
     filename = function() {
       paste0(format(Sys.time(), "%Y-%m-%d_%H%M%S"), "_InstabilityMetricsTable", ".csv")
@@ -687,6 +707,21 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
               rownames = FALSE)
 
   },  options = list(scrollX = TRUE))
+
+  observe({
+    if (!is.null(reactive_metrics$df)) {
+      shinyjs::show("downloadmetrics2")
+    }
+    else {
+      shinyjs::hide("downloadmetrics2")
+    }
+    if (identical(reactive_metrics$Index_Table_original, reactive_metrics$Index_Table)) {
+      shinyjs::show("downloadmetrics2")
+    }
+    else {
+      shinyjs::hide("downloadmetrics2")
+    }
+  })
 
   output$metrics_table <- DT::renderDataTable({
     validate(
