@@ -318,3 +318,28 @@ plot_repeat_correction_model <- function(fragments_list, batch_run_id_subset = N
   ggplotly(p, tooltip="text")
 
 }
+
+getVolumes <- function () {
+  osSystem <- Sys.info()["sysname"]
+  if (osSystem == "Darwin") {
+    volumes <- dir_ls("/Volumes")
+    names(volumes) <- basename(volumes)
+  }
+  else if (osSystem == "Linux") {
+    volumes <- c(Computer = "/")
+    if (isTRUE(dir_exists("/media"))) {
+      media <- dir_ls("/media")
+      names(media) <- basename(media)
+      volumes <- c(volumes, media)
+    }
+  }
+  else if (osSystem == "Windows") {
+    volLetter <- system2('powershell', '(get-volume).driveletter', stdout=TRUE)
+    volumes <- paste0(volLetter, ':/')
+    names(volumes) <- paste0(volLetter, ':')
+  }
+  else {
+    stop("unsupported OS")
+  }
+  volumes
+}

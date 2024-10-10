@@ -334,11 +334,6 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                    value = 0, {
                      incProgress(0.1)
 
-                     if (!is.null(reactive$metadata_table)) {
-                       shinyalert("ERROR!", "You already have metadata loaded, please click the refresh button on the top to delete all data and start from fresh.", type = "error", confirmButtonCol = "#337ab7")
-                     }
-                     else {
-
                        reactive$metadata_table <- read.csv(input$MetadataUpload$datapath)
 
                        reactive$metadata_table[reactive$metadata_table==""] <- NA
@@ -412,7 +407,6 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                          shinyalert("ERROR!", "File is not in correct format. Please check if your column names, make sure it is in the correct format.", type = "error", confirmButtonCol = "#337ab7")
                          shinyjs::hide("NextButtonLoad")
                        }
-                     }
                    })
     },
     error = function(e) {
