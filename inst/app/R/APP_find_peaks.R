@@ -944,14 +944,11 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
   observeEvent(input$Manual_peak_start, {
     tryCatch({
-      reactive_peaks$peaks <- find_fragments(reactive_peaks$peaks,
-                                             smoothing_window = input$smoothing_window,
-                                             minimum_peak_signal = input$minimum_peak_signal,
-                                             min_bp_size = input$min_bp_size,
-                                             max_bp_size = input$max_bp_size
-      )
+
+      reactive_peaks$peaks <- reactivity_trigger(reactive_peaks$peaks)
 
       if (!is.null(upload_data$metadata_table())) {
+
         add_metadata(
           fragments_list = reactive_peaks$peaks,
           metadata_data.frame = upload_data$metadata_table(),
@@ -964,6 +961,16 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
       find_alleles(reactive_peaks$peaks,
                    peak_region_size_gap_threshold = input$peak_region_size_gap_threshold,
                    peak_region_height_threshold_multiplier = input$peak_region_height_threshold_multiplier)
+
+      call_repeats(fragments_list = reactive_peaks$peaks,
+                   assay_size_without_repeat = input$assay_size_without_repeat,
+                   repeat_size = input$repeat_size,
+                   force_whole_repeat_units = if(input$force_whole_repeat_units == "YES") TRUE else FALSE,
+                   correction = input$batchcorrectionswitch,
+                   force_repeat_pattern = if(input$force_repeat_pattern == "YES") TRUE else FALSE,
+                   force_repeat_pattern_size_period = input$force_repeat_pattern_size_period,
+                   force_repeat_pattern_scan_window = input$force_repeat_pattern_scan_window
+      )
 
       reactive_peaks$peaks[[input$sample_subset_Manual]]$set_allele_peak(unit = "repeats", value = input$Modal_Peak)
 

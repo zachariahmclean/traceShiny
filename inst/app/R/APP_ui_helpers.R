@@ -319,27 +319,21 @@ plot_repeat_correction_model <- function(fragments_list, batch_run_id_subset = N
 
 }
 
-getVolumes <- function () {
-  osSystem <- Sys.info()["sysname"]
-  if (osSystem == "Darwin") {
-    volumes <- dir_ls("/Volumes")
-    names(volumes) <- basename(volumes)
-  }
-  else if (osSystem == "Linux") {
-    volumes <- c(Computer = "/")
-    if (isTRUE(dir_exists("/media"))) {
-      media <- dir_ls("/media")
-      names(media) <- basename(media)
-      volumes <- c(volumes, media)
-    }
-  }
-  else if (osSystem == "Windows") {
-    volLetter <- system2('powershell', '(get-volume).driveletter', stdout=TRUE)
-    volumes <- paste0(volLetter, ':/')
-    names(volumes) <- paste0(volLetter, ':')
-  }
-  else {
-    stop("unsupported OS")
-  }
-  volumes
+reactivity_trigger <- function(
+    fragments_trace_list) {
+
+  fragments_list <- lapply(fragments_trace_list, function(x) {
+
+    # generate new class
+    new_fragments_repeats <- trace:::fragments_repeats$new(unique_id = x$unique_id)
+    new_fragments_repeats$trace_bp_df <- x$trace_bp_df
+    new_fragments_repeats$peak_table_df <- x$peak_table_df
+    new_fragments_repeats <- trace:::transfer_metadata_helper(x, new_fragments_repeats)
+    new_fragments_repeats$.__enclos_env__$private$min_bp_size <- x$min_bp_size
+    new_fragments_repeats$.__enclos_env__$private$max_bp_size <- x$max_bp_size
+
+    return(new_fragments_repeats)
+  })
+
+  return(fragments_list)
 }
