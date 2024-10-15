@@ -28,6 +28,7 @@ upload_data_box_ui2 <- function(id) {
                  inputId = "DataUpload",
                  label = h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Upload Method')),
                  choices = c("fsa",
+                             "fastq",
                              "Use Example"),
                  individual = TRUE,
                  checkIcon = list(
@@ -43,13 +44,60 @@ upload_data_box_ui2 <- function(id) {
         fileInput("DataFSA", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Upload fsa File(s)')), multiple = T)
       ),
       conditionalPanel(
-        condition = 'input.DataUpload == "Peak Table"',
-        fileInput("DataPeak", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Upload Peak Table')))
+        condition = 'input.DataUpload == "fastq"',
+        fileInput("fastq", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Upload fastq Files(s)')), multiple = T)
       ),
       conditionalPanel(
         condition = 'input.DataUpload == "Repeat Table"',
         fileInput("DataTable", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Upload Repeat Table')))
       )
+  )
+}
+
+upload_data_box_ui_fastq1 <- function(id) {
+  box(id = "LoadBox_FASTQ1", title = p("Approximate Pattern Matching"), status = "warning", solidHeader = F,
+      collapsible = T, width = NULL,
+
+      fluidRow(
+        column(6,
+               textInput("flank_left", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Left Flanking Sequence')), placeholder = "CAAGTCCTTC")
+        ),
+        column(6,
+               textInput("flank_right", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Right Flanking Sequence')), placeholder = "CAACAGCCGCCACCG")
+        )
+      ),
+
+      fluidRow(
+        column(6,
+               textInput("repeat_pattern", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Repeat Pattern')), placeholder = "CAG")
+        ),
+        column(6,
+               numericInput("no_repeats", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Find at least this many repeats')), value = 10,
+                            min = 0, step = 1)
+        )
+      ),
+
+      fluidRow(
+        column(6,
+               numericInput("Lev_distance", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Max Levenshtein Distance')), value = 0.1,
+                            min = 0, max = 1, step = 0.01)
+        )
+      ),
+      p(style="text-align: center;", actionBttn("Fastq_Button", "APPLY", size = "lg"))
+  )
+}
+
+upload_data_box_ui_fastq2 <- function(id) {
+  box(id = "LoadBox_FASTQ2", title = p("Filtered Fastq"), status = "warning", solidHeader = F,
+      collapsible = T, width = NULL,
+
+      fluidRow(
+        column(3,
+               pickerInput("sample_subset_fastq", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Filter Samples')),
+                           choices = "ALL"))
+      ),
+
+      withSpinner(DT::dataTableOutput("fastq_filter_table", width = "100%", height = 400))
   )
 }
 
@@ -162,12 +210,15 @@ upload_data_box_server <- function(input, output, session, continue_module) {
     shinyjs::hide("LoadBox3")
     shinyjs::hide("LoadBox4")
     shinyjs::hide("NextButtonLoad")
+    shinyjs::hide("LoadBox_FASTQ1")
+    shinyjs::hide("LoadBox_FASTQ2")
 
     updateRadioGroupButtons(session, "DataUpload", selected = "fsa")
 
     reactive$laddertable <- NULL
     reactive$fsa_list <- NULL
     reactive$metadata_table <- NULL
+    reactive$df <- NULL
   })
 
   observeEvent(input$DataUpload, {
@@ -180,28 +231,27 @@ upload_data_box_server <- function(input, output, session, continue_module) {
         shinyjs::hide("LoadBox3")
         shinyjs::hide("LoadBox4")
         shinyjs::hide("NextButtonLoad")
+        shinyjs::hide("LoadBox_FASTQ1")
+        shinyjs::hide("LoadBox_FASTQ2")
       }
       else {
         reactive$fsa_list <- trace::cell_line_fsa_list
 
-        # fsa_list <- lapply(cell_line_fsa_list[91:94], function(x) x$clone())
-        #
-        # find_ladders(fsa_list,
-        #              show_progress_bar = FALSE)
-        #
-        # fsa_list[[1]]$trace_bp_df[which(round(fsa_list[[1]]$trace_bp_df$size, 2) == 418.25), "signal"] <- 4000
-        #
-        # reactive$fsa_list <- fsa_list
+        reactive$df <- NULL
 
         shinyjs::show("LoadBox2")
         shinyjs::show("LoadBox5")
         shinyjs::hide("NextButtonLoad")
+        shinyjs::hide("LoadBox_FASTQ1")
+        shinyjs::hide("LoadBox_FASTQ2")
       }
     }
     else {
       updateMaterialSwitch(session, "DataUploadMeta", value = F)
       shinyjs::show("LoadBox2")
       shinyjs::hide("NextButtonLoad")
+      shinyjs::hide("LoadBox_FASTQ1")
+      shinyjs::hide("LoadBox_FASTQ2")
     }
   })
 
@@ -212,6 +262,8 @@ upload_data_box_server <- function(input, output, session, continue_module) {
         shinyalert("ERROR!", "You already have metadata loaded, please click the refresh button on the top to delete all data and start from fresh.", type = "error", confirmButtonCol = "#337ab7")
         shinyjs::hide("LoadBox4")
         shinyjs::hide("NextButtonLoad")
+        shinyjs::hide("LoadBox_FASTQ1")
+        shinyjs::hide("LoadBox_FASTQ2")
       }
       else {
         reactive$metadata_table <- trace::metadata
@@ -221,6 +273,8 @@ upload_data_box_server <- function(input, output, session, continue_module) {
         shinyjs::show("LoadBox3")
         shinyjs::show("LoadBox4")
         shinyjs::show("NextButtonLoad")
+        shinyjs::hide("LoadBox_FASTQ1")
+        shinyjs::hide("LoadBox_FASTQ2")
       }
     }
     else if(input$DataUploadMeta == F) {
@@ -245,6 +299,8 @@ upload_data_box_server <- function(input, output, session, continue_module) {
     shinyjs::show("LoadBox3")
     shinyjs::show("LoadBox4")
     shinyjs::show("NextButtonLoad")
+    shinyjs::hide("LoadBox_FASTQ1")
+    shinyjs::hide("LoadBox_FASTQ2")
     shinyalert("SUCCESS!", "Channels Selected!", type = "success", confirmButtonCol = "#337ab7")
 
     output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
@@ -270,10 +326,68 @@ upload_data_box_server <- function(input, output, session, continue_module) {
 
                        reactive$fsa_list <- read_fsa(list.files(full.names = TRUE, filesdir))
 
+                       reactive$df <- NULL
+
                        shinyalert("SUCCESS!", "File uploaded successfully.", type = "success", confirmButtonCol = "#337ab7")
 
                        shinyjs::show("LoadBox2")
                        shinyjs::show("LoadBox5")
+                       shinyjs::hide("LoadBox3")
+                       shinyjs::hide("LoadBox4")
+                       shinyjs::hide("NextButtonLoad")
+                       shinyjs::hide("LoadBox_FASTQ1")
+                       shinyjs::hide("LoadBox_FASTQ2")
+
+                       output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
+                                                                        menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = T))
+                       )
+                     }
+                   })
+    },
+    error = function(e) {
+      shinyalert("ERROR!", e$message, type = "error", confirmButtonCol = "#337ab7")
+      reactive$fsa_list <- NULL
+      reactive$df <- NULL
+    })
+  })
+
+  observeEvent(input$fastq, {
+    tryCatch({
+      withProgress(message = 'Loading fastq file(s)...', style = "old",
+                   value = 0, {
+                     incProgress(0.1)
+
+                     if (!is.null(reactive$fastq_list)) {
+                       shinyalert("ERROR!", "You already have an fsa file(s) loaded, please click the refresh button on the top to delete all data and start from fresh.", type = "error", confirmButtonCol = "#337ab7")
+                     }
+                     else {
+                       filesdir = dirname(input$fastq[[1, 'datapath']])
+
+                       for (i in 1:length(input$fastq$name)) {
+                         file.rename(input$fastq[[i, 'datapath']], paste0(filesdir,'/',input$fastq$name[i]))
+                       }
+
+                       CAG <- list()
+                       CAG_reverse <- list()
+                       joined <- list()
+
+                       for (i in paste0(filesdir,'/',input$fastq$name)) {
+                         CAG[[i]] <- microseq::readFastq(i)
+                         CAG_reverse[[i]] <- microseq::readFastq(i)
+                         CAG_reverse[[i]]$Sequence <- microseq::reverseComplement(CAG_reverse[[i]]$Sequence)
+                         joined[[i]] <- Map(c, CAG[[i]], CAG_reverse[[i]])
+                       }
+
+                       reactive$df <- joined
+
+                       reactive$fsa_list <- NULL
+
+                       shinyalert("SUCCESS!", "File uploaded successfully.", type = "success", confirmButtonCol = "#337ab7")
+
+                       shinyjs::show("LoadBox2")
+                       shinyjs::show("LoadBox_FASTQ1")
+                       shinyjs::show("LoadBox_FASTQ2")
+                       shinyjs::hide("LoadBox5")
                        shinyjs::hide("LoadBox3")
                        shinyjs::hide("LoadBox4")
                        shinyjs::hide("NextButtonLoad")
@@ -287,7 +401,78 @@ upload_data_box_server <- function(input, output, session, continue_module) {
     error = function(e) {
       shinyalert("ERROR!", e$message, type = "error", confirmButtonCol = "#337ab7")
       reactive$fsa_list <- NULL
+      reactive$df <- NULL
     })
+  })
+
+  observeEvent(input$Fastq_Button, {
+
+    ALL <- list()
+    df <- list()
+
+    for (i in names(reactive$df)) {
+
+      ALL[[i]] <- aregexec(paste0(input$flank_left, paste0("(", input$repeat_pattern, ")", "{", input$no_repeats, ",}"),  input$flank_right), reactive$df[[i]]$Sequence, max.distance = input$Lev_distance)
+
+      ## Extract matches
+      df[[i]] <- regmatches(reactive$df[[i]]$Sequence, ALL[[i]])
+      names(df[[i]]) <- reactive$df[[i]]$Header
+      df[[i]] <- df[[i]][lapply(df[[i]],length)>0]
+
+      df[[i]] <- as.data.frame(enframe(df[[i]]))
+      df[[i]] <- unnest(df[[i]])
+      df[[i]] <- df[[i]][!duplicated(df[[i]]$name), ]
+      df[[i]] <- mutate(df[[i]], Repeat_length = paste0(round((nchar(df[[i]]$value)- nchar(paste0(input$flank_left, input$flank_right)))/nchar(input$repeat_pattern)))) %>% mutate(df[[i]], SampleID = gsub(".+/", "", i))
+      df[[i]]$Repeat_length <- as.numeric(df[[i]]$Repeat_length)
+    }
+
+    reactive$df_final <- df %>% purrr::reduce(full_join)
+    reactive$df_final <- reactive$df_final[,c(1,3,2,4)]
+    colnames(reactive$df_final) <- c("Read ID", "Repeat Length", "Sequence", "SampleID")
+
+    shinyjs::show("LoadBox2")
+    shinyjs::show("LoadBox_FASTQ1")
+    shinyjs::show("LoadBox_FASTQ2")
+    shinyjs::hide("LoadBox5")
+    shinyjs::show("LoadBox3")
+    shinyjs::hide("LoadBox4")
+    shinyjs::hide("NextButtonLoad")
+  })
+
+  output$fastq_filter_table <- DT::renderDataTable({
+    validate(
+      need(!is.null(reactive$df_final), 'You must select your parameters and press APPLY...'))
+
+    if (input$sample_subset_fastq == "ALL") {
+
+      datatable(reactive$df_final,
+                options = list(scrollX = TRUE,
+                               scrollY = TRUE,
+                               server = TRUE,
+                               paging = TRUE,
+                               pageLength = 15
+                ),
+                selection = 'single',
+                rownames = FALSE)
+    }
+    else {
+      datatable(reactive$df_final[which(reactive$df_final$SampleID == input$sample_subset_fastq),],
+                options = list(scrollX = TRUE,
+                               scrollY = TRUE,
+                               server = TRUE,
+                               paging = TRUE,
+                               pageLength = 15
+                ),
+                selection = 'single',
+                rownames = FALSE)
+    }
+
+  },  options = list(scrollX = TRUE))
+
+  observe({
+    if (!is.null(reactive$df_final)) {
+      updatePickerInput(session, "sample_subset_fastq", choices = c("ALL", unique(reactive$df_final$SampleID)))
+    }
   })
 
   observe({
@@ -334,18 +519,19 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                    value = 0, {
                      incProgress(0.1)
 
-                       reactive$metadata_table <- read.csv(input$MetadataUpload$datapath)
+                     reactive$metadata_table <- read.csv(input$MetadataUpload$datapath)
 
-                       reactive$metadata_table[reactive$metadata_table==""] <- NA
+                     reactive$metadata_table[reactive$metadata_table==""] <- NA
 
-                       if (any(grepl("unique_id", colnames(reactive$metadata_table))) &&
-                           any(grepl("metrics_group_id", colnames(reactive$metadata_table))) &&
-                           any(grepl("metrics_baseline_control", colnames(reactive$metadata_table))) &&
-                           any(grepl("batch_run_id", colnames(reactive$metadata_table))) &&
-                           any(grepl("batch_sample_id", colnames(reactive$metadata_table))) &&
-                           any(grepl("batch_sample_modal_repeat", colnames(reactive$metadata_table)))
-                       )
-                       {
+                     if (any(grepl("unique_id", colnames(reactive$metadata_table))) &&
+                         any(grepl("metrics_group_id", colnames(reactive$metadata_table))) &&
+                         any(grepl("metrics_baseline_control", colnames(reactive$metadata_table))) &&
+                         any(grepl("batch_run_id", colnames(reactive$metadata_table))) &&
+                         any(grepl("batch_sample_id", colnames(reactive$metadata_table))) &&
+                         any(grepl("batch_sample_modal_repeat", colnames(reactive$metadata_table)))
+                     )
+                     {
+                       if (!is.null(reactive$fsa_list)) {
                          reactive$metadata_table <- reactive$metadata_table[match(names(reactive$fsa_list), reactive$metadata_table$unique_id),]
 
                          if (all(reactive$metadata_table$unique_id %in% names(reactive$fsa_list))) {
@@ -362,6 +548,8 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                                shinyjs::show("LoadBox3")
                                shinyjs::show("LoadBox4")
                                shinyjs::show("NextButtonLoad")
+                               shinyjs::hide("LoadBox_FASTQ1")
+                               shinyjs::hide("LoadBox_FASTQ2")
 
                                output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
                                                                                 menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = T),
@@ -377,6 +565,8 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                                shinyjs::show("LoadBox3")
                                shinyjs::show("LoadBox4")
                                shinyjs::show("NextButtonLoad")
+                               shinyjs::hide("LoadBox_FASTQ1")
+                               shinyjs::hide("LoadBox_FASTQ2")
 
                                output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
                                                                                 menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = T),
@@ -391,6 +581,8 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                              shinyjs::show("LoadBox3")
                              shinyjs::show("LoadBox4")
                              shinyjs::show("NextButtonLoad")
+                             shinyjs::hide("LoadBox_FASTQ1")
+                             shinyjs::hide("LoadBox_FASTQ2")
 
                              output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
                                                                               menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = T),
@@ -403,16 +595,87 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                            shinyjs::hide("NextButtonLoad")
                          }
                        }
-                       else {
-                         shinyalert("ERROR!", "File is not in correct format. Please check if your column names, make sure it is in the correct format.", type = "error", confirmButtonCol = "#337ab7")
-                         shinyjs::hide("NextButtonLoad")
+                       else if (!is.null(reactive$df)) {
+                         reactive$metadata_table <- reactive$metadata_table[match(reactive$df$SampleID, reactive$metadata_table$unique_id),]
+
+                         if (all(reactive$metadata_table$unique_id %in% reactive$df$SampleID)) {
+
+                           if (any(grepl("TRUE", reactive$metadata_table$metrics_baseline_control))) {
+
+                             if (all(unique(reactive$metadata_table[-which(reactive$metadata_table$metrics_baseline_control == TRUE), ]$metrics_group_id) %in%
+                                     unique(reactive$metadata_table[which(reactive$metadata_table$metrics_baseline_control == TRUE), ]$metrics_group_id))) {
+
+                               shinyalert("SUCCESS!", "File uploaded successfully.", type = "success", confirmButtonCol = "#337ab7")
+
+                               shinyjs::show("LoadBox2")
+                               shinyjs::hide("LoadBox5")
+                               shinyjs::show("LoadBox3")
+                               shinyjs::hide("LoadBox4")
+                               shinyjs::hide("NextButtonLoad")
+                               shinyjs::show("NextButtonLoad2")
+                               shinyjs::show("LoadBox_FASTQ1")
+                               shinyjs::show("LoadBox_FASTQ2")
+
+                               output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
+                                                                                menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = T),
+                                                                                menuItem("Instability Metrics", icon = icon("table"), tabName = "InstabilityMetrics2", selected = F,
+                                                                                         badgeColor = "green", badgeLabel = "new")))
+
+                             }
+                             else {
+                               shinyalert("WARNING!", "Not all samples have matching controls. Please check your column metrics_baseline_control.", type = "warning", confirmButtonCol = "#337ab7")
+
+                               shinyjs::show("LoadBox2")
+                               shinyjs::hide("LoadBox5")
+                               shinyjs::show("LoadBox3")
+                               shinyjs::hide("LoadBox4")
+                               shinyjs::hide("NextButtonLoad")
+                               shinyjs::show("NextButtonLoad2")
+                               shinyjs::show("LoadBox_FASTQ1")
+                               shinyjs::show("LoadBox_FASTQ2")
+
+                               output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
+                                                                                menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = T),
+                                                                                menuItem("Instability Metrics", icon = icon("table"), tabName = "InstabilityMetrics2", selected = F,
+                                                                                         badgeColor = "green", badgeLabel = "new")))
+                             }
+                           }
+                           else {
+                             shinyalert("WARNING!", "Control samples not detected in uploaded dataframe, please check your column metrics_baseline_control. You may proceed but some functions may not be avaliable.", type = "warning", confirmButtonCol = "#337ab7")
+                             shinyjs::show("LoadBox2")
+                             shinyjs::hide("LoadBox5")
+                             shinyjs::show("LoadBox3")
+                             shinyjs::hide("LoadBox4")
+                             shinyjs::hide("NextButtonLoad")
+                             shinyjs::show("NextButtonLoad2")
+                             shinyjs::show("LoadBox_FASTQ1")
+                             shinyjs::show("LoadBox_FASTQ2")
+
+                             output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
+                                                                              menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = T),
+                                                                              menuItem("Instability Metrics", icon = icon("table"), tabName = "InstabilityMetrics2", selected = F,
+                                                                                       badgeColor = "green", badgeLabel = "new")))
+                           }
+                         }
+                         else {
+                           shinyalert("ERROR!", "fsa filenames does not match the unique ID names in the metadata (or is not complete). Please check your loaded fsa files and corresponding metadata names.", type = "error", confirmButtonCol = "#337ab7")
+                           shinyjs::hide("NextButtonLoad")
+                           shinyjs::hide("NextButtonLoad2")
+                         }
                        }
+                     }
+                     else {
+                       shinyalert("ERROR!", "File is not in correct format. Please check if your column names, make sure it is in the correct format.", type = "error", confirmButtonCol = "#337ab7")
+                       shinyjs::hide("NextButtonLoad")
+                       shinyjs::hide("NextButtonLoad2")
+                     }
                    })
     },
     error = function(e) {
       shinyalert("ERROR!", e$message, type = "error", confirmButtonCol = "#337ab7")
       reactive$metadata_table <- NULL
       shinyjs::hide("NextButtonLoad")
+      shinyjs::hide("NextButtonLoad2")
     })
   })
 
@@ -467,6 +730,8 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                        shinyjs::show("LoadBox3")
                        shinyjs::show("LoadBox4")
                        shinyjs::show("NextButtonLoad")
+                       shinyjs::hide("LoadBox_FASTQ1")
+                       shinyjs::hide("LoadBox_FASTQ2")
 
                        output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
                                                                         menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = T),
@@ -509,6 +774,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
   },  options = list(scrollX = TRUE))
 
   return(list(
+    fastq = reactive(reactive$df),
     laddertable = reactive(reactive$laddertable),
     fsa_list = reactive(reactive$fsa_list),
     metadata_table = reactive(reactive$metadata_table),

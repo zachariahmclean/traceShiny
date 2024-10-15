@@ -270,6 +270,12 @@ body <- dashboardBody(
                                                                color = "primary",
                                                                icon = icon("play"), block = T))
               )
+            ),
+            fluidRow(
+              column(3,
+                     upload_data_box_ui_fastq1("fe")),
+              column(9,
+                     upload_data_box_ui_fastq2("fe"))
             )
     ),
     tabItem(tabName = "FindLadders",
@@ -324,6 +330,24 @@ body <- dashboardBody(
               )
             )
     ),
+
+    # tabItem(tabName = "InstabilityMetrics2",
+    #         fluidRow(metrics2_box_ui1("fe")),
+    #         fluidRow(
+    #           column(3,
+    #                  metrics2_box_ui2("fe"),
+    #                  metrics2_box_ui5("fe"),
+    #                  p(style="text-align: center;", actionBttn("NextButtonMetrics2", "CLICK HERE FOR SOME COOL PLOTS",
+    #                                                            style = "jelly",
+    #                                                            color = "primary",
+    #                                                            icon = icon("play"), block = T))
+    #           ),
+    #           column(9,
+    #                  metrics2_box_ui4("fe"),
+    #                  metrics2_box_ui3("fe")
+    #           )
+    #         )
+    # ),
 
     tabItem(tabName = "Analysis",
             fluidRow(

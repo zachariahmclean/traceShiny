@@ -58,7 +58,15 @@ server <- function(input, output, session) {
 
   # Analysis module ---------------------------------------------------------------------
 
-  analysis_server(input = input, output = output, session = session, continue_module = continue_module, upload_data = upload_data, ladder_module = ladder_module, peaks_module = peaks_module, metrics_module = metrics_module)
+  analysis_module <- analysis_server(input = input, output = output, session = session, continue_module = continue_module, upload_data = upload_data, ladder_module = ladder_module, peaks_module = peaks_module, metrics_module = metrics_module)
+
+  # Metrics2 module ---------------------------------------------------------------------
+
+  #metrics2_server(input = input, output = output, session = session, continue_module = continue_module, upload_data = upload_data, ladder_module = ladder_module, peaks_module = peaks_module, metrics_module = metrics_module, analysis_module = analysis_module)
+
+  # Analysis module ---------------------------------------------------------------------
+
+  #analysis2_server(input = input, output = output, session = session, continue_module = continue_module, upload_data = upload_data, ladder_module = ladder_module, peaks_module = peaks_module, metrics_module = metrics_module, analysis_module = analysis_module, metrics2_module = metrics2_module)
 
   # Help Menu ---------------------------------------------------------------
   output$sessionInfo <- renderPrint({
@@ -70,3 +78,4 @@ server <- function(input, output, session) {
   formServer(basicInfoForm)
 
 }
+#

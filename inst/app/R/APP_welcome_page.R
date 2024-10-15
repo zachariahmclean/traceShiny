@@ -34,6 +34,8 @@ observeEvent(input$startbuttonintro, {
                  library(dplyr)
                  library(assertr)
                  library(ggpubr)
+                 library(tibble)
+                 library(tidyr)
 
                  incProgress(0.8)
 
@@ -43,11 +45,13 @@ observeEvent(input$startbuttonintro, {
                    js$collapse("LoadBoxIntro")
                  }
                  shinyjs::show("startbuttonLoad")
-                 shinyjs::hide(id = "LoadBox2")
-                 shinyjs::hide(id = "LoadBox5")
-                 shinyjs::hide(id = "LoadBox3")
-                 shinyjs::hide(id = "LoadBox4")
-                 shinyjs::hide(id = "NextButtonLoad")
+                 shinyjs::hide("LoadBox2")
+                 shinyjs::hide("LoadBox5")
+                 shinyjs::hide("LoadBox3")
+                 shinyjs::hide("LoadBox4")
+                 shinyjs::hide("NextButtonLoad")
+                 shinyjs::hide("LoadBox_FASTQ1")
+                 shinyjs::hide("LoadBox_FASTQ2")
                  updateRadioGroupButtons(session, "DataUpload", selected = "fsa")
 
                  output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",

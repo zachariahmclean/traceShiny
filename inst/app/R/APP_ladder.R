@@ -92,24 +92,20 @@ ladder_box_ui3 <- function(id) {
         column(6,
                pickerInput("unique_id_selection", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Sample Selection')), choices = NULL)
         ),
-        column(6,
+        column(1,
                actionButton("up_ladder", NULL, icon("arrow-up"), style='text-align: left; margin-top:50px; font-size:200%'),
                br(),
-               actionButton("down_ladder", NULL, icon("arrow-down"), style='text-align: left; margin-top:-20px; font-size:200%'))
-      ),
-      fluidRow(
+               actionButton("down_ladder", NULL, icon("arrow-down"), style='text-align: left; margin-top:-20px; font-size:200%')),
         column(3,
                prettySwitch("warning_checkbox", "Select only samples with ladder warnings",
-                            value = FALSE, fill = T, status = "success", inline = T),
-        )
-      ),
-
-      fluidRow(
+                            value = FALSE, fill = T, status = "success", inline = T)
+        ),
         column(3,
                sliderInput("rsq_limit", HTML('<h5 style = "text-align:justify; margin-top:-50px;">r-squared threshold for warning (see table below)'),
                            min = 0.9, max = 1,
                            value = 0.998, step = 0.001))
       ),
+
       fluidRow(
         column(6,
                sliderInput("find_scan_max", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Snap to tallest scan window')),
