@@ -1,0 +1,561 @@
+Analysis2_box_ui1 <- function(id) {
+  box(id = "Analysis2Box1", title = p("Overlay Plots"), status = "warning", solidHeader = F,
+      collapsible = T, width = NULL,
+
+      fluidRow(
+        column(1,
+               numericInput("xlim1_analysis2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">X min')),
+                            value = 0)),
+
+        column(1,
+               numericInput("xlim2_analysis2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">X max')),
+                            value = 250)),
+        column(1,
+               numericInput("ylim1_analysis2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Y min')),
+                            value = -100)),
+
+        column(1,
+               numericInput("ylim2_analysis2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Y max')),
+                            value = 2000)),
+
+        column(4,
+               sliderInput("opacity2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Opacity')),
+                           min = 0, max = 1,
+                           value = 0.6, step = 0.1)
+        ),
+
+        column(4,
+               sliderInput("HeightAnalysis2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Plot Height')),
+                           min = 1, max = 100,
+                           value = 20, step = 1)
+        )
+      ),
+
+      withSpinner(htmlOutput("overlay_plot2UI"))
+  )
+}
+
+Analysis2_box_ui2 <- function(id) {
+  box(id = "Analysis2Box2", title = p("Instability Metrics Table"), status = "warning", solidHeader = F,
+      collapsible = T, width = NULL,
+
+      fluidRow(
+        column(6,
+               p(style="text-align: left;", actionButton("clear2", "Clear Rows"))
+        ),
+        column(6,
+               p(style="text-align: right;", downloadButton("metrics_table_analysis_download2"))
+        )
+      ),
+        withSpinner(DT::dataTableOutput("metrics_table_analysis2", width = "100%", height = "400"))
+      )
+}
+
+Analysis2_box_ui3 <- function(id) {
+  box(id = "Analysis2Box3", title = p("Settings"), status = "warning", solidHeader = F,
+      collapsible = T, width = NULL,
+
+      fluidRow(
+        column(12,
+               radioGroupButtons(
+                 inputId = "points_histo2",
+                 label = h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Plot Option')),
+                 choices = c("Points",
+                             "Histogram"),
+                 justified = TRUE,
+                 selected = "Histogram"
+               ),
+
+               virtualSelectInput("Analysis_samples2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Plot to Overlay')),
+                                  choices = NULL,
+                                  multiple = T,
+                                  selected = NULL,
+                                  search = T,
+                                  hideClearButton = F,
+                                  placeholder = "Please select your samples"
+               ),
+
+               virtualSelectInput("group_samples2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Group Samples By')),
+                                  choices = "unique_id",
+                                  multiple = T,
+                                  selected = NULL,
+                                  search = T,
+                                  hideClearButton = F,
+                                  placeholder = "Please select your groupings"
+               ),
+
+               pickerInput("normalize2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Normalization Method')),
+                           choices = c("None", "Highest Peak", "Sum Of All Peaks")),
+
+               htmlOutput("Normalization_settings2"),
+               fluidRow(
+                 column(6,
+                        numericInput("threshold_min2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Min Repeat Size')),
+                                     value = 10)),
+                 column(6,
+                        numericInput("threshold_max2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Max Repeat Size')),
+                                     value = 500))
+               ),
+               materialSwitch("index_normalize2", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Set Index Repeat as Zero')), value = FALSE, status = "primary"),
+               materialSwitch("dot_show2", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Show peaks/traces')), value = TRUE, status = "primary"),
+               materialSwitch("line_show2", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Show Best Fit Line')), value = FALSE, status = "primary"),
+
+               conditionalPanel(
+                 condition = 'input.line_show2 == true',
+                 numericInput("span2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Span')),
+                              value = 0.1, max = 1,
+                              step = 0.01),
+                 materialSwitch("CI_show2", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Show Confidence Intervals')), value = FALSE, status = "primary"),
+
+                 conditionalPanel(
+                   condition = 'input.CI_show2 == true',
+                   numericInput("CI2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Confidence Interval')),
+                                value = 0.95, max = 1,
+                                step = 0.01)
+                 )
+               )
+        ))
+  )
+}
+
+analysis2_server <- function(input, output, session, continue_module, upload_data, ladder_module, peaks_module, metrics_module, analysis_module, metrics2_module) {
+
+  reactive_analysis2 <- reactiveValues()
+
+  #Colours
+  safe_colorblind_palette <- c("#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499",
+                               "#44AA99", "#999933", "#882255", "#88CCEE", "#661100", "#6699CC", "#888888")
+  color = grDevices::colors()[grep('gr(a|e)y', grDevices::colors(), invert = T)]
+  color = color[-grep("white", color)]
+  color = c(safe_colorblind_palette, color)
+
+  observe({
+    updateVirtualSelect("Analysis_samples2", choices = names(metrics2_module$peak_list()))
+    updateVirtualSelect("group_samples2", choices = colnames(upload_data$metadata_table()))
+  })
+
+  #Download
+  output$metrics_table_analysis_download2 <- shiny::downloadHandler(
+    filename = function() {
+      paste0(format(Sys.time(), "%Y-%m-%d_%H%M%S"), "_Instability_Metrics_Table_with_Metadata.csv")
+    },
+    content = function(file) {
+      if (!is.null(upload_data$metadata_table())) {
+        df <- dplyr::left_join(upload_data$metadata_table(), metrics2_module$metrics_table())
+      }
+      else {
+        df <- arrange(metrics2_module$metrics_table(), unique_id)
+      }
+
+      write.csv(df, file, row.names = F, col.names = T)
+    }
+  )
+
+  observeEvent(input$clear2, {
+    proxy %>% selectRows(NULL)
+    updateVirtualSelect("Analysis_samples2", choices = names(metrics2_module$peak_list()))
+  })
+
+  observeEvent(input$NextButtonMetrics2, {
+
+    output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
+                                                     menuItem("Upload", icon = icon("spinner"), tabName = "Upload"),
+                                                     menuItem("Instability Metrics", icon = icon("table"), tabName = "InstabilityMetrics2", selected = F),
+                                                     menuItem("Analysis", icon = icon("magnifying-glass-chart"), tabName = "Analysis2", selected = T,
+                                                              badgeColor = "green", badgeLabel = "new")))
+  })
+
+  output$Normalization_settings2 <- renderUI({
+    h4(HTML('<b><h4 style = "text-align:justify;">Normalization Settings</b>'))
+  })
+
+  observe({
+    if (input$normalize2 == "None") {
+      shinyjs::hide("threshold_min2")
+      shinyjs::hide("threshold_max2")
+      shinyjs::hide("Normalization_settings2")
+    }
+    else {
+      shinyjs::show("threshold_max2")
+      shinyjs::show("threshold_min2")
+      shinyjs::show("Normalization_settings2")
+    }
+  })
+
+  observeEvent(input$normalize2, {
+    if (!is.null(metrics2_module$peak_list())) {
+      if (input$normalize2 == "Highest Peak") {
+        updateNumericInput(session, "ylim1_analysis2", value = -0.3)
+      }
+      else if (input$normalize2 == "Sum Of All Peaks") {
+        updateNumericInput(session, "ylim1_analysis2", value = -0.03)
+      }
+      else if (input$normalize2 == "None") {
+        updateNumericInput(session, "ylim1_analysis2", value = -2)
+      }
+
+      if (input$normalize2 == "Highest Peak") {
+        updateNumericInput(session, "ylim2_analysis2", value = 1.2)
+      }
+      else if (input$normalize2 == "Sum Of All Peaks") {
+        updateNumericInput(session, "ylim2_analysis2", value = 0.3)
+      }
+      else if (input$normalize2 == "None") {
+        updateNumericInput(session, "ylim2_analysis2", value = metrics2_module$peak_list()[[input$sample_subset_metrics2]]$get_allele_peak()$allele_height + 100)
+      }
+    }
+  })
+
+  observe({
+    if (!is.null(metrics2_module$peak_list()) && !is.null(input$sample_subset_metrics2)) {
+      updateNumericInput(session, "xlim1_analysis2", value = metrics2_module$peak_list()[[input$sample_subset_metrics2]]$get_allele_peak()$allele_repeat - 50)
+      updateNumericInput(session, "xlim2_analysis2", value = metrics2_module$peak_list()[[input$sample_subset_metrics2]]$get_allele_peak()$allele_repeat + 50)
+      updateNumericInput(session, "ylim1_analysis2", value = -100)
+      updateNumericInput(session, "ylim2_analysis2", value = metrics2_module$peak_list()[[input$sample_subset_metrics2]]$get_allele_peak()$allele_height + 300)
+
+    if (input$index_normalize2 == TRUE) {
+      updateNumericInput(session, "xlim1_analysis2", value = -50)
+      updateNumericInput(session, "xlim2_analysis2", value = 50)
+
+      if (input$normalize2 == "Highest Peak") {
+        updateNumericInput(session, "ylim1_analysis2", value = -0.3)
+      }
+      else if (input$normalize2 == "Sum Of All Peaks") {
+        updateNumericInput(session, "ylim1_analysis2", value = -0.03)
+      }
+      else if (input$normalize2 == "None") {
+        updateNumericInput(session, "ylim1_analysis2", value = -2)
+      }
+
+      if (input$normalize2 == "Highest Peak") {
+        updateNumericInput(session, "ylim2_analysis2", value = 1.2)
+      }
+      else if (input$normalize2 == "Sum Of All Peaks") {
+        updateNumericInput(session, "ylim2_analysis2", value = 0.3)
+      }
+      else if (input$normalize2 == "None") {
+        updateNumericInput(session, "ylim2_analysis2", value = metrics2_module$peak_list()[[input$sample_subset_metrics2]]$get_allele_peak()$allele_height + 100)
+      }
+    }
+    else {
+      updateNumericInput(session, "xlim1_analysis2", value = metrics2_module$peak_list()[[input$sample_subset_metrics2]]$get_allele_peak()$allele_repeat - 50)
+      updateNumericInput(session, "xlim2_analysis2", value = metrics2_module$peak_list()[[input$sample_subset_metrics2]]$get_allele_peak()$allele_repeat + 50)
+
+      if (input$normalize2 == "Highest Peak") {
+        updateNumericInput(session, "ylim1_analysis2", value = -0.3)
+      }
+      else if (input$normalize2 == "Sum Of All Peaks") {
+        updateNumericInput(session, "ylim1_analysis2", value = -0.03)
+      }
+      else if (input$normalize2 == "None") {
+        updateNumericInput(session, "ylim1_analysis2", value = -2)
+      }
+
+      if (input$normalize2 == "Highest Peak") {
+        updateNumericInput(session, "ylim2_analysis2", value = 1.2)
+      }
+      else if (input$normalize2 == "Sum Of All Peaks") {
+        updateNumericInput(session, "ylim2_analysis2", value = 0.3)
+      }
+      else if (input$normalize2 == "None") {
+        updateNumericInput(session, "ylim2_analysis2", value = metrics2_module$peak_list()[[input$sample_subset_metrics2]]$get_allele_peak()$allele_height + 100)
+      }
+    }
+    }
+  })
+
+  output$overlay_plot2UI <- renderUI({
+    plotlyOutput("overlay_plot2", height = (300 + input$HeightAnalysis2*20))
+  })
+
+  output$overlay_plot2 <- renderPlotly({
+
+    if (is.null(input$Analysis_samples2)) {
+      # Return a blank plot if object is missing
+      return(plotly::plot_ly())
+    }
+
+    if (input$points_histo2 == "Histogram") {
+
+      trace <- extract_fragments(metrics2_module$peak_list())
+
+      trace <- mutate(trace, Normalised_Height = height)
+
+      trace <- trace[which(trace$unique_id %in% input$Analysis_samples2),]
+
+      if (input$normalize2 == "None") {
+
+        if (!is.null(upload_data$metadata_table())) {
+          trace <- left_join(trace, upload_data$metadata_table())
+        }
+
+        trace$plot <- col_concat(as.data.frame(trace[, which(colnames(trace) %in% input$group_samples2)]), sep = ":")
+      }
+
+      else if (input$normalize2 == "Sum Of All Peaks") {
+        lookup <- trace[trace$repeats > input$threshold_min2, ]
+        lookup <- lookup[lookup$repeats < input$threshold_max2, ]
+
+        lookup <- lookup %>% group_by(unique_id) %>% dplyr::summarise(sum(height))
+        colnames(lookup)[2] <- c("norm_factor")
+
+        trace <- left_join(trace, lookup)
+
+        trace <- mutate(trace, Normalised_Height = height/norm_factor)
+
+        if (!is.null(upload_data$metadata_table())) {
+          trace <- left_join(trace, upload_data$metadata_table())
+        }
+
+        trace$plot <- col_concat(as.data.frame(trace[, which(colnames(trace) %in% input$group_samples2)]), sep = ":")
+      }
+
+      else if (input$normalize2 == "Highest Peak") {
+        lookup <- trace[trace$repeats > input$threshold_min2, ]
+        lookup <- lookup[lookup$repeats < input$threshold_max2, ]
+
+        lookup <- lookup %>% group_by(unique_id) %>% dplyr::summarise(max(height))
+        colnames(lookup)[2] <- c("norm_factor")
+
+        trace <- left_join(trace, lookup)
+
+        trace <- mutate(trace, Normalised_Height = height/norm_factor)
+
+        if (!is.null(upload_data$metadata_table())) {
+          trace <- left_join(trace, upload_data$metadata_table())
+        }
+
+        trace$plot <- col_concat(as.data.frame(trace[, which(colnames(trace) %in% input$group_samples2)]), sep = ":")
+      }
+
+      if (input$index_normalize2 == TRUE) {
+        trace$repeats <- trace$repeats - trace$index_repeat
+      }
+
+      reactive_analysis2$trace <- trace
+
+      if (input$line_show2 == TRUE) {
+        if (input$dot_show2 == TRUE) {
+          p <- ggplot(trace, aes(x=repeats, y=Normalised_Height, colour = plot,
+                                                   text=paste0("Repeats: ", repeats, "\n",
+                                                               if (input$normalize2 == "None") "Signal: " else "Normalised_Height: ", Normalised_Height, "\n",
+                                                               "Grouping: ", plot))) +
+            geom_smooth(aes(x=repeats, y=Normalised_Height, colour = plot), inherit.aes = FALSE, method = "loess", span=input$span2, level=input$CI2, se = input$CI_show2) +
+            geom_bar(aes(fill = unique_id), alpha = input$opacity2, stat='identity', position = position_dodge(width = 0, preserve = "single"), width = length(unique(trace$unique_id))) +
+            xlab("Repeats") +
+            ylab(if (input$normalize2 == "None") "Signal" else "Normalised_Height") +
+            xlim(c(input$xlim1_analysis2, input$xlim2_analysis2)) +
+            ylim(c(input$ylim1_analysis2, input$ylim2_analysis2)) +
+            scale_color_manual(values= color) +
+            labs(colour = paste(input$group_samples2, collapse = ":")) +
+            theme_bw()
+        }
+        else {
+          p <- ggplot(trace, aes(x=repeats, y=Normalised_Height, colour = plot,
+                                                   text=paste0("Repeats: ", repeats, "\n",
+                                                               if (input$normalize2 == "None") "Signal: " else "Normalised_Height: ", Normalised_Height, "\n",
+                                                               "Grouping: ", plot))) +
+            geom_smooth(aes(x=repeats, y=Normalised_Height, colour = plot), inherit.aes = FALSE, method = "loess", span=input$span2, level=input$CI2, se = input$CI_show2) +
+            xlab("Repeats") +
+            ylab(if (input$normalize2 == "None") "Signal" else "Normalised_Height") +
+            xlim(c(input$xlim1_analysis2, input$xlim2_analysis2)) +
+            ylim(c(input$ylim1_analysis2, input$ylim2_analysis2)) +
+            scale_color_manual(values= color) +
+            labs(colour = paste(input$group_samples2, collapse = ":")) +
+            theme_bw()
+        }
+      }
+      else {
+        if (input$dot_show2 == TRUE) {
+          p <- ggplot(trace, aes(x=repeats, y=Normalised_Height, colour = plot,
+                                                   text=paste0("Repeats: ", repeats, "\n",
+                                                               if (input$normalize2 == "None") "Signal: " else "Normalised_Height: ", Normalised_Height, "\n",
+                                                               "Grouping: ", plot))) +
+            geom_bar(aes(fill = unique_id), alpha = input$opacity2, stat='identity', position = position_dodge(width = 0, preserve = "single"), width = length(unique(trace$unique_id))) +
+            xlab("Repeats") +
+            ylab(if (input$normalize2 == "None") "Signal" else "Normalised_Height") +
+            xlim(c(input$xlim1_analysis2, input$xlim2_analysis2)) +
+            ylim(c(input$ylim1_analysis2, input$ylim2_analysis2)) +
+            scale_color_manual(values= color) +
+            labs(colour = paste(input$group_samples2, collapse = ":")) +
+            theme_bw()
+        }
+        else {
+          p <- ggplot(trace, aes(x=repeats, y=Normalised_Height, colour = plot,
+                                                   text=paste0("Repeats: ", repeats, "\n",
+                                                               if (input$normalize2 == "None") "Signal: " else "Normalised_Height: ", Normalised_Height, "\n",
+                                                               "Grouping: ", plot))) +
+            xlab("Repeats") +
+            ylab(if (input$normalize2 == "None") "Signal" else "Normalised_Height") +
+            xlim(c(input$xlim1_analysis2, input$xlim2_analysis2)) +
+            ylim(c(input$ylim1_analysis2, input$ylim2_analysis2)) +
+            scale_color_manual(values= color) +
+            labs(colour = paste(input$group_samples2, collapse = ":")) +
+            theme_bw()
+        }
+      }
+      ggplotly(p, tooltip="text", height = (300 + input$HeightAnalysis2*20))
+    }
+    else {
+      trace <- extract_fragments(metrics2_module$peak_list())
+
+      trace <- mutate(trace, Normalised_Height = height)
+
+      trace <- trace[which(trace$unique_id %in% input$Analysis_samples2),]
+
+      if (input$normalize2 == "None") {
+
+        if (!is.null(upload_data$metadata_table())) {
+          trace <- left_join(trace, upload_data$metadata_table())
+        }
+
+        trace <- mutate(trace, Normalised_Height = height)
+
+        trace$plot <- col_concat(as.data.frame(trace[, which(colnames(trace) %in% input$group_samples2)]), sep = ":")
+      }
+
+      else if (input$normalize2 == "Sum Of All Peaks") {
+        lookup <- trace[trace$repeats > input$threshold_min2, ]
+        lookup <- lookup[lookup$repeats < input$threshold_max2, ]
+
+        lookup <- lookup %>% group_by(unique_id) %>% dplyr::summarise(sum(height))
+        colnames(lookup)[2] <- c("norm_factor")
+
+        trace <- left_join(trace, lookup)
+
+        trace <- mutate(trace, Normalised_Height = height/norm_factor)
+
+        if (!is.null(upload_data$metadata_table())) {
+          trace <- left_join(trace, upload_data$metadata_table())
+        }
+
+        trace$plot <- col_concat(as.data.frame(trace[, which(colnames(trace) %in% input$group_samples2)]), sep = ":")
+      }
+
+      else if (input$normalize2 == "Highest Peak") {
+        lookup <- trace[trace$repeats > input$threshold_min2, ]
+        lookup <- lookup[lookup$repeats < input$threshold_max2, ]
+
+        lookup <- lookup %>% group_by(unique_id) %>% dplyr::summarise(max(height))
+        colnames(lookup)[2] <- c("norm_factor")
+
+        trace <- left_join(trace, lookup)
+
+        trace <- mutate(trace, Normalised_Height = height/norm_factor)
+
+        if (!is.null(upload_data$metadata_table())) {
+          trace <- left_join(trace, upload_data$metadata_table())
+        }
+
+        trace$plot <- col_concat(as.data.frame(trace[, which(colnames(trace) %in% input$group_samples2)]), sep = ":")
+      }
+
+      if (input$index_normalize2 == TRUE) {
+        trace$repeats <- trace$repeats - trace$index_repeat
+      }
+
+      reactive_analysis2$trace <- trace
+
+
+      if (input$line_show2 == TRUE) {
+        if (input$dot_show2 == TRUE) {
+
+          p <- ggplot(trace, aes(x=repeats, y=Normalised_Height, colour = plot,
+                                                   text=paste0("Repeats: ", repeats, "\n",
+                                                               if (input$normalize2 == "None") "Signal: " else "Normalised_Height: ", Normalised_Height, "\n",
+                                                               "Grouping: ", plot))) +
+            geom_point(alpha = input$opacity2) +
+            xlab("Repeats") +
+            ylab(if (input$normalize2 == "None") "Signal" else "Normalised_Height") +
+            geom_smooth(aes(x=repeats, y=Normalised_Height, colour = plot), inherit.aes = FALSE, method = "loess", span=input$span2, level=input$CI2, se = input$CI_show2) +
+            xlim(c(input$xlim1_analysis2, input$xlim2_analysis2)) +
+            ylim(c(input$ylim1_analysis2, input$ylim2_analysis2)) +
+            scale_color_manual(values= color) +
+            labs(colour = paste(input$group_samples2, collapse = ":")) +
+            theme_bw()
+        }
+        else {
+
+          p <- ggplot(trace, aes(x=repeats, y=Normalised_Height, colour = plot,
+                                                   text=paste0("Repeats: ", repeats, "\n",
+                                                               if (input$normalize2 == "None") "Signal: " else "Normalised_Height: ", Normalised_Height, "\n",
+                                                               "Grouping: ", plot))) +
+            xlab("Repeats") +
+            ylab(if (input$normalize2 == "None") "Signal" else "Normalised_Height") +
+            geom_smooth(aes(x=repeats, y=Normalised_Height, colour = plot), inherit.aes = FALSE, method = "loess", span=input$span2, level=input$CI2, se = input$CI_show2) +
+            xlim(c(input$xlim1_analysis2, input$xlim2_analysis2)) +
+            ylim(c(input$ylim1_analysis2, input$ylim2_analysis2)) +
+            scale_color_manual(values= color) +
+            labs(colour = paste(input$group_samples2, collapse = ":")) +
+            theme_bw()
+        }
+      }
+      else {
+
+        if (input$dot_show2 == TRUE) {
+          p <- ggplot(trace, aes(x=repeats, y=Normalised_Height, colour = plot,
+                                                   text=paste0("Repeats: ", repeats, "\n",
+                                                               if (input$normalize2 == "None") "Signal: " else "Normalised_Height: ", Normalised_Height, "\n",
+                                                               "Grouping: ", plot))) +
+            geom_point(alpha = input$opacity2)+
+            xlab("Repeats") +
+            ylab(if (input$normalize2 == "None") "Signal" else "Normalised_Height") +
+            xlim(c(input$xlim1_analysis2, input$xlim2_analysis2)) +
+            ylim(c(input$ylim1_analysis2, input$ylim2_analysis2)) +
+            scale_color_manual(values= color) +
+            labs(colour = paste(input$group_samples2, collapse = ":")) +
+            theme_bw()
+        }
+        else {
+          p <- ggplot(trace, aes(x=repeats, y=Normalised_Height, colour = plot,
+                                                   text=paste0("Repeats: ", repeats, "\n",
+                                                               if (input$normalize2 == "None") "Signal: " else "Normalised_Height: ", Normalised_Height, "\n",
+                                                               "Grouping: ", plot))) +
+            xlab("Repeats") +
+            ylab(if (input$normalize2 == "None") "Signal" else "Normalised_Height") +
+            xlim(c(input$xlim1_analysis2, input$xlim2_analysis2)) +
+            ylim(c(input$ylim1_analysis2, input$ylim2_analysis2)) +
+            scale_color_manual(values= color) +
+            labs(colour = paste(input$group_samples2, collapse = ":")) +
+            theme_bw()
+        }
+      }
+      ggplotly(p, tooltip="text", height = (300 + input$HeightAnalysis2*20))
+    }
+  })
+
+  proxy = dataTableProxy('metrics_table_analysis2')
+
+  output$metrics_table_analysis2 <- DT::renderDataTable({
+
+    if (!is.null(upload_data$metadata_table())) {
+      df <- dplyr::left_join(upload_data$metadata_table(), metrics2_module$metrics_table())
+    }
+    else {
+      df <- arrange(metrics2_module$metrics_table(), unique_id)
+    }
+
+    datatable(df,
+              options = list(scrollX = TRUE,
+                             scrollY = TRUE,
+                             server = TRUE,
+                             paging = TRUE,
+                             pageLength = 15
+              ),
+              filter = "top",
+              rownames = FALSE)
+  },  options = list(scrollX = TRUE))
+
+  observeEvent(input$metrics_table_analysis2_rows_selected, {
+
+    list <- list()
+    for (i in input$metrics_table_analysis2_rows_selected) {
+      list[i] <- paste(metrics2_module$peak_list()[[i]]$unique_id)
+    }
+
+    list <- unlist(list)
+
+    updateVirtualSelect("Analysis_samples2", selected = list)
+  })
+
+}

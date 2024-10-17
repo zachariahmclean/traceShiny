@@ -210,6 +210,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
     shinyjs::hide("LoadBox3")
     shinyjs::hide("LoadBox4")
     shinyjs::hide("NextButtonLoad")
+    shinyjs::hide("NextButtonLoad2")
     shinyjs::hide("LoadBox_FASTQ1")
     shinyjs::hide("LoadBox_FASTQ2")
 
@@ -231,6 +232,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
         shinyjs::hide("LoadBox3")
         shinyjs::hide("LoadBox4")
         shinyjs::hide("NextButtonLoad")
+        shinyjs::hide("NextButtonLoad2")
         shinyjs::hide("LoadBox_FASTQ1")
         shinyjs::hide("LoadBox_FASTQ2")
       }
@@ -242,6 +244,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
         shinyjs::show("LoadBox2")
         shinyjs::show("LoadBox5")
         shinyjs::hide("NextButtonLoad")
+        shinyjs::hide("NextButtonLoad2")
         shinyjs::hide("LoadBox_FASTQ1")
         shinyjs::hide("LoadBox_FASTQ2")
       }
@@ -250,6 +253,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
       updateMaterialSwitch(session, "DataUploadMeta", value = F)
       shinyjs::show("LoadBox2")
       shinyjs::hide("NextButtonLoad")
+      shinyjs::hide("NextButtonLoad2")
       shinyjs::hide("LoadBox_FASTQ1")
       shinyjs::hide("LoadBox_FASTQ2")
     }
@@ -262,6 +266,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
         shinyalert("ERROR!", "You already have metadata loaded, please click the refresh button on the top to delete all data and start from fresh.", type = "error", confirmButtonCol = "#337ab7")
         shinyjs::hide("LoadBox4")
         shinyjs::hide("NextButtonLoad")
+        shinyjs::hide("NextButtonLoad2")
         shinyjs::hide("LoadBox_FASTQ1")
         shinyjs::hide("LoadBox_FASTQ2")
       }
@@ -273,6 +278,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
         shinyjs::show("LoadBox3")
         shinyjs::show("LoadBox4")
         shinyjs::show("NextButtonLoad")
+        shinyjs::hide("NextButtonLoad2")
         shinyjs::hide("LoadBox_FASTQ1")
         shinyjs::hide("LoadBox_FASTQ2")
       }
@@ -299,6 +305,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
     shinyjs::show("LoadBox3")
     shinyjs::show("LoadBox4")
     shinyjs::show("NextButtonLoad")
+    shinyjs::hide("NextButtonLoad2")
     shinyjs::hide("LoadBox_FASTQ1")
     shinyjs::hide("LoadBox_FASTQ2")
     shinyalert("SUCCESS!", "Channels Selected!", type = "success", confirmButtonCol = "#337ab7")
@@ -335,6 +342,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                        shinyjs::hide("LoadBox3")
                        shinyjs::hide("LoadBox4")
                        shinyjs::hide("NextButtonLoad")
+                       shinyjs::hide("NextButtonLoad2")
                        shinyjs::hide("LoadBox_FASTQ1")
                        shinyjs::hide("LoadBox_FASTQ2")
 
@@ -391,6 +399,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                        shinyjs::hide("LoadBox3")
                        shinyjs::hide("LoadBox4")
                        shinyjs::hide("NextButtonLoad")
+                       shinyjs::hide("NextButtonLoad2")
 
                        output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
                                                                         menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = T))
@@ -430,6 +439,8 @@ upload_data_box_server <- function(input, output, session, continue_module) {
     reactive$df_final <- reactive$df_final[,c(1,3,2,4)]
     colnames(reactive$df_final) <- c("Read ID", "Repeat Length", "Sequence", "SampleID")
 
+    updatePickerInput(session, "sample_subset_metrics2", choices = unique(reactive$df_final$SampleID))
+
     shinyjs::show("LoadBox2")
     shinyjs::show("LoadBox_FASTQ1")
     shinyjs::show("LoadBox_FASTQ2")
@@ -437,6 +448,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
     shinyjs::show("LoadBox3")
     shinyjs::hide("LoadBox4")
     shinyjs::hide("NextButtonLoad")
+    shinyjs::show("NextButtonLoad2")
   })
 
   output$fastq_filter_table <- DT::renderDataTable({
@@ -548,6 +560,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                                shinyjs::show("LoadBox3")
                                shinyjs::show("LoadBox4")
                                shinyjs::show("NextButtonLoad")
+                               shinyjs::hide("NextButtonLoad2")
                                shinyjs::hide("LoadBox_FASTQ1")
                                shinyjs::hide("LoadBox_FASTQ2")
 
@@ -565,6 +578,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                                shinyjs::show("LoadBox3")
                                shinyjs::show("LoadBox4")
                                shinyjs::show("NextButtonLoad")
+                               shinyjs::hide("NextButtonLoad2")
                                shinyjs::hide("LoadBox_FASTQ1")
                                shinyjs::hide("LoadBox_FASTQ2")
 
@@ -581,6 +595,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                              shinyjs::show("LoadBox3")
                              shinyjs::show("LoadBox4")
                              shinyjs::show("NextButtonLoad")
+                             shinyjs::hide("NextButtonLoad2")
                              shinyjs::hide("LoadBox_FASTQ1")
                              shinyjs::hide("LoadBox_FASTQ2")
 
@@ -593,12 +608,13 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                          else {
                            shinyalert("ERROR!", "fsa filenames does not match the unique ID names in the metadata (or is not complete). Please check your loaded fsa files and corresponding metadata names.", type = "error", confirmButtonCol = "#337ab7")
                            shinyjs::hide("NextButtonLoad")
+                           shinyjs::hide("NextButtonLoad2")
                          }
                        }
-                       else if (!is.null(reactive$df)) {
-                         reactive$metadata_table <- reactive$metadata_table[match(reactive$df$SampleID, reactive$metadata_table$unique_id),]
+                       else if (!is.null(reactive$df_final)) {
+                         reactive$metadata_table <- reactive$metadata_table[match(unique(reactive$df_final$SampleID), reactive$metadata_table$unique_id),]
 
-                         if (all(reactive$metadata_table$unique_id %in% reactive$df$SampleID)) {
+                         if (all(reactive$metadata_table$unique_id %in% unique(reactive$df_final$SampleID))) {
 
                            if (any(grepl("TRUE", reactive$metadata_table$metrics_baseline_control))) {
 
@@ -774,7 +790,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
   },  options = list(scrollX = TRUE))
 
   return(list(
-    fastq = reactive(reactive$df),
+    fastq = reactive(reactive$df_final),
     laddertable = reactive(reactive$laddertable),
     fsa_list = reactive(reactive$fsa_list),
     metadata_table = reactive(reactive$metadata_table),

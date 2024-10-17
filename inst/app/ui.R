@@ -261,14 +261,7 @@ body <- dashboardBody(
             fluidRow(upload_data_box_ui1("fe")),
             fluidRow(
               column(12,
-                     upload_data_box_ui2("fe"),
-                     upload_data_box_ui3("fe"),
-                     upload_data_box_ui4("fe"),
-                     upload_data_box_ui5("fe"),
-                     p(style="text-align: center;", actionBttn("NextButtonLoad", "CONTINUE TO NEXT STEP...",
-                                                               style = "jelly",
-                                                               color = "primary",
-                                                               icon = icon("play"), block = T))
+                     upload_data_box_ui2("fe")
               )
             ),
             fluidRow(
@@ -276,6 +269,21 @@ body <- dashboardBody(
                      upload_data_box_ui_fastq1("fe")),
               column(9,
                      upload_data_box_ui_fastq2("fe"))
+            ),
+            fluidRow(
+              column(12,
+                     upload_data_box_ui3("fe"),
+                     upload_data_box_ui4("fe"),
+                     upload_data_box_ui5("fe"),
+                     p(style="text-align: center;", actionBttn("NextButtonLoad", "CONTINUE TO NEXT STEP...",
+                                                               style = "jelly",
+                                                               color = "primary",
+                                                               icon = icon("play"), block = T)),
+                     p(style="text-align: center;", actionBttn("NextButtonLoad2", "CONTINUE TO NEXT STEP...",
+                                                               style = "jelly",
+                                                               color = "primary",
+                                                               icon = icon("play"), block = T))
+              )
             )
     ),
     tabItem(tabName = "FindLadders",
@@ -331,29 +339,28 @@ body <- dashboardBody(
             )
     ),
 
-    # tabItem(tabName = "InstabilityMetrics2",
-    #         fluidRow(metrics2_box_ui1("fe")),
-    #         fluidRow(
-    #           column(3,
-    #                  metrics2_box_ui2("fe"),
-    #                  metrics2_box_ui5("fe"),
-    #                  p(style="text-align: center;", actionBttn("NextButtonMetrics2", "CLICK HERE FOR SOME COOL PLOTS",
-    #                                                            style = "jelly",
-    #                                                            color = "primary",
-    #                                                            icon = icon("play"), block = T))
-    #           ),
-    #           column(9,
-    #                  metrics2_box_ui4("fe"),
-    #                  metrics2_box_ui3("fe")
-    #           )
-    #         )
-    # ),
+    tabItem(tabName = "InstabilityMetrics2",
+            fluidRow(metrics2_box_ui1("fe")),
+            fluidRow(
+              column(3,
+                     metrics2_box_ui2("fe"),
+                     metrics2_box_ui5("fe"),
+                     p(style="text-align: center;", actionBttn("NextButtonMetrics2", "CLICK HERE FOR SOME COOL PLOTS",
+                                                               style = "jelly",
+                                                               color = "primary",
+                                                               icon = icon("play"), block = T))
+              ),
+              column(9,
+                     metrics2_box_ui4("fe"),
+                     metrics2_box_ui3("fe")
+              )
+            )
+    ),
 
     tabItem(tabName = "Analysis",
             fluidRow(
               column(3,
                      Analysis_box_ui3("fe")
-                     #Analysis_box_ui2_2("fe")
                      ),
               column(9,
               Analysis_box_ui1("fe"))
@@ -361,6 +368,20 @@ body <- dashboardBody(
             fluidRow(
               column(12,
                      Analysis_box_ui2("fe"))
+            )
+    ),
+
+    tabItem(tabName = "Analysis2",
+            fluidRow(
+              column(3,
+                     Analysis2_box_ui3("fe")
+              ),
+              column(9,
+                     Analysis2_box_ui1("fe"))
+            ),
+            fluidRow(
+              column(12,
+                     Analysis2_box_ui2("fe"))
             )
     ),
 
