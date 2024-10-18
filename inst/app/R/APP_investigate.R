@@ -471,7 +471,8 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
     index <- list()
 
     for (i in 1:length(peaks_module$index_list())) {
-      index[[i]] <- as.data.frame(cbind(peaks_module$index_list()[[i]]$unique_id, peaks_module$index_list()[[i]]$metrics_group_id, peaks_module$index_list()[[i]]$get_allele_peak()$allele_repeat, peaks_module$index_list()[[i]]$get_index_peak()$index_repeat))
+      index[[i]] <- as.data.frame(cbind(peaks_module$index_list()[[i]]$unique_id, peaks_module$index_list()[[i]]$metrics_group_id, peaks_module$index_list()[[i]]$get_allele_peak()$allele_repeat,
+                                        peaks_module$index_list()[[i]]$get_index_peak()$index_repeat))
     }
 
     reactive_metrics$Index_Table <- do.call(rbind, index)
@@ -530,7 +531,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
   })
 
   observeEvent(input$sample_subset_metrics, {
-    if (!is.null(upload_data$metadata_table()) && !is.na(input$IndexRepeat1)) {
+    if (!is.null(upload_data$metadata_table())) {
       if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
         if (input$group_controls == TRUE) {
           updatePickerInput(session, "sample_subset2", choices = upload_data$metadata_table()[which(upload_data$metadata_table()$metrics_group_id == upload_data$metadata_table()[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics),]$metrics_group_id),][which(upload_data$metadata_table()[which(upload_data$metadata_table()$metrics_group_id == upload_data$metadata_table()[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics),]$metrics_group_id),]$metrics_baseline_control == "TRUE"),]$unique_id)
@@ -544,7 +545,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
       updateNumericInput(session, "xlim1_metrics", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat - 50)
       updateNumericInput(session, "xlim2_metrics", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat + 50)
       updateNumericInput(session, "ylim1_metrics", value = -200)
-      updateNumericInput(session, "ylim2_metrics", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_height + 100)
+      updateNumericInput(session, "ylim2_metrics", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_height + 300)
     }
   })
 
@@ -681,7 +682,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
     }
   })
 
-  observeEvent(list(input$IndexRepeat2, input$sample_subset_metrics),  {
+  observeEvent(input$IndexRepeat2,  {
     if (!is.null(ladder_module$ladders()) && !is.null(input$sample_subset2) && !is.na(input$IndexRepeat1)) {
       if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
         if (input$group_controls == TRUE) {

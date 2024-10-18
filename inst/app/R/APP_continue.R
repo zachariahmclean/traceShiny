@@ -32,10 +32,13 @@ continue_server <- function(input, output, session) {
                        return(NULL)
                      }
 
-                       library(trace)
-                       library(dplyr)
-                       library(assertr)
-                       library(ggpubr)
+                     library(trace)
+                     library(dplyr)
+                     library(assertr)
+                     library(ggpubr)
+                     library(tibble)
+                     library(tidyr)
+                     library(stringr)
 
                      removeModal()
 

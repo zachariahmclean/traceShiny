@@ -213,31 +213,31 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
 
       strLoad <- paste("library(trace)",
                        "##Data Upload",
-                       "peak_list <- readRDS('fsa_files.RDS')",
+                       "repeat_distribution <- readRDS('repeat_distribution.RDS')",
                        "metadata_table <- readRDS('metadata.RDS')", sep = "\n")
 
       strAddMeta <- ifelse(is.null(upload_data$metadata_table()),
                            paste0("##No Metadata was uploaded"),
                            paste0("##Add Metadata", "\n",
-                                  "add_metadata(peak_list, ",
+                                  "add_metadata(repeat_distribution, ",
                                   "metadata_data.frame = metadata_table)")
       )
 
       strIndex <- ifelse (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control)),
                           paste0("##Find Index", "\n",
-                                 "assign_index_peaks(peak_list, grouped = TRUE)"),
+                                 "assign_index_peaks(repeat_distribution, grouped = TRUE)"),
                           paste0("##Find Index", "\n",
-                                 "assign_index_peaks(peak_list, grouped = FALSE)")
+                                 "assign_index_peaks(repeat_distribution, grouped = FALSE)")
       )
 
       strMetrics <- paste("##Calculate Instability Metrics", "\n",
-                          paste0("metrics_dataframe <- calculate_instability_metrics(peak_list, ",
+                          paste0("metrics_dataframe <- calculate_instability_metrics(repeat_distribution, ",
                                  "peak_threshold = ", paste(input$peak_threshold2), ", ",
                                  "window_around_index_peak = c(", paste(input$window_around_index_peak_min2), ", ", paste(input$window_around_index_peak_max2), "))"))
 
       code <- paste(strLoad, strAddMeta, strIndex, strMetrics, sep = '\n')
 
-      fs <- c("code.R", "Index_Table.csv", "metadata.RDS", "fsa_files.RDS")
+      fs <- c("code.R", "Index_Table.csv", "metadata.RDS", "repeat_distribution.RDS")
 
       writeLines(text = code, "code.R")
 
@@ -245,7 +245,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
 
       saveRDS(upload_data$metadata_table(), "metadata.RDS")
 
-      saveRDS(upload_data$fastq()$SampleID, "fsa_files.RDS")
+      saveRDS(reactive_metrics2$peak_list, "repeat_distribution.RDS")
 
       zip(zipfile=file, files=fs)
     }
@@ -344,8 +344,9 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
 
 
   observeEvent(ignoreInit = TRUE, list(input$Metrics2BoxSTART, input$group_controls2), {
+
     #Transform data
-    Instability <- upload_data$fastq()[,c(2,4)]
+    Instability <- upload_data$fastq()[,c(2,5)]
     Instability <- Instability %>% group_by(`Repeat Length`, SampleID) %>%
       summarise(Height = n())
 
@@ -424,12 +425,12 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
           updatePickerInput(session, "sample_subset2_2", choices = upload_data$metadata_table()[which(upload_data$metadata_table()$metrics_group_id == upload_data$metadata_table()[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics2),]$metrics_group_id),][which(upload_data$metadata_table()[which(upload_data$metadata_table()$metrics_group_id == upload_data$metadata_table()[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics2),]$metrics_group_id),]$metrics_baseline_control == "TRUE"),]$unique_id)
         }
         else {
-          updatePickerInput(session, "sample_subset2_2", choices = upload_data$metadata_table()[which(upload_data$metadata_table()$metrics_group_id == upload_data$metadata_table()[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics2),]$metrics_group_id),][which(upload_data$metadata_table()[which(upload_data$metadata_table()$metrics_group_id == upload_data$metadata_table()[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics2),]$metrics_group_id),]$metrics_baseline_control == "TRUE"),]$unique_id)
+          updatePickerInput(session, "sample_subset2_2", choices = NULL)
           updatePickerInput(session, "sample_subset_metrics2", choices = upload_data$metadata_table()$unique_id)
         }
       }
       else {
-        updatePickerInput(session, "sample_subset2_2", choices = upload_data$metadata_table()[which(upload_data$metadata_table()$metrics_group_id == upload_data$metadata_table()[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics2),]$metrics_group_id),][which(upload_data$metadata_table()[which(upload_data$metadata_table()$metrics_group_id == upload_data$metadata_table()[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics2),]$metrics_group_id),]$metrics_baseline_control == "TRUE"),]$unique_id)
+        updatePickerInput(session, "sample_subset2_2", choices = NULL)
         updatePickerInput(session, "sample_subset_metrics2", choices = upload_data$metadata_table()$unique_id)
       }
     }
@@ -455,13 +456,12 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
     index <- list()
 
     for (i in 1:length(peak_list)) {
-      index[[i]] <- as.data.frame(cbind(peak_list[[i]]$unique_id, peak_list[[i]]$metrics_group_id, peak_list[[i]]$get_allele_peak()$allele_repeat, peak_list[[i]]$get_index_peak()$index_repeat))
+      index[[i]] <- as.data.frame(cbind(peak_list[[i]]$unique_id, peak_list[[i]]$metrics_group_id, peak_list[[i]]$get_allele_peak()$allele_repeat,
+                                        peak_list[[i]]$get_index_peak()$index_repeat))
     }
 
     reactive_metrics2$Index_Table <- do.call(rbind, index)
     colnames(reactive_metrics2$Index_Table) <- c("Unique IDs", "Metrics Group ID", "Allele Repeat", "Index Repeat")
-
-
 
     reactive_metrics2$Index_Table_original <- reactive_metrics2$Index_Table
   })
@@ -514,7 +514,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
   })
 
   observeEvent(input$sample_subset_metrics2, {
-    if (!is.null(upload_data$metadata_table()) && !is.na(input$IndexRepeat1_2)) {
+    if (!is.null(upload_data$metadata_table())) {
       if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
         if (input$group_controls2 == TRUE) {
           updatePickerInput(session, "sample_subset2_2", choices = upload_data$metadata_table()[which(upload_data$metadata_table()$metrics_group_id == upload_data$metadata_table()[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics2),]$metrics_group_id),][which(upload_data$metadata_table()[which(upload_data$metadata_table()$metrics_group_id == upload_data$metadata_table()[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics2),]$metrics_group_id),]$metrics_baseline_control == "TRUE"),]$unique_id)
@@ -528,7 +528,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
       updateNumericInput(session, "xlim1_metrics2", value = reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$get_allele_peak()$allele_repeat - 50)
       updateNumericInput(session, "xlim2_metrics2", value = reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$get_allele_peak()$allele_repeat + 50)
       updateNumericInput(session, "ylim1_metrics2", value = -2)
-      updateNumericInput(session, "ylim2_metrics2", value = reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$get_allele_peak()$allele_height + 100)
+      updateNumericInput(session, "ylim2_metrics2", value = reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$get_allele_peak()$allele_height + 300)
     }
   })
 
@@ -538,6 +538,8 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
       shinyjs::show("IndexRepeat1_2")
       shinyjs::hide("IndexRepeat2_2")
       shinyjs::hide("plot_traces_INDEX_2_UI")
+      updatePickerInput(session, "sample_subset2_2", choices = NULL)
+      updateNumericInput(session, "IndexRepeat2_2", value = NULL)
     }
     else if (!is.null(upload_data$metadata_table())) {
       if (input$group_controls2 == TRUE) {
@@ -572,6 +574,8 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
         shinyjs::show("IndexRepeat1_2")
         shinyjs::hide("IndexRepeat2_2")
         shinyjs::hide("plot_traces_INDEX_2_UI")
+        updatePickerInput(session, "sample_subset2_2", choices = NULL)
+        updateNumericInput(session, "IndexRepeat2_2", value = NULL)
       }
     }
   })
@@ -663,8 +667,8 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
     }
   })
 
-  observeEvent(list(input$IndexRepeat2_2, input$sample_subset_metrics2),  {
-    if (!is.null(upload_data) && !is.null(input$sample_subset2_2) && !is.na(input$IndexRepeat1_2)) {
+  observeEvent(input$IndexRepeat2_2,  {
+    if (!is.null(upload_data$fastq()) && !is.null(input$sample_subset2_2) && !is.na(input$IndexRepeat1_2)) {
       if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
         if (input$group_controls2 == TRUE) {
           if (!is.null(reactive_metrics2$Index_Table) && !is.null(reactive_metrics2$peak_list)) {
@@ -930,7 +934,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
 
   })
 
-  observeEvent(input$up_inv, {
+  observeEvent(input$up_inv2, {
     tryCatch({
       if (is.null(upload_data$metadata_table())) {
         updatePickerInput(session, "sample_subset_metrics2", selected = if (which(names(reactive_metrics2$peak_list) == input$sample_subset_metrics2) - 1 == 0)
@@ -964,7 +968,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
     })
   })
 
-  observeEvent(input$down_inv, {
+  observeEvent(input$down_inv2, {
     tryCatch({
       if (is.null(upload_data$metadata_table())) {
         updatePickerInput(session, "sample_subset_metrics2", selected = if (which(names(reactive_metrics2$peak_list) == input$sample_subset_metrics2) + 1 > length(names(reactive_metrics2$peak_list)))

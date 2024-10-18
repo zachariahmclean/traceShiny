@@ -81,6 +81,10 @@ upload_data_box_ui_fastq1 <- function(id) {
         column(6,
                numericInput("Lev_distance", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Max Levenshtein Distance')), value = 0.1,
                             min = 0, max = 1, step = 0.01)
+        ),
+        column(6,
+               numericInput("codon_start", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Starting Codon Position (For Short-Hand Sequence Notation)')), value = 2,
+                            min = 0, step = 1)
         )
       ),
       p(style="text-align: center;", actionBttn("Fastq_Button", "APPLY", size = "lg"))
@@ -97,7 +101,11 @@ upload_data_box_ui_fastq2 <- function(id) {
                            choices = "ALL"))
       ),
 
-      withSpinner(DT::dataTableOutput("fastq_filter_table", width = "100%", height = 400))
+      withSpinner(DT::dataTableOutput("fastq_filter_table", width = "100%")),
+
+      htmlOutput("short_form"),
+
+      withSpinner(DT::dataTableOutput("short_form_table", width = "100%", height = 200))
   )
 }
 
@@ -289,7 +297,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
   })
 
   observe({
-    if(input$DataUpload == "fsa"){
+    if(input$DataUpload == "fsa" | input$DataUpload == "fastq"){
       shinyjs::hide("DataUploadMeta")
     }
     else {
@@ -373,6 +381,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
 
                        for (i in 1:length(input$fastq$name)) {
                          file.rename(input$fastq[[i, 'datapath']], paste0(filesdir,'/',input$fastq$name[i]))
+                         incProgress(0.1 + i/10)
                        }
 
                        CAG <- list()
@@ -415,41 +424,110 @@ upload_data_box_server <- function(input, output, session, continue_module) {
   })
 
   observeEvent(input$Fastq_Button, {
+    tryCatch({
+      withProgress(message = 'Loading fastq file(s)...', style = "old",
+                   value = 0, {
+                     incProgress(0.1)
 
-    ALL <- list()
-    df <- list()
+                     ALL <- list()
+                     df <- list()
 
-    for (i in names(reactive$df)) {
+                     for (i in names(reactive$df)) {
 
-      ALL[[i]] <- aregexec(paste0(input$flank_left, paste0("(", input$repeat_pattern, ")", "{", input$no_repeats, ",}"),  input$flank_right), reactive$df[[i]]$Sequence, max.distance = input$Lev_distance)
+                       ALL[[i]] <- aregexec(paste0(input$flank_left, paste0("(", input$repeat_pattern, ")", "{", input$no_repeats, ",}"),  input$flank_right), reactive$df[[i]]$Sequence, max.distance = input$Lev_distance)
 
-      ## Extract matches
-      df[[i]] <- regmatches(reactive$df[[i]]$Sequence, ALL[[i]])
-      names(df[[i]]) <- reactive$df[[i]]$Header
-      df[[i]] <- df[[i]][lapply(df[[i]],length)>0]
+                       ## Extract matches
+                       df[[i]] <- regmatches(reactive$df[[i]]$Sequence, ALL[[i]])
+                       names(df[[i]]) <- reactive$df[[i]]$Header
+                       df[[i]] <- df[[i]][lapply(df[[i]],length)>0]
 
-      df[[i]] <- as.data.frame(enframe(df[[i]]))
-      df[[i]] <- unnest(df[[i]])
-      df[[i]] <- df[[i]][!duplicated(df[[i]]$name), ]
-      df[[i]] <- mutate(df[[i]], Repeat_length = paste0(round((nchar(df[[i]]$value)- nchar(paste0(input$flank_left, input$flank_right)))/nchar(input$repeat_pattern)))) %>% mutate(df[[i]], SampleID = gsub(".+/", "", i))
-      df[[i]]$Repeat_length <- as.numeric(df[[i]]$Repeat_length)
+                       df[[i]] <- as.data.frame(enframe(df[[i]]))
+                       df[[i]] <- unnest(df[[i]])
+                       df[[i]] <- df[[i]][!duplicated(df[[i]]$name), ]
+                       df[[i]] <- mutate(df[[i]], Repeat_length = paste0(round((nchar(df[[i]]$value)- nchar(paste0(input$flank_left, input$flank_right)))/nchar(input$repeat_pattern)))) %>% mutate(df[[i]], SampleID = gsub(".+/", "", i))
+                       df[[i]]$Repeat_length <- as.numeric(df[[i]]$Repeat_length)
+                     }
+
+                     df <- df[lapply(df,nrow)>4]
+
+                     reactive$df_final <- df %>% purrr::reduce(full_join)
+                     reactive$df_final <- reactive$df_final[,c(1,3,2,4)]
+                     colnames(reactive$df_final) <- c("Read ID", "Repeat Length", "Sequence", "SampleID")
+
+                     value <- str_sub(reactive$df_final$Sequence, input$codon_start)
+
+                     for (i in 1:length(value)) {
+                       reactive$df_final$`Sequence Short`[i] <- paste(paste0(rle(unlist(strsplit(value[i], "(?<=.{3})", perl = TRUE)))$values, rle(unlist(strsplit(value[i], "(?<=.{3})", perl = TRUE)))$lengths), collapse = " ")
+                     }
+
+                     reactive$df_final <-reactive$df_final[,c(1, 2, 5, 3, 4)]
+
+                     updatePickerInput(session, "sample_subset_metrics2", choices = unique(reactive$df_final$SampleID))
+
+                     shinyjs::show("LoadBox2")
+                     shinyjs::show("LoadBox_FASTQ1")
+                     shinyjs::show("LoadBox_FASTQ2")
+                     shinyjs::hide("LoadBox5")
+                     shinyjs::show("LoadBox3")
+                     shinyjs::hide("LoadBox4")
+                     shinyjs::hide("NextButtonLoad")
+                     shinyjs::show("NextButtonLoad2")
+                   })
+    },
+    error = function(e) {
+      shinyalert("ERROR!", "No sequence matching patterns found!", type = "error", confirmButtonCol = "#337ab7")
+      reactive$fsa_list <- NULL
+      reactive$df_final <- NULL
+    })
+  })
+
+  output$short_form <- renderUI({
+    h4(HTML('<b><h4 style = "text-align:justify">Sequence Summary</b>'))
+  })
+
+  observe({
+    if (is.null(reactive$df_final)) {
+      shinyjs::hide("short_form")
+    }
+    else {
+      shinyjs::show("short_form")
+    }
+  })
+
+  output$short_form_table <- DT::renderDataTable({
+    validate(
+      need(!is.null(reactive$df_final), ''))
+
+    df <- reactive$df_final %>% group_by(`Sequence Short`, SampleID) %>% summarise(n())
+    colnames(df)[3] <- "Number of Appearances"
+    df <- arrange(df, desc(`Number of Appearances`))
+    df <- df[,c(1,3,2)]
+
+    if (input$sample_subset_fastq == "ALL") {
+
+      datatable(df,
+                options = list(scrollX = TRUE,
+                               scrollY = TRUE,
+                               server = TRUE,
+                               paging = TRUE,
+                               pageLength = 15
+                ),
+                selection = 'single',
+                rownames = FALSE)
+    }
+    else {
+      datatable(df[which(df$SampleID == input$sample_subset_fastq),],
+                options = list(scrollX = TRUE,
+                               scrollY = TRUE,
+                               server = TRUE,
+                               paging = TRUE,
+                               pageLength = 15
+                ),
+                selection = 'single',
+                rownames = FALSE)
     }
 
-    reactive$df_final <- df %>% purrr::reduce(full_join)
-    reactive$df_final <- reactive$df_final[,c(1,3,2,4)]
-    colnames(reactive$df_final) <- c("Read ID", "Repeat Length", "Sequence", "SampleID")
-
-    updatePickerInput(session, "sample_subset_metrics2", choices = unique(reactive$df_final$SampleID))
-
-    shinyjs::show("LoadBox2")
-    shinyjs::show("LoadBox_FASTQ1")
-    shinyjs::show("LoadBox_FASTQ2")
-    shinyjs::hide("LoadBox5")
-    shinyjs::show("LoadBox3")
-    shinyjs::hide("LoadBox4")
-    shinyjs::hide("NextButtonLoad")
-    shinyjs::show("NextButtonLoad2")
-  })
+  },  options = list(scrollX = TRUE))
 
   output$fastq_filter_table <- DT::renderDataTable({
     validate(

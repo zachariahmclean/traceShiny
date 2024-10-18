@@ -122,6 +122,17 @@ body <- dashboardBody(
   tags$head(tags$style(HTML(".small-box {background-color: #e8ebe9 !important; color: #000000 !important; }"))),
   tags$style(HTML(".vscomp-dropbox-container  {z-index:99999 !important;}")),
 
+  #Datatable no wrap
+  tags$head(
+    tags$style(HTML(
+      "
+      td {
+        white-space: nowrap;
+      }
+      "
+    ))
+  ),
+
   #Font size for validate
   tags$head(
     tags$style(HTML("

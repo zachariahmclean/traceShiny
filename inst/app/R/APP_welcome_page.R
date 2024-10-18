@@ -36,6 +36,7 @@ observeEvent(input$startbuttonintro, {
                  library(ggpubr)
                  library(tibble)
                  library(tidyr)
+                 library(stringr)
 
                  incProgress(0.8)
 

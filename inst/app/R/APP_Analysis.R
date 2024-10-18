@@ -12,7 +12,7 @@ Analysis_box_ui1 <- function(id) {
                             value = 250)),
         column(1,
                numericInput("ylim1_analysis", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Y min')),
-                            value = -100)),
+                            value = -200)),
 
         column(1,
                numericInput("ylim2_analysis", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Y max')),
@@ -211,7 +211,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
         updateNumericInput(session, "ylim2_analysis", value = 0.3)
       }
       else if (input$normalize == "None") {
-        updateNumericInput(session, "ylim2_analysis", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_height + 100)
+        updateNumericInput(session, "ylim2_analysis", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_height + 300)
       }
     }
   })
@@ -220,7 +220,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
     if (!is.null(peaks_module$index_list()) && !is.null(input$sample_subset_metrics)) {
       updateNumericInput(session, "xlim1_analysis", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat - 50)
       updateNumericInput(session, "xlim2_analysis", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat + 50)
-      updateNumericInput(session, "ylim1_analysis", value = -100)
+      updateNumericInput(session, "ylim1_analysis", value = -200)
       updateNumericInput(session, "ylim2_analysis", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_height + 300)
 
     if (input$index_normalize == TRUE) {
@@ -244,7 +244,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
         updateNumericInput(session, "ylim2_analysis", value = 0.3)
       }
       else if (input$normalize == "None") {
-        updateNumericInput(session, "ylim2_analysis", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_height + 100)
+        updateNumericInput(session, "ylim2_analysis", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_height + 300)
       }
     }
     else {
@@ -268,7 +268,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
         updateNumericInput(session, "ylim2_analysis", value = 0.3)
       }
       else if (input$normalize == "None") {
-        updateNumericInput(session, "ylim2_analysis", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_height + 100)
+        updateNumericInput(session, "ylim2_analysis", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_height + 300)
       }
     }
     }
