@@ -38,6 +38,7 @@ observeEvent(input$startbuttonintro, {
                  library(tidyr)
                  library(stringr)
                  library(readxl)
+                 library(microseq)
 
                  incProgress(0.8)
 

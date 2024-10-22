@@ -16,6 +16,7 @@ Imports:
     DT,
     ggpubr,
     methods,
+    microseq,
     plotly,
     R6,
     readxl,

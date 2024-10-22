@@ -42,6 +42,7 @@ continue_server <- function(input, output, session) {
                      library(tidyr)
                      library(stringr)
                      library(readxl)
+                     library(microseq)
 
                      removeModal()
 
