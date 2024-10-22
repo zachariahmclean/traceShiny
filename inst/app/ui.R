@@ -126,7 +126,7 @@ body <- dashboardBody(
   tags$head(
     tags$style(HTML(
       "
-      td {
+      #fastq_filter_table {
         white-space: nowrap;
       }
       "

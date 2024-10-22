@@ -37,6 +37,7 @@ observeEvent(input$startbuttonintro, {
                  library(tibble)
                  library(tidyr)
                  library(stringr)
+                 library(readxl)
 
                  incProgress(0.8)
 
@@ -51,6 +52,7 @@ observeEvent(input$startbuttonintro, {
                  shinyjs::hide("LoadBox3")
                  shinyjs::hide("LoadBox4")
                  shinyjs::hide("NextButtonLoad")
+                 shinyjs::hide("NextButtonLoad2")
                  shinyjs::hide("LoadBox_FASTQ1")
                  shinyjs::hide("LoadBox_FASTQ2")
                  updateRadioGroupButtons(session, "DataUpload", selected = "fsa")

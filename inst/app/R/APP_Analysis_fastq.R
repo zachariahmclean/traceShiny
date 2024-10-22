@@ -131,7 +131,7 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
 
   observe({
     updateVirtualSelect("Analysis_samples2", choices = names(metrics2_module$peak_list()))
-    updateVirtualSelect("group_samples2", choices = colnames(upload_data$metadata_table()))
+    updateVirtualSelect("group_samples2", choices = colnames(upload_data$metadata_table_fastq()))
   })
 
   #Download
@@ -140,8 +140,8 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
       paste0(format(Sys.time(), "%Y-%m-%d_%H%M%S"), "_Instability_Metrics_Table_with_Metadata.csv")
     },
     content = function(file) {
-      if (!is.null(upload_data$metadata_table())) {
-        df <- dplyr::left_join(upload_data$metadata_table(), metrics2_module$metrics_table())
+      if (!is.null(upload_data$metadata_table_fastq())) {
+        df <- dplyr::left_join(upload_data$metadata_table_fastq(), metrics2_module$metrics_table())
       }
       else {
         df <- arrange(metrics2_module$metrics_table(), unique_id)
@@ -285,8 +285,8 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
 
       if (input$normalize2 == "None") {
 
-        if (!is.null(upload_data$metadata_table())) {
-          trace <- left_join(trace, upload_data$metadata_table())
+        if (!is.null(upload_data$metadata_table_fastq())) {
+          trace <- left_join(trace, upload_data$metadata_table_fastq())
         }
 
         trace$plot <- col_concat(as.data.frame(trace[, which(colnames(trace) %in% input$group_samples2)]), sep = ":")
@@ -303,8 +303,8 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
 
         trace <- mutate(trace, Normalised_Height = height/norm_factor)
 
-        if (!is.null(upload_data$metadata_table())) {
-          trace <- left_join(trace, upload_data$metadata_table())
+        if (!is.null(upload_data$metadata_table_fastq())) {
+          trace <- left_join(trace, upload_data$metadata_table_fastq())
         }
 
         trace$plot <- col_concat(as.data.frame(trace[, which(colnames(trace) %in% input$group_samples2)]), sep = ":")
@@ -321,8 +321,8 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
 
         trace <- mutate(trace, Normalised_Height = height/norm_factor)
 
-        if (!is.null(upload_data$metadata_table())) {
-          trace <- left_join(trace, upload_data$metadata_table())
+        if (!is.null(upload_data$metadata_table_fastq())) {
+          trace <- left_join(trace, upload_data$metadata_table_fastq())
         }
 
         trace$plot <- col_concat(as.data.frame(trace[, which(colnames(trace) %in% input$group_samples2)]), sep = ":")
@@ -336,12 +336,12 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
 
       if (input$line_show2 == TRUE) {
         if (input$dot_show2 == TRUE) {
-          p <- ggplot(trace, aes(x=repeats, y=Normalised_Height, colour = plot,
+          p <- ggplot(trace, aes(x=repeats, y=Normalised_Height, fill = plot,
                                                    text=paste0("Repeats: ", repeats, "\n",
                                                                if (input$normalize2 == "None") "Signal: " else "Normalised_Height: ", Normalised_Height, "\n",
                                                                "Grouping: ", plot))) +
             geom_smooth(aes(x=repeats, y=Normalised_Height, colour = plot), inherit.aes = FALSE, method = "loess", span=input$span2, level=input$CI2, se = input$CI_show2) +
-            geom_bar(aes(fill = unique_id), alpha = input$opacity2, stat='identity', position = position_dodge(width = 0, preserve = "single"), width = length(unique(trace$unique_id))) +
+            geom_bar(aes(group = unique_id), alpha = input$opacity2, stat='identity', position = position_dodge(width = 0, preserve = "single"), width = length(unique(trace$unique_id))) +
             xlab("Repeats") +
             ylab(if (input$normalize2 == "None") "Signal" else "Normalised_Height") +
             xlim(c(input$xlim1_analysis2, input$xlim2_analysis2)) +
@@ -367,11 +367,11 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
       }
       else {
         if (input$dot_show2 == TRUE) {
-          p <- ggplot(trace, aes(x=repeats, y=Normalised_Height, colour = plot,
+          p <- ggplot(trace, aes(x=repeats, y=Normalised_Height, fill = plot,
                                                    text=paste0("Repeats: ", repeats, "\n",
                                                                if (input$normalize2 == "None") "Signal: " else "Normalised_Height: ", Normalised_Height, "\n",
                                                                "Grouping: ", plot))) +
-            geom_bar(aes(fill = unique_id), alpha = input$opacity2, stat='identity', position = position_dodge(width = 0, preserve = "single"), width = length(unique(trace$unique_id))) +
+            geom_bar(aes(group = unique_id), alpha = input$opacity2, stat='identity', position = position_dodge(width = 0, preserve = "single"), width = length(unique(trace$unique_id))) +
             xlab("Repeats") +
             ylab(if (input$normalize2 == "None") "Signal" else "Normalised_Height") +
             xlim(c(input$xlim1_analysis2, input$xlim2_analysis2)) +
@@ -405,8 +405,8 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
 
       if (input$normalize2 == "None") {
 
-        if (!is.null(upload_data$metadata_table())) {
-          trace <- left_join(trace, upload_data$metadata_table())
+        if (!is.null(upload_data$metadata_table_fastq())) {
+          trace <- left_join(trace, upload_data$metadata_table_fastq())
         }
 
         trace <- mutate(trace, Normalised_Height = height)
@@ -425,8 +425,8 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
 
         trace <- mutate(trace, Normalised_Height = height/norm_factor)
 
-        if (!is.null(upload_data$metadata_table())) {
-          trace <- left_join(trace, upload_data$metadata_table())
+        if (!is.null(upload_data$metadata_table_fastq())) {
+          trace <- left_join(trace, upload_data$metadata_table_fastq())
         }
 
         trace$plot <- col_concat(as.data.frame(trace[, which(colnames(trace) %in% input$group_samples2)]), sep = ":")
@@ -443,8 +443,8 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
 
         trace <- mutate(trace, Normalised_Height = height/norm_factor)
 
-        if (!is.null(upload_data$metadata_table())) {
-          trace <- left_join(trace, upload_data$metadata_table())
+        if (!is.null(upload_data$metadata_table_fastq())) {
+          trace <- left_join(trace, upload_data$metadata_table_fastq())
         }
 
         trace$plot <- col_concat(as.data.frame(trace[, which(colnames(trace) %in% input$group_samples2)]), sep = ":")
@@ -528,8 +528,8 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
 
   output$metrics_table_analysis2 <- DT::renderDataTable({
 
-    if (!is.null(upload_data$metadata_table())) {
-      df <- dplyr::left_join(upload_data$metadata_table(), metrics2_module$metrics_table())
+    if (!is.null(upload_data$metadata_table_fastq())) {
+      df <- dplyr::left_join(upload_data$metadata_table_fastq(), metrics2_module$metrics_table())
     }
     else {
       df <- arrange(metrics2_module$metrics_table(), unique_id)

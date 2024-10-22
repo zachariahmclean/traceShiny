@@ -164,6 +164,12 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
     ladders$size <- continue_module$size()
   })
 
+  observeEvent(ignoreInit = F, list(input$MetadataUpload, input$SelectionButton, input$DataFSA, input$fastq, input$fileinputLOAD), {
+    reactive_ladder$ladder <- NULL
+    ladders$scan <- NULL
+    ladders$size <- NULL
+  })
+
   #Download
   output$laddertext1_download <- shiny::downloadHandler(
     filename = function() {

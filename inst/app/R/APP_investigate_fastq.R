@@ -73,7 +73,7 @@ metrics2_box_ui2 <- function(id) {
                           numericInput("repeat_range3_2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Interval')),
                                        min = 0,
                                        value = 5, step = 1))
-                 ),
+                 )
           )
         )
       ),
@@ -85,13 +85,13 @@ metrics2_box_ui3 <- function(id) {
   box(id = "Metrics2Box2", title = p("Instability Metrics Table"), status = "warning", solidHeader = F,
       collapsible = T, width = NULL,
 
-      p(style="text-align: right;", downloadButton("downloadmetrics2_2")),
+      p(style="text-align: right;", downloadButton("downloadmetrics2")),
       withSpinner(DT::dataTableOutput("metrics2_table", width = "100%", height = "400"))
   )
 }
 
 metrics2_box_ui4 <- function(id) {
-  box(id = "Metrics2Box3", title = p("Histogram"), status = "warning", solidHeader = F,
+  box(id = "Metrics2Box3", title = p("Plot"), status = "warning", solidHeader = F,
       collapsible = T, width = NULL,
 
       fluidRow(
@@ -118,6 +118,7 @@ metrics2_box_ui4 <- function(id) {
                            min = 1, max = 100,
                            value = 20, step = 1)
         )),
+
       fluidRow(
         column(12,
                h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Plot Controls</b>')),
@@ -135,7 +136,16 @@ metrics2_box_ui4 <- function(id) {
 
                  column(1,
                         numericInput("ylim2_metrics2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Y max')),
-                                     value = 2000))))),
+                                     value = 2000)),
+                 column(6,
+                        prettySwitch("show_line_fastq", "Show Best Fit Line",
+                                     value = FALSE, fill = T, status = "success", inline = T)
+                 ),
+                 column(3,
+                        numericInput("span_fastq", HTML('<h5 style = "text-align:justify; margin-top:-50px;">Best Fit Line Smoothness'),
+                                     value = 0.1, min = 0, step = 0.01)
+                 )
+                 ))),
 
       htmlOutput("text_no_data2_2"),
 
@@ -165,7 +175,7 @@ metrics2_box_ui4 <- function(id) {
       fluidRow(
         column(12,
                h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Index Repeat Table</b>')),
-               p(style="text-align: right;", downloadButton("Index_Table_download_2")),
+               p(style="text-align: right;", downloadButton("Index_Table_download2")),
                withSpinner(DT::dataTableOutput("Index_Table2"))
         )
       )
@@ -177,7 +187,7 @@ metrics2_box_ui5 <- function(id) {
       collapsible = T, width = NULL,
 
       downloadBttn("downloadRDS2", "Download R Object For Further Analysis"), br(), br(),
-      downloadBttn("downloadmetrics2", "Download Instability Metrics Table"), br(), br(),
+      downloadBttn("downloadmetrics2_2", "Download Instability Metrics Table"), br(), br(),
       actionBttn("downloadPlotButton2", "Download All Plots", icon = icon("download")), br(), br(),
       downloadBttn("downloadlogs2", "Download Code For Current Analysis"), br(), br(),
       downloadBttn("downloadDataSave2", "Save .Rdata File For Re-load into traceShiny")
@@ -192,15 +202,26 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
 
   reactive_metrics2 <- reactiveValues()
 
-  # observe(
-  #   if (!is.null(continue_module$instability_metrics())) {
-  #     reactive_metrics2$df <- continue_module$instability_metrics()
-  #     reactive_metrics2$sample_subset_metrics2 <- continue_module$sample_subset_metrics2()
-  #     reactive_metrics2$sample_subset2_2 <- continue_module$sample_subset2_2()
-  #     reactive_metrics2$Index_Table <- continue_module$Index_Table()
-  #     reactive_metrics2$Index_Table_original <- continue_module$Index_Table_original()
-  #   }
-  # )
+  #Continue
+  observe(
+    if (!is.null(continue_module$Index_Table())) {
+      reactive_metrics2$df <- continue_module$instability_metrics_fastq()
+      reactive_metrics2$peak_list <- continue_module$peak_list()
+      reactive_metrics2$sample_subset_metrics2 <- continue_module$sample_subset_metrics2()
+      reactive_metrics2$sample_subset2_2 <- continue_module$sample_subset2_2()
+      reactive_metrics2$Index_Table <- continue_module$Index_Table()
+      reactive_metrics2$Index_Table_original <- continue_module$Index_Table_original()
+    }
+  )
+
+  observeEvent(ignoreInit = F, list(input$MetadataUpload, input$SelectionButton, input$DataFSA, input$fastq, input$fileinputLOAD), {
+    reactive_metrics2$df <- NULL
+    reactive_metrics2$peak_list <- NULL
+    reactive_metrics2$sample_subset_metrics2 <- NULL
+    reactive_metrics2$sample_subset2_2 <- NULL
+    reactive_metrics2$Index_Table <- NULL
+    reactive_metrics2$Index_Table_original <- NULL
+  })
 
   output$downloadlogs2 <- shiny::downloadHandler(
     filename = function() {
@@ -214,16 +235,16 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
       strLoad <- paste("library(trace)",
                        "##Data Upload",
                        "repeat_distribution <- readRDS('repeat_distribution.RDS')",
-                       "metadata_table <- readRDS('metadata.RDS')", sep = "\n")
+                       "metadata_table_fastq <- readRDS('metadata.RDS')", sep = "\n")
 
-      strAddMeta <- ifelse(is.null(upload_data$metadata_table()),
+      strAddMeta <- ifelse(is.null(upload_data$metadata_table_fastq()),
                            paste0("##No Metadata was uploaded"),
                            paste0("##Add Metadata", "\n",
                                   "add_metadata(repeat_distribution, ",
-                                  "metadata_data.frame = metadata_table)")
+                                  "metadata_data.frame = metadata_table_fastq)")
       )
 
-      strIndex <- ifelse (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control)),
+      strIndex <- ifelse (any(grepl("TRUE", upload_data$metadata_table_fastq()$metrics_baseline_control)),
                           paste0("##Find Index", "\n",
                                  "assign_index_peaks(repeat_distribution, grouped = TRUE)"),
                           paste0("##Find Index", "\n",
@@ -243,7 +264,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
 
       write.csv(reactive_metrics2$Index_Table[,c(1,4)], "Index_Table.csv", row.names = F, col.names = T)
 
-      saveRDS(upload_data$metadata_table(), "metadata.RDS")
+      saveRDS(upload_data$metadata_table_fastq(), "metadata.RDS")
 
       saveRDS(reactive_metrics2$peak_list, "repeat_distribution.RDS")
 
@@ -270,7 +291,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
     }
   )
 
-  output$downloadmetrics2 <- shiny::downloadHandler(
+  output$downloadmetrics2_2 <- shiny::downloadHandler(
     filename = function() {
       paste0(format(Sys.time(), "%Y-%m-%d_%H%M%S"), "_InstabilityMetricsTable", ".csv")
     },
@@ -304,7 +325,8 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
       if (input$points_histo == "Points") {
         for (i in unique(trace$unique_id)) {
         p <- ggplot(trace[which(trace$unique_id == i), ], aes(x=repeats, y = height, colour = unique_id)) +
-          geom_smooth(method = "loess", span=0.1, level=0.9, se = T, show.legend = FALSE) +
+          {if (input$show_line_fastq == T)
+          list(geom_smooth(method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
           geom_point(show.legend = FALSE) +
           theme_bw()
         print(p)
@@ -312,9 +334,10 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
       }
       else {
         for (i in unique(upload_data$fastq()$SampleID)) {
-        p <- ggplot(upload_data$fastq()[which(upload_data$fastq()$SampleID == i),], aes(x=`Repeat Length`, colour = SampleID)) +
-          geom_smooth(inherit.aes=F, data = trace[which(trace$unique_id == i), ], aes(x=repeats, y = height, colour = unique_id), method = "loess", span=0.1, level=0.9, se = T, show.legend = FALSE) +
-          geom_histogram(binwidth = 1, show.legend = FALSE) +
+        p <- ggplot(upload_data$fastq()[which(upload_data$fastq()$SampleID == i),], aes(x=`Repeat Length`, fill = SampleID)) +
+          {if (input$show_line_fastq == T)
+          list(geom_smooth(inherit.aes=F, data = trace[which(trace$unique_id == i), ], aes(x=repeats, y = height, colour = unique_id), method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
+          geom_histogram(binwidth = 1, show.legend = FALSE, fill= "grey") +
           theme_bw()
         print(p)
         }
@@ -361,11 +384,11 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
       unique_id = "unique_id"
     )
 
-    if (!is.null(upload_data$metadata_table())) {
+    if (!is.null(upload_data$metadata_table_fastq())) {
 
       add_metadata(
         fragments_list = peak_list,
-        metadata_data.frame = upload_data$metadata_table(),
+        metadata_data.frame = upload_data$metadata_table_fastq(),
         unique_id = "unique_id",
         metrics_baseline_control = "metrics_baseline_control",
         batch_sample_modal_repeat = "batch_sample_modal_repeat"
@@ -376,13 +399,13 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
       fragments_list = peak_list
     )
 
-    if (is.null(upload_data$metadata_table())) {
+    if (is.null(upload_data$metadata_table_fastq())) {
       assign_index_peaks(
         peak_list,
         grouped = FALSE
       )
     }
-    else if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
+    else if (any(grepl("TRUE", upload_data$metadata_table_fastq()$metrics_baseline_control))) {
       if (input$group_controls2 == TRUE) {
         assign_index_peaks(
           peak_list,
@@ -419,37 +442,37 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
                                                      menuItem("Upload", icon = icon("spinner"), tabName = "Upload"),
                                                      menuItem("Instability Metrics", icon = icon("table"), tabName = "InstabilityMetrics2", selected = T)))
 
-    if (!is.null(upload_data$metadata_table())) {
-      if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
+    if (!is.null(upload_data$metadata_table_fastq())) {
+      if (any(grepl("TRUE", upload_data$metadata_table_fastq()$metrics_baseline_control))) {
         if (input$group_controls2 == TRUE) {
-          updatePickerInput(session, "sample_subset2_2", choices = upload_data$metadata_table()[which(upload_data$metadata_table()$metrics_group_id == upload_data$metadata_table()[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics2),]$metrics_group_id),][which(upload_data$metadata_table()[which(upload_data$metadata_table()$metrics_group_id == upload_data$metadata_table()[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics2),]$metrics_group_id),]$metrics_baseline_control == "TRUE"),]$unique_id)
+          updatePickerInput(session, "sample_subset2_2", choices = upload_data$metadata_table_fastq()[which(upload_data$metadata_table_fastq()$metrics_group_id == upload_data$metadata_table_fastq()[which(upload_data$metadata_table_fastq()$unique_id == input$sample_subset_metrics2),]$metrics_group_id),][which(upload_data$metadata_table_fastq()[which(upload_data$metadata_table_fastq()$metrics_group_id == upload_data$metadata_table_fastq()[which(upload_data$metadata_table_fastq()$unique_id == input$sample_subset_metrics2),]$metrics_group_id),]$metrics_baseline_control == "TRUE"),]$unique_id)
         }
         else {
           updatePickerInput(session, "sample_subset2_2", choices = NULL)
-          updatePickerInput(session, "sample_subset_metrics2", choices = upload_data$metadata_table()$unique_id)
+          updatePickerInput(session, "sample_subset_metrics2", choices = upload_data$metadata_table_fastq()$unique_id)
         }
       }
       else {
         updatePickerInput(session, "sample_subset2_2", choices = NULL)
-        updatePickerInput(session, "sample_subset_metrics2", choices = upload_data$metadata_table()$unique_id)
+        updatePickerInput(session, "sample_subset_metrics2", choices = upload_data$metadata_table_fastq()$unique_id)
       }
     }
 
-    if (is.null(upload_data$metadata_table())) {
+    if (is.null(upload_data$metadata_table_fastq())) {
       reactive_metrics2$sample_subset_metrics2 <- names(reactive_metrics2$peak_list)
     }
-    else if (!is.null(upload_data$metadata_table())) {
-      if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
+    else if (!is.null(upload_data$metadata_table_fastq())) {
+      if (any(grepl("TRUE", upload_data$metadata_table_fastq()$metrics_baseline_control))) {
         if (input$group_controls2 == TRUE) {
-          reactive_metrics2$sample_subset_metrics2 <- upload_data$metadata_table()[-which(upload_data$metadata_table()$metrics_baseline_control == TRUE),]$unique_id
-          reactive_metrics2$sample_subset2_2 <- upload_data$metadata_table()[which(upload_data$metadata_table()$metrics_group_id == upload_data$metadata_table()[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics2),]$metrics_group_id),][which(upload_data$metadata_table()[which(upload_data$metadata_table()$metrics_group_id == upload_data$metadata_table()[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics2),]$metrics_group_id),]$metrics_baseline_control == "TRUE"),]$unique_id
+          reactive_metrics2$sample_subset_metrics2 <- upload_data$metadata_table_fastq()[-which(upload_data$metadata_table_fastq()$metrics_baseline_control == TRUE),]$unique_id
+          reactive_metrics2$sample_subset2_2 <- upload_data$metadata_table_fastq()[which(upload_data$metadata_table_fastq()$metrics_group_id == upload_data$metadata_table_fastq()[which(upload_data$metadata_table_fastq()$unique_id == input$sample_subset_metrics2),]$metrics_group_id),][which(upload_data$metadata_table_fastq()[which(upload_data$metadata_table_fastq()$metrics_group_id == upload_data$metadata_table_fastq()[which(upload_data$metadata_table_fastq()$unique_id == input$sample_subset_metrics2),]$metrics_group_id),]$metrics_baseline_control == "TRUE"),]$unique_id
         }
         else {
-          reactive_metrics2$sample_subset_metrics2 <- upload_data$metadata_table()$unique_id
+          reactive_metrics2$sample_subset_metrics2 <- upload_data$metadata_table_fastq()$unique_id
         }
       }
       else {
-        reactive_metrics2$sample_subset_metrics2 <- upload_data$metadata_table()$unique_id
+        reactive_metrics2$sample_subset_metrics2 <- upload_data$metadata_table_fastq()$unique_id
       }
     }
 
@@ -467,17 +490,17 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
   })
 
   observe({
-    if (!is.null(upload_data$metadata_table())) {
-      if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
+    if (!is.null(upload_data$metadata_table_fastq())) {
+      if (any(grepl("TRUE", upload_data$metadata_table_fastq()$metrics_baseline_control))) {
         if (input$group_controls2 == TRUE) {
-          updatePickerInput(session, "sample_subset_metrics2", choices = upload_data$metadata_table()[-which(upload_data$metadata_table()$metrics_baseline_control == TRUE),]$unique_id)
+          updatePickerInput(session, "sample_subset_metrics2", choices = upload_data$metadata_table_fastq()[-which(upload_data$metadata_table_fastq()$metrics_baseline_control == TRUE),]$unique_id)
         }
         else {
-          updatePickerInput(session, "sample_subset_metrics2", choices = upload_data$metadata_table()$unique_id)
+          updatePickerInput(session, "sample_subset_metrics2", choices = upload_data$metadata_table_fastq()$unique_id)
         }
       }
       else {
-        updatePickerInput(session, "sample_subset_metrics2", choices = upload_data$metadata_table()$unique_id)
+        updatePickerInput(session, "sample_subset_metrics2", choices = upload_data$metadata_table_fastq()$unique_id)
       }
     }
   })
@@ -514,10 +537,10 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
   })
 
   observeEvent(input$sample_subset_metrics2, {
-    if (!is.null(upload_data$metadata_table())) {
-      if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
+    if (!is.null(upload_data$metadata_table_fastq())) {
+      if (any(grepl("TRUE", upload_data$metadata_table_fastq()$metrics_baseline_control))) {
         if (input$group_controls2 == TRUE) {
-          updatePickerInput(session, "sample_subset2_2", choices = upload_data$metadata_table()[which(upload_data$metadata_table()$metrics_group_id == upload_data$metadata_table()[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics2),]$metrics_group_id),][which(upload_data$metadata_table()[which(upload_data$metadata_table()$metrics_group_id == upload_data$metadata_table()[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics2),]$metrics_group_id),]$metrics_baseline_control == "TRUE"),]$unique_id)
+          updatePickerInput(session, "sample_subset2_2", choices = upload_data$metadata_table_fastq()[which(upload_data$metadata_table_fastq()$metrics_group_id == upload_data$metadata_table_fastq()[which(upload_data$metadata_table_fastq()$unique_id == input$sample_subset_metrics2),]$metrics_group_id),][which(upload_data$metadata_table_fastq()[which(upload_data$metadata_table_fastq()$metrics_group_id == upload_data$metadata_table_fastq()[which(upload_data$metadata_table_fastq()$unique_id == input$sample_subset_metrics2),]$metrics_group_id),]$metrics_baseline_control == "TRUE"),]$unique_id)
         }
       }
     }
@@ -533,7 +556,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
   })
 
   observe({
-    if (is.null(upload_data$metadata_table())) {
+    if (is.null(upload_data$metadata_table_fastq())) {
       shinyjs::hide("sample_subset2_2")
       shinyjs::show("IndexRepeat1_2")
       shinyjs::hide("IndexRepeat2_2")
@@ -541,9 +564,9 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
       updatePickerInput(session, "sample_subset2_2", choices = NULL)
       updateNumericInput(session, "IndexRepeat2_2", value = NULL)
     }
-    else if (!is.null(upload_data$metadata_table())) {
+    else if (!is.null(upload_data$metadata_table_fastq())) {
       if (input$group_controls2 == TRUE) {
-        if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
+        if (any(grepl("TRUE", upload_data$metadata_table_fastq()$metrics_baseline_control))) {
           shinyjs::hide("IndexRepeat1_2")
           shinyjs::show("IndexRepeat2_2")
           shinyjs::show("sample_subset2_2")
@@ -590,7 +613,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
   })
 
   observe({
-    if (is.null(upload_data$metadata_table())) {
+    if (is.null(upload_data$metadata_table_fastq())) {
       shinyjs::hide("group_controls2")
     }
     else {
@@ -604,13 +627,13 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
                    value = 0, {
                      incProgress(0.1)
 
-                     if (is.null(upload_data$metadata_table())) {
+                     if (is.null(upload_data$metadata_table_fastq())) {
                        assign_index_peaks(
                          reactive_metrics2$peak_list,
                          grouped = FALSE
                        )
                      }
-                     else if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
+                     else if (any(grepl("TRUE", upload_data$metadata_table_fastq()$metrics_baseline_control))) {
                        if (input$group_controls2 == TRUE) {
                          assign_index_peaks(
                            reactive_metrics2$peak_list,
@@ -669,7 +692,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
 
   observeEvent(input$IndexRepeat2_2,  {
     if (!is.null(upload_data$fastq()) && !is.null(input$sample_subset2_2) && !is.na(input$IndexRepeat1_2)) {
-      if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
+      if (any(grepl("TRUE", upload_data$metadata_table_fastq()$metrics_baseline_control))) {
         if (input$group_controls2 == TRUE) {
           if (!is.null(reactive_metrics2$Index_Table) && !is.null(reactive_metrics2$peak_list)) {
             reactive_metrics2$Index_Table[which(reactive_metrics2$Index_Table$`Unique IDs` == input$sample_subset_metrics2),]$`Index Repeat` <- input$IndexRepeat2_2
@@ -735,7 +758,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
     trace <- extract_fragments(reactive_metrics2$peak_list)
     trace <- trace[which(trace$unique_id == input$sample_subset_metrics2), ]
 
-    if (is.null(upload_data$metadata_table())) {
+    if (is.null(upload_data$metadata_table_fastq())) {
 
       if (input$points_histo == "Points") {
         p <- ggplot(trace, aes(x=repeats, y = height, colour = unique_id)) +
@@ -749,12 +772,13 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
           geom_rect(inherit.aes=F, aes(xmin=input$IndexRepeat1_2 + input$window_around_index_peak_min2,
                                        xmax=input$window_around_index_peak_max2 + input$IndexRepeat1_2,
                                        ymin=0, ymax=input$ylim2_metrics2), alpha=0.1, fill="red"))} +
-          geom_smooth(method = "loess", span=0.1, level=0.9, se = T, show.legend = FALSE) +
+          {if (input$show_line_fastq == T)
+          list(geom_smooth(method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
           geom_point(show.legend = FALSE) +
           theme_bw()
       }
       else {
-        p <- ggplot(upload_data$fastq()[which(upload_data$fastq()$SampleID == input$sample_subset_metrics2),], aes(x=`Repeat Length`, colour = SampleID)) +
+        p <- ggplot(upload_data$fastq()[which(upload_data$fastq()$SampleID == input$sample_subset_metrics2),], aes(x=`Repeat Length`, fill = SampleID)) +
           xlim(xlim) +
           ylim(ylim) +
           {if(!is.na(input$IndexRepeat1_2))
@@ -765,13 +789,14 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
               geom_rect(inherit.aes=F, aes(xmin=input$IndexRepeat1_2 + input$window_around_index_peak_min2,
                                            xmax=input$window_around_index_peak_max2 + input$IndexRepeat1_2,
                                            ymin=0, ymax=input$ylim2_metrics2), alpha=0.1, fill="red"))} +
-          geom_smooth(inherit.aes=F, data = trace, aes(x=repeats, y = height, colour = unique_id), method = "loess", span=0.1, level=0.9, se = T, show.legend = FALSE) +
-          geom_histogram(binwidth = 1, show.legend = FALSE) +
+          {if (input$show_line_fastq == T)
+          list(geom_smooth(inherit.aes=F, data = trace, aes(x=repeats, y = height, colour = unique_id), method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
+          geom_histogram(binwidth = 1, show.legend = FALSE, fill= "grey") +
           theme_bw()
       }
     }
 
-    else if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control)) && !is.null(input$sample_subset2_2)) {
+    else if (any(grepl("TRUE", upload_data$metadata_table_fastq()$metrics_baseline_control)) && !is.null(input$sample_subset2_2)) {
 
       if (input$group_controls2 == TRUE) {
         if (input$points_histo == "Points") {
@@ -786,12 +811,13 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
             geom_rect(inherit.aes=F, aes(xmin=input$IndexRepeat2_2 + input$window_around_index_peak_min2,
                                          xmax=input$window_around_index_peak_max2 + input$IndexRepeat2_2,
                                          ymin=0, ymax=input$ylim2_metrics2), alpha=0.1, fill="red"))} +
-            geom_smooth(method = "loess", span=0.1, level=0.9, se = T, show.legend = FALSE) +
+            {if (input$show_line_fastq == T)
+            list(geom_smooth(method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
             geom_point(show.legend = FALSE) +
             theme_bw()
         }
         else {
-          p <- ggplot(upload_data$fastq()[which(upload_data$fastq()$SampleID == input$sample_subset_metrics2),], aes(x=`Repeat Length`, colour = SampleID)) +
+          p <- ggplot(upload_data$fastq()[which(upload_data$fastq()$SampleID == input$sample_subset_metrics2),], aes(x=`Repeat Length`, fill = SampleID)) +
             xlim(xlim) +
             ylim(ylim) +
             {if(!is.na(input$IndexRepeat1_2))
@@ -802,8 +828,9 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
             geom_rect(inherit.aes=F, aes(xmin=input$IndexRepeat2_2 + input$window_around_index_peak_min2,
                                          xmax=input$window_around_index_peak_max2 + input$IndexRepeat2_2,
                                          ymin=0, ymax=input$ylim2_metrics2), alpha=0.1, fill="red"))} +
-            geom_smooth(inherit.aes=F, data = trace, aes(x=repeats, y = height, colour = unique_id), method = "loess", span=0.1, level=0.9, se = T, show.legend = FALSE) +
-            geom_histogram(binwidth = 1, show.legend = FALSE) +
+            {if (input$show_line_fastq == T)
+            list(geom_smooth(inherit.aes=F, data = trace, aes(x=repeats, y = height, colour = unique_id), method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
+            geom_histogram(binwidth = 1, show.legend = FALSE, fill= "grey") +
             theme_bw()
         }
       }
@@ -820,12 +847,13 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
             geom_rect(inherit.aes=F, aes(xmin=input$IndexRepeat1_2 + input$window_around_index_peak_min2,
                                          xmax=input$window_around_index_peak_max2 + input$IndexRepeat1_2,
                                          ymin=0, ymax=input$ylim2_metrics2), alpha=0.1, fill="red"))} +
-            geom_smooth(method = "loess", span=0.1, level=0.9, se = T, show.legend = FALSE) +
+            {if (input$show_line_fastq == T)
+            list(geom_smooth(method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
             geom_point(show.legend = FALSE) +
             theme_bw()
         }
         else {
-          p <- ggplot(upload_data$fastq()[which(upload_data$fastq()$SampleID == input$sample_subset_metrics2),], aes(x=`Repeat Length`, colour = SampleID)) +
+          p <- ggplot(upload_data$fastq()[which(upload_data$fastq()$SampleID == input$sample_subset_metrics2),], aes(x=`Repeat Length`, fill = SampleID)) +
             xlim(xlim) +
             ylim(ylim) +
             {if(!is.na(input$IndexRepeat1_2))
@@ -836,8 +864,9 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
             geom_rect(inherit.aes=F, aes(xmin=input$IndexRepeat1_2 + input$window_around_index_peak_min2,
                                          xmax=input$window_around_index_peak_max2 + input$IndexRepeat1_2,
                                          ymin=0, ymax=input$ylim2_metrics2), alpha=0.1, fill="red"))} +
-            geom_smooth(inherit.aes=F, data = trace, aes(x=repeats, y = height, colour = unique_id), method = "loess", span=0.1, level=0.9, se = T, show.legend = FALSE) +
-            geom_histogram(binwidth = 1, show.legend = FALSE) +
+            {if (input$show_line_fastq == T)
+            list(geom_smooth(inherit.aes=F, data = trace, aes(x=repeats, y = height, colour = unique_id), method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
+            geom_histogram(binwidth = 1, show.legend = FALSE, fill= "grey") +
             theme_bw()
         }
       }
@@ -855,12 +884,13 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
             geom_rect(inherit.aes=F, aes(xmin=input$IndexRepeat1_2 + input$window_around_index_peak_min2,
                                          xmax=input$window_around_index_peak_max2 + input$IndexRepeat1_2,
                                          ymin=0, ymax=input$ylim2_metrics2), alpha=0.1, fill="red"))} +
-            geom_smooth(method = "loess", span=0.1, level=0.9, se = T, show.legend = FALSE) +
+            {if (input$show_line_fastq == T)
+            list(geom_smooth(method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
             geom_point(show.legend = FALSE) +
             theme_bw()
         }
         else {
-          p <- ggplot(upload_data$fastq()[which(upload_data$fastq()$SampleID == input$sample_subset_metrics2),], aes(x=`Repeat Length`, colour = SampleID)) +
+          p <- ggplot(upload_data$fastq()[which(upload_data$fastq()$SampleID == input$sample_subset_metrics2),], aes(x=`Repeat Length`, fill = SampleID)) +
             xlim(xlim) +
             ylim(ylim) +
             {if(!is.na(input$IndexRepeat1_2))
@@ -871,8 +901,9 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
             geom_rect(inherit.aes=F, aes(xmin=input$IndexRepeat1_2 + input$window_around_index_peak_min2,
                                          xmax=input$window_around_index_peak_max2 + input$IndexRepeat1_2,
                                          ymin=0, ymax=input$ylim2_metrics2), alpha=0.1, fill="red"))} +
-            geom_smooth(inherit.aes=F, data = trace, aes(x=repeats, y = height, colour = unique_id), method = "loess", span=0.1, level=0.9, se = T, show.legend = FALSE) +
-            geom_histogram(binwidth = 1, show.legend = FALSE) +
+            {if (input$show_line_fastq == T)
+            list(geom_smooth(inherit.aes=F, data = trace, aes(x=repeats, y = height, colour = unique_id), method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
+            geom_histogram(binwidth = 1, show.legend = FALSE, fill= "grey") +
             theme_bw()
         }
       }
@@ -904,31 +935,23 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
         xlim(xlim) +
         ylim(ylim) +
         {if(!is.na(input$IndexRepeat2_2))
-          list(geom_hline(yintercept = if(!is.na(input$IndexRepeat2_2)) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset2_2]]$.__enclos_env__$private$index_height,
-                   color = "black", size=1),
-        geom_vline(xintercept = input$IndexRepeat2_2,
-                   color = "red", size=1),
-        geom_rect(inherit.aes=F, aes(xmin=input$IndexRepeat2_2 + input$window_around_index_peak_min2,
-                                     xmax=input$window_around_index_peak_max2 + input$IndexRepeat2_2,
-                                     ymin=0, ymax=input$ylim2_metrics2), alpha=0.1, fill="red"))} +
-        geom_smooth(method = "loess", span=0.1, level=0.9, se = T, show.legend = FALSE) +
+          list(geom_vline(xintercept = input$IndexRepeat2_2,
+                          color = "red", size=1))} +
+        {if (input$show_line_fastq == T)
+        list(geom_smooth(method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
         geom_point(show.legend = FALSE) +
         theme_bw()
     }
     else {
-      p <- ggplot(upload_data$fastq()[which(upload_data$fastq()$SampleID == input$sample_subset2_2),], aes(x=`Repeat Length`, colour = SampleID)) +
+      p <- ggplot(upload_data$fastq()[which(upload_data$fastq()$SampleID == input$sample_subset2_2),], aes(x=`Repeat Length`, fill = SampleID)) +
         xlim(xlim) +
         ylim(ylim) +
         {if(!is.na(input$IndexRepeat2_2))
-          list(geom_hline(yintercept = if(!is.na(input$IndexRepeat1_2)) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset2_2]]$.__enclos_env__$private$index_height,
-                   color = "black", size=1),
-        geom_vline(xintercept = input$IndexRepeat2_2,
-                   color = "red", size=1),
-        geom_rect(inherit.aes=F, aes(xmin=input$IndexRepeat2_2 + input$window_around_index_peak_min2,
-                                     xmax=input$window_around_index_peak_max2 + input$IndexRepeat2_2,
-                                     ymin=0, ymax=input$ylim2_metrics2), alpha=0.1, fill="red"))} +
-        geom_smooth(inherit.aes=F, data = trace, aes(x=repeats, y = height, colour = unique_id), method = "loess", span=0.1, level=0.9, se = T, show.legend = FALSE) +
-        geom_histogram(binwidth = 1, show.legend = FALSE) +
+          list(geom_vline(xintercept = input$IndexRepeat2_2,
+                          color = "red", size=1))} +
+        {if (input$show_line_fastq == T)
+        list(geom_smooth(inherit.aes=F, data = trace, aes(x=repeats, y = height, colour = unique_id), method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
+        geom_histogram(binwidth = 1, show.legend = FALSE, fill= "grey") +
         theme_bw()
     }
 
@@ -936,30 +959,30 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
 
   observeEvent(input$up_inv2, {
     tryCatch({
-      if (is.null(upload_data$metadata_table())) {
+      if (is.null(upload_data$metadata_table_fastq())) {
         updatePickerInput(session, "sample_subset_metrics2", selected = if (which(names(reactive_metrics2$peak_list) == input$sample_subset_metrics2) - 1 == 0)
           reactive_metrics2$peak_list[[which(names(reactive_metrics2$peak_list) == input$sample_subset_metrics2)]]$unique_id
           else reactive_metrics2$peak_list[[which(names(reactive_metrics2$peak_list) == input$sample_subset_metrics2) - 1]]$unique_id)
       }
-      else if (!is.null(upload_data$metadata_table())) {
-        if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
+      else if (!is.null(upload_data$metadata_table_fastq())) {
+        if (any(grepl("TRUE", upload_data$metadata_table_fastq()$metrics_baseline_control))) {
           if (input$group_controls2 == TRUE) {
-            if (!any(which(upload_data$metadata_table()$metrics_baseline_control == TRUE) == input$Index_Table2_rows_selected)) {
-              updatePickerInput(session, "sample_subset_metrics2", selected = if (which(upload_data$metadata_table()[-which(upload_data$metadata_table()$metrics_baseline_control == TRUE),]$unique_id == input$sample_subset_metrics2) - 1 == 0)
-                upload_data$metadata_table()[-which(upload_data$metadata_table()$metrics_baseline_control == TRUE),]$unique_id[which(upload_data$metadata_table()[-which(upload_data$metadata_table()$metrics_baseline_control == TRUE),]$unique_id == input$sample_subset_metrics2)]
-                else upload_data$metadata_table()[-which(upload_data$metadata_table()$metrics_baseline_control == TRUE),]$unique_id[which(upload_data$metadata_table()[-which(upload_data$metadata_table()$metrics_baseline_control == TRUE),]$unique_id == input$sample_subset_metrics2) - 1])
+            if (!any(which(upload_data$metadata_table_fastq()$metrics_baseline_control == TRUE) == input$Index_Table2_rows_selected)) {
+              updatePickerInput(session, "sample_subset_metrics2", selected = if (which(upload_data$metadata_table_fastq()[-which(upload_data$metadata_table_fastq()$metrics_baseline_control == TRUE),]$unique_id == input$sample_subset_metrics2) - 1 == 0)
+                upload_data$metadata_table_fastq()[-which(upload_data$metadata_table_fastq()$metrics_baseline_control == TRUE),]$unique_id[which(upload_data$metadata_table_fastq()[-which(upload_data$metadata_table_fastq()$metrics_baseline_control == TRUE),]$unique_id == input$sample_subset_metrics2)]
+                else upload_data$metadata_table_fastq()[-which(upload_data$metadata_table_fastq()$metrics_baseline_control == TRUE),]$unique_id[which(upload_data$metadata_table_fastq()[-which(upload_data$metadata_table_fastq()$metrics_baseline_control == TRUE),]$unique_id == input$sample_subset_metrics2) - 1])
             }
           }
           else {
-            updatePickerInput(session, "sample_subset_metrics2", selected = if (which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics2) - 1 == 0)
-              upload_data$metadata_table()$unique_id[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics2)]
-              else upload_data$metadata_table()$unique_id[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics2) - 1])
+            updatePickerInput(session, "sample_subset_metrics2", selected = if (which(upload_data$metadata_table_fastq()$unique_id == input$sample_subset_metrics2) - 1 == 0)
+              upload_data$metadata_table_fastq()$unique_id[which(upload_data$metadata_table_fastq()$unique_id == input$sample_subset_metrics2)]
+              else upload_data$metadata_table_fastq()$unique_id[which(upload_data$metadata_table_fastq()$unique_id == input$sample_subset_metrics2) - 1])
           }
         }
         else {
-          updatePickerInput(session, "sample_subset_metrics2", selected = if (which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics2) - 1 == 0)
-            upload_data$metadata_table()$unique_id[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics2)]
-            else upload_data$metadata_table()$unique_id[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics2) - 1])
+          updatePickerInput(session, "sample_subset_metrics2", selected = if (which(upload_data$metadata_table_fastq()$unique_id == input$sample_subset_metrics2) - 1 == 0)
+            upload_data$metadata_table_fastq()$unique_id[which(upload_data$metadata_table_fastq()$unique_id == input$sample_subset_metrics2)]
+            else upload_data$metadata_table_fastq()$unique_id[which(upload_data$metadata_table_fastq()$unique_id == input$sample_subset_metrics2) - 1])
         }
       }
     },
@@ -970,28 +993,28 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
 
   observeEvent(input$down_inv2, {
     tryCatch({
-      if (is.null(upload_data$metadata_table())) {
+      if (is.null(upload_data$metadata_table_fastq())) {
         updatePickerInput(session, "sample_subset_metrics2", selected = if (which(names(reactive_metrics2$peak_list) == input$sample_subset_metrics2) + 1 > length(names(reactive_metrics2$peak_list)))
           reactive_metrics2$peak_list[[which(names(reactive_metrics2$peak_list) == input$sample_subset_metrics2)]]$unique_id
           else reactive_metrics2$peak_list[[which(names(reactive_metrics2$peak_list) == input$sample_subset_metrics2) + 1]]$unique_id)
       }
-      else if (!is.null(upload_data$metadata_table())) {
-        if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
+      else if (!is.null(upload_data$metadata_table_fastq())) {
+        if (any(grepl("TRUE", upload_data$metadata_table_fastq()$metrics_baseline_control))) {
           if (input$group_controls2 == TRUE) {
-            updatePickerInput(session, "sample_subset_metrics2", selected = if (which(upload_data$metadata_table()[-which(upload_data$metadata_table()$metrics_baseline_control == TRUE),]$unique_id == input$sample_subset_metrics2) + 1 > length(upload_data$metadata_table()[-which(upload_data$metadata_table()$metrics_baseline_control == TRUE),]$unique_id))
-              upload_data$metadata_table()[-which(upload_data$metadata_table()$metrics_baseline_control == TRUE),]$unique_id[which(upload_data$metadata_table()[-which(upload_data$metadata_table()$metrics_baseline_control == TRUE),]$unique_id == input$sample_subset_metrics2)]
-              else upload_data$metadata_table()[-which(upload_data$metadata_table()$metrics_baseline_control == TRUE),]$unique_id[which(upload_data$metadata_table()[-which(upload_data$metadata_table()$metrics_baseline_control == TRUE),]$unique_id == input$sample_subset_metrics2) + 1])
+            updatePickerInput(session, "sample_subset_metrics2", selected = if (which(upload_data$metadata_table_fastq()[-which(upload_data$metadata_table_fastq()$metrics_baseline_control == TRUE),]$unique_id == input$sample_subset_metrics2) + 1 > length(upload_data$metadata_table_fastq()[-which(upload_data$metadata_table_fastq()$metrics_baseline_control == TRUE),]$unique_id))
+              upload_data$metadata_table_fastq()[-which(upload_data$metadata_table_fastq()$metrics_baseline_control == TRUE),]$unique_id[which(upload_data$metadata_table_fastq()[-which(upload_data$metadata_table_fastq()$metrics_baseline_control == TRUE),]$unique_id == input$sample_subset_metrics2)]
+              else upload_data$metadata_table_fastq()[-which(upload_data$metadata_table_fastq()$metrics_baseline_control == TRUE),]$unique_id[which(upload_data$metadata_table_fastq()[-which(upload_data$metadata_table_fastq()$metrics_baseline_control == TRUE),]$unique_id == input$sample_subset_metrics2) + 1])
           }
           else {
-            updatePickerInput(session, "sample_subset_metrics2", selected = if (which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics2) + 1 > length(upload_data$metadata_table()$unique_id))
-              upload_data$metadata_table()$unique_id[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics2)]
-              else upload_data$metadata_table()$unique_id[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics2) + 1])
+            updatePickerInput(session, "sample_subset_metrics2", selected = if (which(upload_data$metadata_table_fastq()$unique_id == input$sample_subset_metrics2) + 1 > length(upload_data$metadata_table_fastq()$unique_id))
+              upload_data$metadata_table_fastq()$unique_id[which(upload_data$metadata_table_fastq()$unique_id == input$sample_subset_metrics2)]
+              else upload_data$metadata_table_fastq()$unique_id[which(upload_data$metadata_table_fastq()$unique_id == input$sample_subset_metrics2) + 1])
           }
         }
         else {
-          updatePickerInput(session, "sample_subset_metrics2", selected = if (which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics2) + 1 > length(upload_data$metadata_table()$unique_id))
-            upload_data$metadata_table()$unique_id[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics2)]
-            else upload_data$metadata_table()$unique_id[which(upload_data$metadata_table()$unique_id == input$sample_subset_metrics2) + 1])
+          updatePickerInput(session, "sample_subset_metrics2", selected = if (which(upload_data$metadata_table_fastq()$unique_id == input$sample_subset_metrics2) + 1 > length(upload_data$metadata_table_fastq()$unique_id))
+            upload_data$metadata_table_fastq()$unique_id[which(upload_data$metadata_table_fastq()$unique_id == input$sample_subset_metrics2)]
+            else upload_data$metadata_table_fastq()$unique_id[which(upload_data$metadata_table_fastq()$unique_id == input$sample_subset_metrics2) + 1])
         }
       }
     },
@@ -1001,22 +1024,22 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
   })
 
   observeEvent(input$Index_Table2_rows_selected, {
-    if (is.null(upload_data$metadata_table())) {
+    if (is.null(upload_data$metadata_table_fastq())) {
       updatePickerInput(session, "sample_subset_metrics2", selected = reactive_metrics2$peak_list[[input$Index_Table2_rows_selected]]$unique_id)
     }
-    else if (!is.null(upload_data$metadata_table())) {
-      if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
+    else if (!is.null(upload_data$metadata_table_fastq())) {
+      if (any(grepl("TRUE", upload_data$metadata_table_fastq()$metrics_baseline_control))) {
         if (input$group_controls2 == TRUE) {
-          if (!any(which(upload_data$metadata_table()$metrics_baseline_control == TRUE) == input$Index_Table2_rows_selected)) {
-            updatePickerInput(session, "sample_subset_metrics2", selected = upload_data$metadata_table()$unique_id[input$Index_Table2_rows_selected])
+          if (!any(which(upload_data$metadata_table_fastq()$metrics_baseline_control == TRUE) == input$Index_Table2_rows_selected)) {
+            updatePickerInput(session, "sample_subset_metrics2", selected = upload_data$metadata_table_fastq()$unique_id[input$Index_Table2_rows_selected])
           }
         }
         else {
-          updatePickerInput(session, "sample_subset_metrics2", selected = upload_data$metadata_table()$unique_id[input$Index_Table2_rows_selected])
+          updatePickerInput(session, "sample_subset_metrics2", selected = upload_data$metadata_table_fastq()$unique_id[input$Index_Table2_rows_selected])
         }
       }
       else {
-        updatePickerInput(session, "sample_subset_metrics2", selected = upload_data$metadata_table()$unique_id[input$Index_Table2_rows_selected])
+        updatePickerInput(session, "sample_subset_metrics2", selected = upload_data$metadata_table_fastq()$unique_id[input$Index_Table2_rows_selected])
       }
     }
   })
@@ -1050,9 +1073,11 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
 
       #Upload
       fastq = upload_data$fastq()
-      metadata_table = upload_data$metadata_table()
+      metadata_table_fastq = upload_data$metadata_table_fastq()
       DataUpload = upload_data$DataUpload()
       DataUploadMeta = upload_data$DataUploadMeta()
+
+      peak_list <- reactive_metrics2$peak_list
 
       #Investigate
       instability_metrics_fastq <- reactive_metrics2$df
@@ -1074,8 +1099,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
       #Package Version
       Package_version <- sessionInfo()$otherPkgs$traceShiny$Version
 
-
-      save("fastq", "metadata_table", "DataUpload", "DataUploadMeta",
+      save("fastq", "metadata_table_fastq", "DataUpload", "DataUploadMeta", "peak_list",
            "instability_metrics_fastq", "peak_threshold2", "window_around_index_peak_min", "window_around_index_peak_max", "repeat_range1", "repeat_range2", "repeat_range3", "percentile_range1", "percentile_range2", "percentile_range3",
            "sample_subset2_2", "sample_subset_metrics2", "Package_version", "Index_Table", "Index_Table_original", "group_controls2",
            file = file)

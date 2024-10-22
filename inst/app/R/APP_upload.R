@@ -41,15 +41,11 @@ upload_data_box_ui2 <- function(id) {
       ),
       conditionalPanel(
         condition = 'input.DataUpload == "fsa"',
-        fileInput("DataFSA", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Upload fsa File(s)')), multiple = T)
+        fileInput("DataFSA", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Upload fsa File(s)')), multiple = T, accept = c(".fsa"))
       ),
       conditionalPanel(
         condition = 'input.DataUpload == "fastq"',
-        fileInput("fastq", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Upload fastq Files(s)')), multiple = T)
-      ),
-      conditionalPanel(
-        condition = 'input.DataUpload == "Repeat Table"',
-        fileInput("DataTable", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Upload Repeat Table')))
+        fileInput("fastq", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Upload fastq Files(s)')), multiple = T, accept = c(".fastq", ".fq"))
       )
   )
 }
@@ -153,7 +149,7 @@ upload_data_box_ui4 <- function(id) {
     conditionalPanel(
       condition = 'input.DataUploadMeta == false',
       fileInput("MetadataUpload", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-75px;">Metadata Upload'), downloadBttn("downloadExampleMetadata", "Download Example MetaData")),
-                multiple = F),
+                multiple = F, accept = c(".txt", ".csv", ".xlsx", ".xls")),
     ),
 
     withSpinner(DT::dataTableOutput("Metadata_table", width = "100%", height = 400))
@@ -201,6 +197,8 @@ upload_data_box_server <- function(input, output, session, continue_module) {
     reactive$laddertable <- continue_module$laddertable()
     reactive$fsa_list <- continue_module$fsa_list()
     reactive$metadata_table <- continue_module$metadata_table()
+    reactive$df_final <- continue_module$fastq()
+    reactive$metadata_table_fastq <- continue_module$metadata_table_fastq()
   })
 
   # #help files
@@ -228,23 +226,12 @@ upload_data_box_server <- function(input, output, session, continue_module) {
     reactive$fsa_list <- NULL
     reactive$metadata_table <- NULL
     reactive$df <- NULL
+    reactive$metadata_table_fastq <- NULL
+    reactive$df_final <- NULL
   })
 
   observeEvent(input$DataUpload, {
     if(input$DataUpload == "Use Example"){
-      if (!is.null(reactive$fsa_list) && is.null(continue_module$fsa_list())) {
-        shinyalert("ERROR!", "You already have fsa file(s) loaded, please click the refresh button on the top to delete all data and start from fresh.", type = "error", confirmButtonCol = "#337ab7")
-        updateMaterialSwitch(session, "DataUploadMeta", value = F)
-        shinyjs::show("LoadBox2")
-        shinyjs::hide("LoadBox5")
-        shinyjs::hide("LoadBox3")
-        shinyjs::hide("LoadBox4")
-        shinyjs::hide("NextButtonLoad")
-        shinyjs::hide("NextButtonLoad2")
-        shinyjs::hide("LoadBox_FASTQ1")
-        shinyjs::hide("LoadBox_FASTQ2")
-      }
-      else {
         reactive$fsa_list <- trace::cell_line_fsa_list
 
         reactive$df <- NULL
@@ -255,7 +242,6 @@ upload_data_box_server <- function(input, output, session, continue_module) {
         shinyjs::hide("NextButtonLoad2")
         shinyjs::hide("LoadBox_FASTQ1")
         shinyjs::hide("LoadBox_FASTQ2")
-      }
     }
     else {
       updateMaterialSwitch(session, "DataUploadMeta", value = F)
@@ -269,27 +255,15 @@ upload_data_box_server <- function(input, output, session, continue_module) {
 
   observeEvent(input$DataUploadMeta, {
     if(input$DataUploadMeta == T) {
-
-      if (!is.null(reactive$metadata_table) && is.null(continue_module$metadata_table())) {
-        shinyalert("ERROR!", "You already have metadata loaded, please click the refresh button on the top to delete all data and start from fresh.", type = "error", confirmButtonCol = "#337ab7")
-        shinyjs::hide("LoadBox4")
-        shinyjs::hide("NextButtonLoad")
-        shinyjs::hide("NextButtonLoad2")
-        shinyjs::hide("LoadBox_FASTQ1")
-        shinyjs::hide("LoadBox_FASTQ2")
-      }
-      else {
-        reactive$metadata_table <- trace::metadata
-        #reactive$metadata_table <- trace::metadata[91:94, ]
-        shinyjs::show("LoadBox2")
-        shinyjs::show("LoadBox5")
-        shinyjs::show("LoadBox3")
-        shinyjs::show("LoadBox4")
-        shinyjs::show("NextButtonLoad")
-        shinyjs::hide("NextButtonLoad2")
-        shinyjs::hide("LoadBox_FASTQ1")
-        shinyjs::hide("LoadBox_FASTQ2")
-      }
+      reactive$metadata_table <- trace::metadata
+      shinyjs::show("LoadBox2")
+      shinyjs::show("LoadBox5")
+      shinyjs::show("LoadBox3")
+      shinyjs::show("LoadBox4")
+      shinyjs::show("NextButtonLoad")
+      shinyjs::hide("NextButtonLoad2")
+      shinyjs::hide("LoadBox_FASTQ1")
+      shinyjs::hide("LoadBox_FASTQ2")
     }
     else if(input$DataUploadMeta == F) {
       reactive$metadata_table <- NULL
@@ -303,6 +277,29 @@ upload_data_box_server <- function(input, output, session, continue_module) {
     else {
       shinyjs::show("DataUploadMeta")
     }
+  })
+
+  observeEvent(input$DataUpload, {
+      if (input$DataUpload == "fastq" | input$DataUpload == "fsa") {
+        shinyjs::show("LoadBox2")
+        shinyjs::hide("LoadBox5")
+        shinyjs::hide("LoadBox3")
+        shinyjs::hide("LoadBox4")
+        shinyjs::hide("NextButtonLoad")
+        shinyjs::hide("NextButtonLoad2")
+        shinyjs::hide("LoadBox_FASTQ1")
+        shinyjs::hide("LoadBox_FASTQ2")
+      }
+      else if (input$DataUpload == "Use Example") {
+        shinyjs::show("LoadBox2")
+        shinyjs::show("LoadBox5")
+        shinyjs::hide("LoadBox3")
+        shinyjs::hide("LoadBox4")
+        shinyjs::hide("NextButtonLoad")
+        shinyjs::hide("NextButtonLoad2")
+        shinyjs::hide("LoadBox_FASTQ1")
+        shinyjs::hide("LoadBox_FASTQ2")
+      }
   })
 
 
@@ -329,10 +326,6 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                    value = 0, {
                      incProgress(0.1)
 
-                     if (!is.null(reactive$fsa_list)) {
-                       shinyalert("ERROR!", "You already have an fsa file(s) loaded, please click the refresh button on the top to delete all data and start from fresh.", type = "error", confirmButtonCol = "#337ab7")
-                     }
-                     else {
                        filesdir = dirname(input$DataFSA[[1, 'datapath']])
 
                        for (i in 1:length(input$DataFSA$name)) {
@@ -357,7 +350,6 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                        output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
                                                                         menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = T))
                        )
-                     }
                    })
     },
     error = function(e) {
@@ -373,10 +365,6 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                    value = 0, {
                      incProgress(0.1)
 
-                     if (!is.null(reactive$fastq_list)) {
-                       shinyalert("ERROR!", "You already have an fsa file(s) loaded, please click the refresh button on the top to delete all data and start from fresh.", type = "error", confirmButtonCol = "#337ab7")
-                     }
-                     else {
                        filesdir = dirname(input$fastq[[1, 'datapath']])
 
                        for (i in 1:length(input$fastq$name)) {
@@ -413,7 +401,6 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                        output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
                                                                         menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = T))
                        )
-                     }
                    })
     },
     error = function(e) {
@@ -609,19 +596,31 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                    value = 0, {
                      incProgress(0.1)
 
-                     reactive$metadata_table <- read.csv(input$MetadataUpload$datapath)
+                     if (is.null(reactive$df_final)) {
 
-                     reactive$metadata_table[reactive$metadata_table==""] <- NA
+                       if (grepl(".csv$", input$MetadataUpload$datapath)) {
+                         reactive$metadata_table <- read.csv(input$MetadataUpload$datapath)
+                       }
+                       else if (grepl(".txt$", input$MetadataUpload$datapath)) {
+                         reactive$metadata_table <- read.delim(input$MetadataUpload$datapath)
+                       }
+                       else if (grepl(".xlsx", input$MetadataUpload$datapath)) {
+                         reactive$metadata_table <- as.data.frame(read_xlsx(input$MetadataUpload$datapath, na = "NA"))
+                       }
+                       else if (grepl(".xls", input$MetadataUpload$datapath)) {
+                         reactive$metadata_table <- as.data.frame(read_xls(input$MetadataUpload$datapath, na = "NA"))
+                       }
 
-                     if (any(grepl("unique_id", colnames(reactive$metadata_table))) &&
-                         any(grepl("metrics_group_id", colnames(reactive$metadata_table))) &&
-                         any(grepl("metrics_baseline_control", colnames(reactive$metadata_table))) &&
-                         any(grepl("batch_run_id", colnames(reactive$metadata_table))) &&
-                         any(grepl("batch_sample_id", colnames(reactive$metadata_table))) &&
-                         any(grepl("batch_sample_modal_repeat", colnames(reactive$metadata_table)))
-                     )
-                     {
-                       if (!is.null(reactive$fsa_list)) {
+                       reactive$metadata_table[reactive$metadata_table==""] <- NA
+
+                       if (any(grepl("unique_id", colnames(reactive$metadata_table))) &&
+                           any(grepl("metrics_group_id", colnames(reactive$metadata_table))) &&
+                           any(grepl("metrics_baseline_control", colnames(reactive$metadata_table))) &&
+                           any(grepl("batch_run_id", colnames(reactive$metadata_table))) &&
+                           any(grepl("batch_sample_id", colnames(reactive$metadata_table))) &&
+                           any(grepl("batch_sample_modal_repeat", colnames(reactive$metadata_table)))
+                       )
+                       {
                          reactive$metadata_table <- reactive$metadata_table[match(names(reactive$fsa_list), reactive$metadata_table$unique_id),]
 
                          if (all(reactive$metadata_table$unique_id %in% names(reactive$fsa_list))) {
@@ -689,15 +688,44 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                            shinyjs::hide("NextButtonLoad2")
                          }
                        }
-                       else if (!is.null(reactive$df_final)) {
-                         reactive$metadata_table <- reactive$metadata_table[match(unique(reactive$df_final$SampleID), reactive$metadata_table$unique_id),]
+                       else {
+                         shinyalert("ERROR!", "File is not in correct format. Please check if your column names, make sure it is in the correct format.", type = "error", confirmButtonCol = "#337ab7")
+                         shinyjs::hide("NextButtonLoad")
+                         shinyjs::hide("NextButtonLoad2")
+                       }
+                     }
+                     else if (!is.null(reactive$df_final)) {
+                       if (grepl(".csv$", input$MetadataUpload$datapath)) {
+                         reactive$metadata_table_fastq <- read.csv(input$MetadataUpload$datapath)
+                       }
+                       else if (grepl(".txt$", input$MetadataUpload$datapath)) {
+                         reactive$metadata_table_fastq <- read.delim(input$MetadataUpload$datapath)
+                       }
+                       else if (grepl(".xlsx", input$MetadataUpload$datapath)) {
+                         reactive$metadata_table_fastq <- as.data.frame(read_xlsx(input$MetadataUpload$datapath, na = "NA"))
+                       }
+                       else if (grepl(".xls", input$MetadataUpload$datapath)) {
+                         reactive$metadata_table_fastq <- as.data.frame(read_xls(input$MetadataUpload$datapath, na = "NA"))
+                       }
 
-                         if (all(reactive$metadata_table$unique_id %in% unique(reactive$df_final$SampleID))) {
+                       reactive$metadata_table_fastq[reactive$metadata_table_fastq==""] <- NA
 
-                           if (any(grepl("TRUE", reactive$metadata_table$metrics_baseline_control))) {
+                       if (any(grepl("unique_id", colnames(reactive$metadata_table_fastq))) &&
+                           any(grepl("metrics_group_id", colnames(reactive$metadata_table_fastq))) &&
+                           any(grepl("metrics_baseline_control", colnames(reactive$metadata_table_fastq))) &&
+                           any(grepl("batch_run_id", colnames(reactive$metadata_table_fastq))) &&
+                           any(grepl("batch_sample_id", colnames(reactive$metadata_table_fastq))) &&
+                           any(grepl("batch_sample_modal_repeat", colnames(reactive$metadata_table_fastq)))
+                       )
+                       {
+                         reactive$metadata_table_fastq <- reactive$metadata_table_fastq[match(unique(reactive$df_final$SampleID), reactive$metadata_table_fastq$unique_id),]
 
-                             if (all(unique(reactive$metadata_table[-which(reactive$metadata_table$metrics_baseline_control == TRUE), ]$metrics_group_id) %in%
-                                     unique(reactive$metadata_table[which(reactive$metadata_table$metrics_baseline_control == TRUE), ]$metrics_group_id))) {
+                         if (all(reactive$metadata_table_fastq$unique_id %in% unique(reactive$df_final$SampleID))) {
+
+                           if (any(grepl("TRUE", reactive$metadata_table_fastq$metrics_baseline_control))) {
+
+                             if (all(unique(reactive$metadata_table_fastq[-which(reactive$metadata_table_fastq$metrics_baseline_control == TRUE), ]$metrics_group_id) %in%
+                                     unique(reactive$metadata_table_fastq[which(reactive$metadata_table_fastq$metrics_baseline_control == TRUE), ]$metrics_group_id))) {
 
                                shinyalert("SUCCESS!", "File uploaded successfully.", type = "success", confirmButtonCol = "#337ab7")
 
@@ -757,17 +785,18 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                            shinyjs::hide("NextButtonLoad2")
                          }
                        }
-                     }
-                     else {
-                       shinyalert("ERROR!", "File is not in correct format. Please check if your column names, make sure it is in the correct format.", type = "error", confirmButtonCol = "#337ab7")
-                       shinyjs::hide("NextButtonLoad")
-                       shinyjs::hide("NextButtonLoad2")
+                       else {
+                         shinyalert("ERROR!", "File is not in correct format. Please check if your column names, make sure it is in the correct format.", type = "error", confirmButtonCol = "#337ab7")
+                         shinyjs::hide("NextButtonLoad")
+                         shinyjs::hide("NextButtonLoad2")
+                       }
                      }
                    })
     },
     error = function(e) {
       shinyalert("ERROR!", e$message, type = "error", confirmButtonCol = "#337ab7")
       reactive$metadata_table <- NULL
+      reactive$metadata_table_fastq <- NULL
       shinyjs::hide("NextButtonLoad")
       shinyjs::hide("NextButtonLoad2")
     })
@@ -775,16 +804,30 @@ upload_data_box_server <- function(input, output, session, continue_module) {
 
   output$Metadata_table <- DT::renderDataTable({
     validate(
-      need(!is.null(reactive$metadata_table), 'You must load your data first...'))
-    datatable(reactive$metadata_table,
-              options = list(scrollX = TRUE,
-                             scrollY = TRUE,
-                             server = TRUE,
-                             paging = TRUE,
-                             pageLength = 15
-              ),
-              selection = 'single',
-              rownames = FALSE)
+      need(!is.null(reactive$metadata_table) | !is.null(reactive$metadata_table_fastq), 'No metadata loaded. If you would like to skip this step please scroll to the bottom of the page and press the next step button.'))
+
+    if (is.null(reactive$df_final)) {
+      datatable(reactive$metadata_table,
+                options = list(scrollX = TRUE,
+                               scrollY = TRUE,
+                               server = TRUE,
+                               paging = TRUE,
+                               pageLength = 15
+                ),
+                selection = 'single',
+                rownames = FALSE)
+    }
+    else {
+      datatable(reactive$metadata_table_fastq,
+                options = list(scrollX = TRUE,
+                               scrollY = TRUE,
+                               server = TRUE,
+                               paging = TRUE,
+                               pageLength = 15
+                ),
+                selection = 'single',
+                rownames = FALSE)
+    }
 
   },  options = list(scrollX = TRUE))
 
@@ -872,6 +915,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
     laddertable = reactive(reactive$laddertable),
     fsa_list = reactive(reactive$fsa_list),
     metadata_table = reactive(reactive$metadata_table),
+    metadata_table_fastq = reactive(reactive$metadata_table_fastq),
     DataUpload = reactive(input$DataUpload),
     DataUploadMeta = reactive(input$DataUploadMeta),
     Ladder_switch = reactive(input$Ladder_switch)

@@ -269,6 +269,13 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     }
   })
 
+  observeEvent(ignoreInit = F, list(input$MetadataUpload, input$SelectionButton, input$DataFSA, input$fastq, input$fileinputLOAD), {
+    reactive_peaks$peaks <- NULL
+    reactive_peaks$sample_traces_size <- NULL
+    reactive_peaks$sample_traces_repeats <- NULL
+    reactive_peaks$batchcorrectionswitch <- NULL
+  })
+
   #Download
   output$peaks_text_download <- shiny::downloadHandler(
     filename = function() {

@@ -203,6 +203,14 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
     }
   )
 
+  observeEvent(ignoreInit = F, list(input$MetadataUpload, input$SelectionButton, input$DataFSA, input$fastq, input$fileinputLOAD), {
+    reactive_metrics$df <- NULL
+    reactive_metrics$sample_subset_metrics <- NULL
+    reactive_metrics$sample_subset2 <- NULL
+    reactive_metrics$Index_Table <- NULL
+    reactive_metrics$Index_Table_original <- NULL
+  })
+
   output$downloadlogs <- shiny::downloadHandler(
     filename = function() {
       paste0(format(Sys.time(), "%Y-%m-%d_%H%M%S"), "_logs", ".zip")

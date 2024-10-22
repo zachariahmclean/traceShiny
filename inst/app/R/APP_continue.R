@@ -2,7 +2,9 @@ continue_server <- function(input, output, session) {
 
   reactive_continue <- reactiveValues(laddertable = NULL,
                                       fsa_list = NULL,
+                                      fastq = NULL,
                                       metadata_table = NULL,
+                                      metadata_table_fastq = NULL,
                                       ladders = NULL,
                                       instability_metrics = NULL,
                                       index_list = NULL)
@@ -39,10 +41,17 @@ continue_server <- function(input, output, session) {
                      library(tibble)
                      library(tidyr)
                      library(stringr)
+                     library(readxl)
 
                      removeModal()
 
                      incProgress(3/10, detail = "Setting up previously saved variables")
+
+                     load(file$datapath)
+
+                     incProgress(5/10, detail = "Setting up upload settings")
+
+                     if (exists("metadata_table")) {
 
                      shinyjs::hide("NextButtonLoad")
                      shinyjs::hide("NextButtonLadder")
@@ -77,10 +86,6 @@ continue_server <- function(input, output, session) {
                      shinyjs::show("MetricsBox1")
                      shinyjs::show("MetricsBox2")
                      shinyjs::show("MetricsBox3")
-
-                     load(file$datapath)
-
-                     incProgress(5/10, detail = "Setting up upload settings")
 
                      #Upload
                      updateRadioGroupButtons(session, "DataUpload", selected = DataUpload)
@@ -135,7 +140,7 @@ continue_server <- function(input, output, session) {
                      updateNumericInput(session, "repeat_range3", value = repeat_range3)
                      updatePickerInput(session, "sample_subset2", choices = sample_subset2)
                      updatePickerInput(session,"sample_subset_metrics", choices = sample_subset_metrics)
-                     #updateMaterialSwitch(session, "group_controls", value = group_controls)
+                     updateMaterialSwitch(session, "group_controls", value = group_controls)
 
                      reactive_continue$laddertable <- laddertable
                      reactive_continue$fsa_list <- fsa_list
@@ -165,6 +170,10 @@ continue_server <- function(input, output, session) {
                      shinyjs::show("LoadBox5")
                      shinyjs::show("LoadBox3")
                      shinyjs::show("LoadBox4")
+                     shinyjs::hide("NextButtonLoad")
+                     shinyjs::hide("NextButtonLoad2")
+                     shinyjs::hide("LoadBox_FASTQ1")
+                     shinyjs::hide("LoadBox_FASTQ2")
 
                      output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
                                                                       menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = F),
@@ -172,11 +181,78 @@ continue_server <- function(input, output, session) {
                                                                       menuItem("Find Peaks", icon = icon("mountain"), tabName = "FindPeaks", selected = F),
                                                                       menuItem("Instability Metrics", icon = icon("water-ladder"), tabName = "InstabilityMetrics", selected = T),
                                                                       menuItem("Analysis", icon = icon("magnifying-glass-chart"), tabName = "Analysis", selected = F)))
+                     }
+                     if (exists("metadata_table_fastq")) {
+
+                       #Load
+                       if (input$LoadBoxIntro$collapsed == FALSE) {
+                         js$collapse("LoadBoxIntro")
+                       }
+
+                       #Metrics
+                       if(input$Metrics2BoxIntro$collapsed == FALSE) {
+                         js$collapse("MetricsBoxIntro")
+                       }
+                       shinyjs::show("Metrics2Box1")
+                       shinyjs::show("Metrics2Box2")
+                       shinyjs::show("Metrics2Box3")
+
+                       #Upload
+                       #updateRadioGroupButtons(session, "DataUpload", selected = DataUpload)
+                       updateMaterialSwitch(session, "DataUploadMeta", value = DataUploadMeta)
+
+                       incProgress(9/10, detail = "Setting up instability metrics settings")
+
+                       #Investigate
+                       updateNumericInput(session, "peak_threshold2", value = peak_threshold2)
+                       updateNumericInput(session, "window_around_index_peak_min", value = window_around_index_peak_min)
+                       updateNumericInput(session, "window_around_index_peak_max", value = window_around_index_peak_max)
+                       updateNumericInput(session, "percentile_range1", value = percentile_range1)
+                       updateNumericInput(session, "percentile_range2", value = percentile_range2)
+                       updateNumericInput(session, "percentile_range3", value = percentile_range3)
+                       updateNumericInput(session, "repeat_range1", value = repeat_range1)
+                       updateNumericInput(session, "repeat_range2", value = repeat_range2)
+                       updateNumericInput(session, "repeat_range3", value = repeat_range3)
+                       updatePickerInput(session, "sample_subset2_2", choices = sample_subset2_2)
+                       updatePickerInput(session,"sample_subset_metrics2", choices = sample_subset_metrics2)
+                       updateMaterialSwitch(session, "group_controls2", value = group_controls2)
+
+                       reactive_continue$fastq <- fastq
+                       reactive_continue$metadata_table_fastq <- metadata_table_fastq
+                       reactive_continue$peak_list <- peak_list
+                       reactive_continue$instability_metrics_fastq <- instability_metrics_fastq
+                       reactive_continue$sample_subset_metrics2 <- sample_subset_metrics2
+                       reactive_continue$sample_subset2_2 <- sample_subset2_2
+                       reactive_continue$Index_Table <- Index_Table
+                       reactive_continue$Index_Table_original <- Index_Table_original
+
+                       if (!is.null(fastq) && !is.null(sample_subset_metrics2)) {
+                         updateNumericInput(session, "IndexRepeat1_2", value = Index_Table[which(Index_Table$`Unique IDs` == sample_subset_metrics2[1]),]$`Index Repeat`)
+
+                         if (!is.null(sample_subset2_2)) {
+                           updateNumericInput(session, "IndexRepeat2_2", value = Index_Table[which(Index_Table$`Unique IDs` == sample_subset2_2[1]),]$`Index Repeat`)
+                         }
+                       }
+
+                       shinyjs::show("LoadBox2")
+                       shinyjs::hide("LoadBox5")
+                       shinyjs::show("LoadBox3")
+                       shinyjs::hide("LoadBox4")
+                       shinyjs::hide("NextButtonLoad")
+                       shinyjs::hide("NextButtonLoad2")
+                       shinyjs::show("LoadBox_FASTQ1")
+                       shinyjs::show("LoadBox_FASTQ2")
+
+                       output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
+                                                                        menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = F),
+                                                                        menuItem("Instability Metrics", icon = icon("water-ladder"), tabName = "InstabilityMetrics2", selected = T),
+                                                                        menuItem("Analysis", icon = icon("magnifying-glass-chart"), tabName = "Analysis2", selected = F)))
+                     }
 
                    })
     },
     error = function(e) {
-      shinyalert("ERROR!", "File is not in correct format.", type = "error", confirmButtonCol = "#337ab7")
+      shinyalert("ERROR!", e$message, type = "error", confirmButtonCol = "#337ab7")
     })
   })
 
@@ -184,6 +260,9 @@ continue_server <- function(input, output, session) {
     laddertable = reactive(reactive_continue$laddertable),
     fsa_list = reactive(reactive_continue$fsa_list),
     metadata_table = reactive(reactive_continue$metadata_table),
+    fastq = reactive(reactive_continue$fastq),
+    peak_list = reactive(reactive_continue$peak_list),
+    metadata_table_fastq = reactive(reactive_continue$metadata_table_fastq),
     ladders = reactive(reactive_continue$ladders),
     scan = reactive(reactive_continue$scan),
     size = reactive(reactive_continue$size),
@@ -195,7 +274,10 @@ continue_server <- function(input, output, session) {
     Index_Table_original = reactive(reactive_continue$Index_Table_original),
     sample_traces_size = reactive(reactive_continue$sample_traces_size),
     sample_traces_repeats = reactive(reactive_continue$sample_traces_repeats),
-    batchcorrectionswitch = reactive(reactive_continue$batchcorrectionswitch)
+    batchcorrectionswitch = reactive(reactive_continue$batchcorrectionswitch),
+    instability_metrics_fastq = reactive(reactive_continue$instability_metrics_fastq),
+    sample_subset_metrics2 = reactive(reactive_continue$sample_subset_metrics2),
+    sample_subset2_2 = reactive(reactive_continue$sample_subset2_2)
   ))
 
 }
