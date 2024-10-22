@@ -18,6 +18,7 @@ Imports:
     methods,
     plotly,
     R6,
+    readxl,
     sendmailR,
     shiny,
     shinyalert,
@@ -27,5 +28,8 @@ Imports:
     shinydashboard,
     shinydashboardPlus,
     shinyjs,
-    shinyWidgets
+    shinyWidgets,
+    stringr,
+    tibble,
+    tidyr
 RoxygenNote: 7.3.2
