@@ -219,6 +219,7 @@ continue_server <- function(input, output, session) {
                        updateMaterialSwitch(session, "group_controls2", value = group_controls2)
 
                        reactive_continue$fastq <- fastq
+                       reactive_continue$df <- All
                        reactive_continue$metadata_table_fastq <- metadata_table_fastq
                        reactive_continue$peak_list <- peak_list
                        reactive_continue$instability_metrics_fastq <- instability_metrics_fastq
@@ -262,6 +263,7 @@ continue_server <- function(input, output, session) {
     fsa_list = reactive(reactive_continue$fsa_list),
     metadata_table = reactive(reactive_continue$metadata_table),
     fastq = reactive(reactive_continue$fastq),
+    All = reactive(reactive_continue$df),
     peak_list = reactive(reactive_continue$peak_list),
     metadata_table_fastq = reactive(reactive_continue$metadata_table_fastq),
     ladders = reactive(reactive_continue$ladders),

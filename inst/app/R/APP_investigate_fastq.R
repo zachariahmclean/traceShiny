@@ -1073,6 +1073,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
 
       #Upload
       fastq = upload_data$fastq()
+      All = upload_data$All()
       metadata_table_fastq = upload_data$metadata_table_fastq()
       DataUpload = upload_data$DataUpload()
       DataUploadMeta = upload_data$DataUploadMeta()
@@ -1099,7 +1100,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
       #Package Version
       Package_version <- sessionInfo()$otherPkgs$traceShiny$Version
 
-      save("fastq", "metadata_table_fastq", "DataUpload", "DataUploadMeta", "peak_list",
+      save("All", "fastq", "metadata_table_fastq", "DataUpload", "DataUploadMeta", "peak_list",
            "instability_metrics_fastq", "peak_threshold2", "window_around_index_peak_min", "window_around_index_peak_max", "repeat_range1", "repeat_range2", "repeat_range3", "percentile_range1", "percentile_range2", "percentile_range3",
            "sample_subset2_2", "sample_subset_metrics2", "Package_version", "Index_Table", "Index_Table_original", "group_controls2",
            file = file)

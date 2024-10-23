@@ -199,6 +199,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
     reactive$metadata_table <- continue_module$metadata_table()
     reactive$df_final <- continue_module$fastq()
     reactive$metadata_table_fastq <- continue_module$metadata_table_fastq()
+    reactive$df <- continue_module$All()
   })
 
   # #help files
@@ -437,7 +438,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
 
                      df <- df[lapply(df,nrow)>4]
 
-                     reactive$df_final <- df %>% purrr::reduce(full_join)
+                     reactive$df_final <- rbindlist(df)
                      reactive$df_final <- reactive$df_final[,c(1,3,2,4)]
                      colnames(reactive$df_final) <- c("Read ID", "Repeat Length", "Sequence", "SampleID")
 
@@ -911,6 +912,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
   },  options = list(scrollX = TRUE))
 
   return(list(
+    All = reactive(reactive$df),
     fastq = reactive(reactive$df_final),
     laddertable = reactive(reactive$laddertable),
     fsa_list = reactive(reactive$fsa_list),
