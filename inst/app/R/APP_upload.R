@@ -97,8 +97,10 @@ upload_data_box_ui_fastq2 <- function(id) {
                            choices = "ALL"))
       ),
 
+      p(style="text-align: right;", downloadButton("fastq_summary_download")),
       withSpinner(DT::dataTableOutput("fastq_filter_table", width = "100%")),
 
+      p(style="text-align: right;", downloadButton("short_form_download")),
       htmlOutput("short_form"),
 
       withSpinner(DT::dataTableOutput("short_form_table", width = "100%", height = 200))
@@ -202,7 +204,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
     reactive$df <- continue_module$All()
   })
 
-  # #help files
+  #help files
   help_click("Data_Upload", helpfile = "data/upload/upload_data.html")
   help_click("Data_Channels", helpfile = "data/upload/fsa_channels.html")
   help_click("MetaData", helpfile = "data/upload/metadata.html")
@@ -303,6 +305,42 @@ upload_data_box_server <- function(input, output, session, continue_module) {
       }
   })
 
+  #Download
+  output$fastq_summary_download <- shiny::downloadHandler(
+    filename = function() {
+      paste0(format(Sys.time(), "%Y-%m-%d_%H%M%S"), "_fastq_summary.csv")
+    },
+    content = function(file) {
+
+      write.csv(reactive$df_final, file, row.names = F, col.names = T)
+    }
+  )
+
+  output$short_form_download <- shiny::downloadHandler(
+    filename = function() {
+      paste0(format(Sys.time(), "%Y-%m-%d_%H%M%S"), "_Sequence_pileup.csv")
+    },
+    content = function(file) {
+
+      df <- reactive$df_final %>% group_by(`Sequence Short`, SampleID) %>% summarise(n())
+      colnames(df)[3] <- "Number of Appearances"
+      df <- arrange(df, desc(`Number of Appearances`))
+      df <- df[,c(1,3,2)]
+
+      write.csv(df, file, row.names = F, col.names = T)
+    }
+  )
+
+  observe({
+    if (!is.null(reactive$df_final)) {
+      shinyjs::show("short_form_download")
+      shinyjs::show("fastq_summary_download")
+    }
+    else {
+      shinyjs::hide("short_form_download")
+      shinyjs::hide("fastq_summary_download")
+    }
+  })
 
   observeEvent(input$SelectionButton, {
     updateMaterialSwitch(session, "DataUploadMeta", value = F)
