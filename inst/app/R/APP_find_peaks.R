@@ -135,9 +135,9 @@ peaks_box_ui2 <- function(id) {
                                        step = 1)
                    ),
                    column(6,
-                          numericInput("force_repeat_pattern_scan_window", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Force repeat pattern scan window')),
-                                       min = 1,
-                                       value = 3, step = 1)
+                          numericInput("force_repeat_pattern_size_window", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Force repeat pattern size window')),
+                                       min = 0,
+                                       value = 0.5, step = 0.1)
                    )
                  )
                )
@@ -444,7 +444,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                                   correction = input$batchcorrectionswitch,
                                   force_repeat_pattern = if(input$force_repeat_pattern == "YES") TRUE else FALSE,
                                   force_repeat_pattern_size_period = input$force_repeat_pattern_size_period,
-                                  force_repeat_pattern_scan_window = input$force_repeat_pattern_scan_window
+                                  force_repeat_pattern_size_window = input$force_repeat_pattern_size_window
                      )
 
                      reactive_peaks$batchcorrectionswitch <- input$batchcorrectionswitch
@@ -486,11 +486,11 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
   observe({
     if (input$force_repeat_pattern == "NO") {
       shinyjs::hide("force_repeat_pattern_size_period")
-      shinyjs::hide("force_repeat_pattern_scan_window")
+      shinyjs::hide("force_repeat_pattern_size_window")
     } else {
       updateNumericInput(session, "force_repeat_pattern_size_period", value = input$repeat_size * 0.93)
       shinyjs::show("force_repeat_pattern_size_period")
-      shinyjs::show("force_repeat_pattern_scan_window")
+      shinyjs::show("force_repeat_pattern_size_window")
     }
   })
 
@@ -976,7 +976,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                    correction = input$batchcorrectionswitch,
                    force_repeat_pattern = if(input$force_repeat_pattern == "YES") TRUE else FALSE,
                    force_repeat_pattern_size_period = input$force_repeat_pattern_size_period,
-                   force_repeat_pattern_scan_window = input$force_repeat_pattern_scan_window
+                   force_repeat_pattern_size_window = input$force_repeat_pattern_size_window
       )
 
       reactive_peaks$peaks[[input$sample_subset_Manual]]$set_allele_peak(unit = "repeats", value = input$Modal_Peak)
@@ -988,7 +988,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                    correction = input$batchcorrectionswitch,
                    force_repeat_pattern = if(input$force_repeat_pattern == "YES") TRUE else FALSE,
                    force_repeat_pattern_size_period = input$force_repeat_pattern_size_period,
-                   force_repeat_pattern_scan_window = input$force_repeat_pattern_scan_window
+                   force_repeat_pattern_size_window = input$force_repeat_pattern_size_window
       )
     },
     error = function(e) {
@@ -1078,7 +1078,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     force_whole_repeat_units = reactive(input$force_whole_repeat_units),
     force_repeat_pattern = reactive(input$force_repeat_pattern),
     force_repeat_pattern_size_period = reactive(input$force_repeat_pattern_size_period),
-    force_repeat_pattern_scan_window = reactive(input$force_repeat_pattern_scan_window)
+    force_repeat_pattern_size_window = reactive(input$force_repeat_pattern_size_window)
   ))
 
 }

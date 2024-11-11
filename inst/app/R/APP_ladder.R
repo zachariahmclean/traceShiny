@@ -31,7 +31,6 @@ ladder_box_ui2 <- function(id) {
 
       conditionalPanel(
         condition = 'input.advancesettings_Ladder == true',
-        materialSwitch("zerofloor", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Apply Zero Floor')), value = TRUE, status = "primary"),
 
         materialSwitch("minimum_peak_signal_ladder", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Use Default Minimum Peak Signal')), value = TRUE, status = "primary"),
 
@@ -69,10 +68,6 @@ ladder_box_ui2 <- function(id) {
         numericInput("ladderselectionwindow", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Ladder Selection Window')),
                      min = 1,
                      value = 5, step = 1),
-
-        numericInput("smoothingwindow", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Smoothing Window')),
-                     min = 1,
-                     value = 21, step = 1),
 
         numericInput("maxcombinations", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Max Combinations')),
                      min = 1,
@@ -283,9 +278,7 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
                                          ladder_start_scan = if(input$spikeswitch == T) NULL else input$spikelocation,
                                          minimum_peak_signal = if(input$minimum_peak_signal_ladder == T) NULL else input$minimum_peak_signal_number,
                                          scan_subset = if(input$scan_subset == T) NULL else c(input$scan_subset1, input$scan_subset2),
-                                         zero_floor = input$zerofloor,
                                          ladder_selection_window = input$ladderselectionwindow,
-                                         smoothing_window = input$smoothingwindow,
                                          max_combinations = input$maxcombinations,
                                          show_progress_bar = FALSE)
 
@@ -448,8 +441,9 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
   rsq_table <- shiny::reactive({
     fragment_ladder_trigger()  # Trigger reactivity with fragment_ladder_trigger
 
-    rsq <- sapply(reactive_ladder$ladder[[input$unique_id_selection]]$local_southern_mod, function(y) suppressWarnings(summary(y$mod)$r.squared))
-    size_ranges <- sapply(reactive_ladder$ladder[[input$unique_id_selection]]$local_southern_mod, function(y) y$mod$model$yi)
+    cor_list <- trace:::ladder_fit_cor(reactive_ladder$ladder[[input$unique_id_selection]])
+    rsq <- sapply(cor_list, function(x) x$rsq)
+    size_ranges <- sapply(cor_list, function(x) x$size_ranges)
     size_ranges_vector <- vector("numeric", ncol(size_ranges))
     for (j in seq_along(size_ranges_vector)) {
       size_ranges_vector[j] <- paste0(size_ranges[1, j], ", ", size_ranges[2, j], ", ", size_ranges[3, j])
@@ -554,9 +548,10 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
           return()
         }
         manual_ladder_list[[sample_unique_id]] <- as.data.frame(shiny::reactiveValuesToList(ladders))
-        reactive_ladder$ladder[[sample_unique_id]] <- trace:::ladder_fix_helper(
-          reactive_ladder$ladder[[sample_unique_id]],
-          shiny::reactiveValuesToList(manual_ladder_list)[[sample_unique_id]]
+
+        trace:::fix_ladders_manual(
+          reactive_ladder$ladder[sample_unique_id],
+          shiny::reactiveValuesToList(manual_ladder_list)[sample_unique_id]
         )
 
         fragment_ladder_trigger(fragment_ladder_trigger() + 1)
@@ -603,9 +598,7 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
     scan_subset = reactive(input$scan_subset),
     scan_subset1 = reactive(input$scan_subset1),
     scan_subset2 = reactive(input$scan_subset2),
-    zerofloor = reactive(input$zerofloor),
     ladderselectionwindow = reactive(input$ladderselectionwindow),
-    smoothingwindow = reactive(input$smoothingwindow),
     maxcombinations = reactive(input$maxcombinations)
   ))
 

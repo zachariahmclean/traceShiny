@@ -101,9 +101,7 @@ continue_server <- function(input, output, session) {
                      updatePickerInput(session,"LadderSizes", selected = LadderSizes)
                      updateMaterialSwitch(session, "spikeswitch", value = spikeswitch)
                      updateNumericInput(session, "spikelocation", value = spikelocation)
-                     updateMaterialSwitch(session, "zerofloor", value = zerofloor)
                      updateNumericInput(session, "ladderselectionwindow", value = ladderselectionwindow)
-                     updateNumericInput(session, "smoothingwindow", value = smoothingwindow)
                      updateNumericInput(session, "maxcombinations", value = maxcombinations)
                      updateMaterialSwitch(session, "minimum_peak_signal_ladder", value = minimum_peak_signal_ladder)
                      updateNumericInput(session, "minimum_peak_signal_number", value = minimum_peak_signal_number)
@@ -125,7 +123,7 @@ continue_server <- function(input, output, session) {
                      updateRadioGroupButtons(session, "force_whole_repeat_units", selected = force_whole_repeat_units)
                      updatePickerInput(session,"force_repeat_pattern", selected = force_repeat_pattern)
                      updateNumericInput(session, "force_repeat_pattern_size_period", value = force_repeat_pattern_size_period)
-                     updateNumericInput(session, "force_repeat_pattern_scan_window", value = force_repeat_pattern_scan_window)
+                     updateNumericInput(session, "force_repeat_pattern_size_window", value = force_repeat_pattern_size_window)
 
                      incProgress(9/10, detail = "Setting up instability metrics settings")
 

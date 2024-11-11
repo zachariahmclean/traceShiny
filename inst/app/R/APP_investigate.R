@@ -233,9 +233,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                                  paste0(if(input$spikeswitch == T) "ladder_start_scan = NULL, " else paste0("ladder_start_scan = ", paste(input$spikelocation), ", ")),
                                  paste0(if(input$minimum_peak_signal_ladder == T) "minimum_peak_signal = NULL, " else paste0("minimum_peak_signal = ", paste(input$minimum_peak_signal_number), ", ")),
                                  paste0(if(input$scan_subset == T) "scan_subset = NULL, " else paste0("scan_subset = c(", paste(input$scan_subset1), ", ", paste(input$scan_subset2), "), ")),
-                                 "zero_floor = ", paste(input$zerofloor), ", ",
                                  "ladder_selection_window = ", paste(input$ladderselectionwindow), ", ",
-                                 "smoothing_window = ", paste(input$smoothingwindow), ", ",
                                  "max_combinations = ", paste(input$maxcombinations), ")"))
 
       strLaddersFix <- paste("##Fix Ladders",
@@ -265,7 +263,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                           paste0("call_repeats(fragments_list, assay_size_without_repeat = ", paste(input$assay_size_without_repeat), ", ",
                                  "repeat_size = ", paste(input$repeat_size), ", ",
                                  "force_repeat_pattern = ", "'", paste(input$force_repeat_pattern), "'", ", ",
-                                 "force_repeat_pattern_scan_window = ", paste(input$force_repeat_pattern_scan_window), ", ",
+                                 "force_repeat_pattern_size_window = ", paste(input$force_repeat_pattern_size_window), ", ",
                                  "force_repeat_pattern_size_period = ", paste(input$force_repeat_pattern_size_period), ", ",
                                  "force_whole_repeat_units = ", paste(ifelse(input$force_whole_repeat_units == "YES", "TRUE", "FALSE")), ", ",
                                  "correction = ", "'", paste(input$batchcorrectionswitch), "')"
@@ -1326,9 +1324,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
       LadderSizes <- ladder_module$LadderSizes()
       spikeswitch <- ladder_module$spikeswitch()
       spikelocation <- ladder_module$spikelocation()
-      zerofloor <- ladder_module$zerofloor()
       ladderselectionwindow <- ladder_module$ladderselectionwindow()
-      smoothingwindow <- ladder_module$smoothingwindow()
       maxcombinations <- ladder_module$maxcombinations()
       minimum_peak_signal_ladder <- ladder_module$minimum_peak_signal_ladder()
       minimum_peak_signal_number <- ladder_module$minimum_peak_signal_number()
@@ -1350,7 +1346,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
       force_whole_repeat_units <- peaks_module$force_whole_repeat_units()
       force_repeat_pattern <- peaks_module$force_repeat_pattern()
       force_repeat_pattern_size_period <- peaks_module$force_repeat_pattern_size_period()
-      force_repeat_pattern_scan_window <- peaks_module$force_repeat_pattern_scan_window()
+      force_repeat_pattern_size_window <- peaks_module$force_repeat_pattern_size_window()
       sample_traces_size <- peaks_module$sample_traces_size()
       sample_traces_repeats <- peaks_module$sample_traces_repeats()
 
@@ -1376,10 +1372,10 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
 
 
       save("laddertable", "fsa_list", "metadata_table", "DataUpload", "DataUploadMeta", "Ladder_switch",
-           "ladders", "scan", "size", "LadderChannel", "SignalChannel", "LadderSizes", "spikeswitch", "spikelocation", "zerofloor", "ladderselectionwindow", "smoothingwindow", "maxcombinations", "minimum_peak_signal_ladder", "minimum_peak_signal_number", "scan_subset", "scan_subset1", "scan_subset2",
+           "ladders", "scan", "size", "LadderChannel", "SignalChannel", "LadderSizes", "spikeswitch", "spikelocation", "ladderselectionwindow", "maxcombinations", "minimum_peak_signal_ladder", "minimum_peak_signal_number", "scan_subset", "scan_subset1", "scan_subset2",
            "index_list", "min_bp_size", "max_bp_size", "smoothing_window_peaks", "minimum_peak_signal", "batchcorrectionswitch", "peak_region_size_gap_threshold",
            "peak_region_height_threshold_multiplier", "assay_size_without_repeat", "repeat_size", "force_whole_repeat_units", "force_repeat_pattern",
-           "force_repeat_pattern_size_period", "force_repeat_pattern_scan_window", "sample_traces_size", "sample_traces_repeats",
+           "force_repeat_pattern_size_period", "force_repeat_pattern_size_window", "sample_traces_size", "sample_traces_repeats",
            "instability_metrics", "peak_threshold", "window_around_index_peak_min", "window_around_index_peak_max", "repeat_range1", "repeat_range2", "repeat_range3", "percentile_range1", "percentile_range2", "percentile_range3",
            "sample_subset2", "sample_subset_metrics", "Package_version", "Index_Table", "Index_Table_original", "group_controls",
            file = file)
