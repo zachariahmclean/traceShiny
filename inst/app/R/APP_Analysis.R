@@ -131,11 +131,11 @@ analysis_server <- function(input, output, session, continue_module, upload_data
   reactive_analysis <- reactiveValues()
 
   #Colours
-  safe_colorblind_palette <- c("#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499",
-                               "#44AA99", "#999933", "#882255", "#88CCEE", "#661100", "#6699CC", "#888888")
+  set.seed(001)
   color = grDevices::colors()[grep('gr(a|e)y', grDevices::colors(), invert = T)]
   color = color[-grep("white", color)]
-  color = c(safe_colorblind_palette, color)
+  color = c(palette(), sample(color))
+  color = color[-grep("black", color)]
 
   observe({
     updateVirtualSelect("Analysis_samples", choices = names(upload_data$fsa_list()))
