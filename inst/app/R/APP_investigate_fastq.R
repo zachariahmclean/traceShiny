@@ -85,7 +85,7 @@ metrics2_box_ui3 <- function(id) {
   box(id = "Metrics2Box2", title = p("Instability Metrics Table"), status = "warning", solidHeader = F,
       collapsible = T, width = NULL,
 
-      p(style="text-align: right;", downloadButton("downloadmetrics2")),
+      p(style="text-align: right;", downloadButton("downloadmetrics2_fastq")),
       withSpinner(DT::dataTableOutput("metrics2_table", width = "100%", height = "400"))
   )
 }
@@ -187,7 +187,7 @@ metrics2_box_ui5 <- function(id) {
       collapsible = T, width = NULL,
 
       downloadBttn("downloadRDS2", "Download R Object For Further Analysis"), br(), br(),
-      downloadBttn("downloadmetrics2_2", "Download Instability Metrics Table"), br(), br(),
+      downloadBttn("downloadmetrics2_fastq_2", "Download Instability Metrics Table"), br(), br(),
       actionBttn("downloadPlotButton2", "Download All Plots", icon = icon("download")), br(), br(),
       downloadBttn("downloadlogs2", "Download Code For Current Analysis"), br(), br(),
       downloadBttn("downloadDataSave2", "Save .Rdata File For Re-load into traceShiny")
@@ -282,7 +282,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
     }
   )
 
-  output$downloadmetrics2 <- shiny::downloadHandler(
+  output$downloadmetrics2_fastq <- shiny::downloadHandler(
     filename = function() {
       paste0(format(Sys.time(), "%Y-%m-%d_%H%M%S"), "_InstabilityMetricsTable", ".csv")
     },
@@ -291,7 +291,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
     }
   )
 
-  output$downloadmetrics2_2 <- shiny::downloadHandler(
+  output$downloadmetrics2_fastq_2 <- shiny::downloadHandler(
     filename = function() {
       paste0(format(Sys.time(), "%Y-%m-%d_%H%M%S"), "_InstabilityMetricsTable", ".csv")
     },
@@ -686,7 +686,9 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
 
   observeEvent(input$IndexRepeat1_2, {
     if (!is.null(reactive_metrics2$Index_Table) && !is.null(reactive_metrics2$peak_list)) {
+      shinyjs::disable("IndexRepeat1_2")
       reactive_metrics2$Index_Table[which(reactive_metrics2$Index_Table$`Unique IDs` == input$sample_subset_metrics2),]$`Index Repeat` <- input$IndexRepeat1_2
+      shinyjs::enable("IndexRepeat1_2")
     }
   })
 
@@ -695,8 +697,10 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
       if (any(grepl("TRUE", upload_data$metadata_table_fastq()$metrics_baseline_control))) {
         if (input$group_controls2 == TRUE) {
           if (!is.null(reactive_metrics2$Index_Table) && !is.null(reactive_metrics2$peak_list)) {
+            shinyjs::disable("IndexRepeat2_2")
             reactive_metrics2$Index_Table[which(reactive_metrics2$Index_Table$`Unique IDs` == input$sample_subset_metrics2),]$`Index Repeat` <- input$IndexRepeat2_2
             reactive_metrics2$Index_Table[which(reactive_metrics2$Index_Table$`Unique IDs` == input$sample_subset2_2),]$`Index Repeat` <- input$IndexRepeat2_2
+            shinyjs::enable("IndexRepeat2_2")
           }
         }
       }
@@ -719,16 +723,16 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
 
   observe({
     if (!is.null(reactive_metrics2$df)) {
-      shinyjs::show("downloadmetrics2")
+      shinyjs::show("downloadmetrics2_fastq")
     }
     else {
-      shinyjs::hide("downloadmetrics2")
+      shinyjs::hide("downloadmetrics2_fastq")
     }
     if (identical(reactive_metrics2$Index_Table_original, reactive_metrics2$Index_Table)) {
-      shinyjs::show("downloadmetrics2")
+      shinyjs::show("downloadmetrics2_fastq")
     }
     else {
-      shinyjs::hide("downloadmetrics2")
+      shinyjs::hide("downloadmetrics2_fastq")
     }
   })
 

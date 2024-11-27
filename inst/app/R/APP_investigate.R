@@ -684,7 +684,9 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
 
   observeEvent(input$IndexRepeat1, {
     if (!is.null(reactive_metrics$Index_Table) && !is.null(peaks_module$index_list())) {
+      shinyjs::disable("IndexRepeat1")
       reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset_metrics),]$`Index Repeat` <- input$IndexRepeat1
+      shinyjs::enable("IndexRepeat1")
     }
   })
 
@@ -693,8 +695,10 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
       if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
         if (input$group_controls == TRUE) {
           if (!is.null(reactive_metrics$Index_Table) && !is.null(peaks_module$index_list())) {
+            shinyjs::disable("IndexRepeat2")
             reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset_metrics),]$`Index Repeat` <- input$IndexRepeat2
             reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset2),]$`Index Repeat` <- input$IndexRepeat2
+            shinyjs::enable("IndexRepeat2")
           }
         }
       }
