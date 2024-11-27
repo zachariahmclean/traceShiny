@@ -176,11 +176,15 @@ metrics_box_ui4 <- function(id) {
 metrics_box_ui5 <- function(id) {
   box(id = "MetricsBox4", title = p("Export Data"), status = "warning", solidHeader = F,
       collapsible = T, width = NULL,
+      h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Download Data Output</b><br>')),
+      downloadBttn("downloadmetrics", "Instability Metrics Table"), br(), br(),
+      actionBttn("downloadPlotButton", "All Plots", icon = icon("download")), br(), br(),
 
-      downloadBttn("downloadRDS", "Download R Object For Further Analysis"), br(), br(),
-      downloadBttn("downloadmetrics", "Download Instability Metrics Table"), br(), br(),
-      actionBttn("downloadPlotButton", "Download All Plots", icon = icon("download")), br(), br(),
-      downloadBttn("downloadlogs", "Download Code For Current Analysis"), br(), br(),
+      h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Download R-related Files</b><br>')),
+      downloadBttn("downloadRDS",  "R Object"), br(), br(),
+      downloadBttn("downloadlogs", "Code For Current Analysis"), br(), br(),
+
+      h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Save and Load</b><br>')),
       downloadBttn("downloadDataSave", "Save .Rdata File For Re-load into traceShiny")
   )
 }
