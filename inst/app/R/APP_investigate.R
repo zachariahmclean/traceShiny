@@ -707,27 +707,22 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
     })
   })
 
-  observeEvent(input$IndexRepeat1, {
+  debounced_IndexRepeat1 <- debounce(input$IndexRepeat1, 2000)
+  debounced_IndexRepeat2 <- debounce(input$IndexRepeat2, 2000)
+
+  observeEvent(debounced_IndexRepeat1(), {
     if (!is.null(reactive_metrics$Index_Table) && !is.null(peaks_module$index_list())) {
-      shinyjs::disable("IndexRepeat1")
-      Sys.sleep(0.5)
-      reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset_metrics),]$`Index Repeat` <- input$IndexRepeat1
-      Sys.sleep(0.5)
-      shinyjs::enable("IndexRepeat1")
+      reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset_metrics),]$`Index Repeat` <- debounced_IndexRepeat1()
     }
   })
 
-  observeEvent(input$IndexRepeat2,  {
+  observeEvent(debounced_IndexRepeat2(),  {
     if (!is.null(ladder_module$ladders()) && !is.null(input$sample_subset2) && !is.na(input$IndexRepeat1)) {
       if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
         if (input$group_controls == TRUE) {
           if (!is.null(reactive_metrics$Index_Table) && !is.null(peaks_module$index_list())) {
-            shinyjs::disable("IndexRepeat2")
-            Sys.sleep(0.5)
-            reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset_metrics),]$`Index Repeat` <- input$IndexRepeat2
-            reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset2),]$`Index Repeat` <- input$IndexRepeat2
-            Sys.sleep(0.5)
-            shinyjs::enable("IndexRepeat2")
+            reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset_metrics),]$`Index Repeat` <- debounced_IndexRepeat2()
+            reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset2),]$`Index Repeat` <- debounced_IndexRepeat2()
           }
         }
       }
@@ -858,14 +853,14 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                                 range = ylim),
                    shapes = if(!is.na(input$IndexRepeat1)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
                                                                 #vertical line
-                                                                list(type = "line", x0 = input$IndexRepeat1,
-                                                                     x1 = input$IndexRepeat1,
+                                                                list(type = "line", x0 = debounced_IndexRepeat1(),
+                                                                     x1 = debounced_IndexRepeat1(),
                                                                      y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")),
                                                                 list(type = "rect",
                                                                      fillcolor = "red", line = list(color = "red"), opacity = 0.1,
                                                                      y0 = 0, y1 = input$ylim2_metrics,
-                                                                     x0 = input$IndexRepeat1 + input$window_around_index_peak_min,
-                                                                     x1 = input$window_around_index_peak_max + input$IndexRepeat1))
+                                                                     x0 = debounced_IndexRepeat1() + input$window_around_index_peak_min,
+                                                                     x1 = input$window_around_index_peak_max + debounced_IndexRepeat1()))
             )
         }
       }
@@ -883,14 +878,14 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                               range = ylim),
                  shapes = if(!is.na(input$IndexRepeat1)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
                                                               #vertical line
-                                                              list(type = "line", x0 = input$IndexRepeat1,
-                                                                   x1 = input$IndexRepeat1,
+                                                              list(type = "line", x0 = debounced_IndexRepeat1(),
+                                                                   x1 = debounced_IndexRepeat1(),
                                                                    y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")),
                                                               list(type = "rect",
                                                                    fillcolor = "red", line = list(color = "red"), opacity = 0.1,
                                                                    y0 = 0, y1 = input$ylim2_metrics,
-                                                                   x0 = input$IndexRepeat1 + input$window_around_index_peak_min,
-                                                                   x1 = input$window_around_index_peak_max + input$IndexRepeat1))
+                                                                   x0 = debounced_IndexRepeat1() + input$window_around_index_peak_min,
+                                                                   x1 = input$window_around_index_peak_max + debounced_IndexRepeat1()))
           )
       }
     }
@@ -931,14 +926,14 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                                   range = ylim),
                      shapes = if(!is.na(input$IndexRepeat2)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
                                                                   #vertical line
-                                                                  list(type = "line", x0 = input$IndexRepeat2,
-                                                                       x1 = input$IndexRepeat2,
+                                                                  list(type = "line", x0 = debounced_IndexRepeat2(),
+                                                                       x1 = debounced_IndexRepeat2(),
                                                                        y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")),
                                                                   list(type = "rect",
                                                                        fillcolor = "red", line = list(color = "red"), opacity = 0.1,
                                                                        y0 = 0, y1 = input$ylim2_metrics,
-                                                                       x0 = input$IndexRepeat2 + input$window_around_index_peak_min,
-                                                                       x1 = input$window_around_index_peak_max + input$IndexRepeat2))
+                                                                       x0 = debounced_IndexRepeat2() + input$window_around_index_peak_min,
+                                                                       x1 = input$window_around_index_peak_max + debounced_IndexRepeat2()))
               )
           }
         }
@@ -956,14 +951,14 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                                 range = ylim),
                    shapes = if(!is.na(input$IndexRepeat2)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
                                                                 #vertical line
-                                                                list(type = "line", x0 = input$IndexRepeat2,
-                                                                     x1 = input$IndexRepeat2,
+                                                                list(type = "line", x0 = debounced_IndexRepeat2(),
+                                                                     x1 = debounced_IndexRepeat2(),
                                                                      y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")),
                                                                 list(type = "rect",
                                                                      fillcolor = "red", line = list(color = "red"), opacity = 0.1,
                                                                      y0 = 0, y1 = input$ylim2_metrics,
-                                                                     x0 = input$IndexRepeat2 + input$window_around_index_peak_min,
-                                                                     x1 = input$window_around_index_peak_max + input$IndexRepeat2))
+                                                                     x0 = debounced_IndexRepeat2() + input$window_around_index_peak_min,
+                                                                     x1 = input$window_around_index_peak_max + debounced_IndexRepeat2()))
             )
         }
       }
@@ -1001,14 +996,14 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                                   range = ylim),
                      shapes = if(!is.na(input$IndexRepeat1)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
                                                                   #vertical line
-                                                                  list(type = "line", x0 = input$IndexRepeat1,
-                                                                       x1 = input$IndexRepeat1,
+                                                                  list(type = "line", x0 = debounced_IndexRepeat1(),
+                                                                       x1 = debounced_IndexRepeat1(),
                                                                        y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")),
                                                                   list(type = "rect",
                                                                        fillcolor = "red", line = list(color = "red"), opacity = 0.1,
                                                                        y0 = 0, y1 = input$ylim2_metrics,
-                                                                       x0 = input$IndexRepeat1 + input$window_around_index_peak_min,
-                                                                       x1 = input$window_around_index_peak_max + input$IndexRepeat1))
+                                                                       x0 = debounced_IndexRepeat1() + input$window_around_index_peak_min,
+                                                                       x1 = input$window_around_index_peak_max + debounced_IndexRepeat1()))
               )
           }
         }
@@ -1026,14 +1021,14 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                                 range = ylim),
                    shapes = if(!is.na(input$IndexRepeat1)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
                                                                 #vertical line
-                                                                list(type = "line", x0 = input$IndexRepeat1,
-                                                                     x1 = input$IndexRepeat1,
+                                                                list(type = "line", x0 = debounced_IndexRepeat1(),
+                                                                     x1 = debounced_IndexRepeat1(),
                                                                      y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")),
                                                                 list(type = "rect",
                                                                      fillcolor = "red", line = list(color = "red"), opacity = 0.1,
                                                                      y0 = 0, y1 = input$ylim2_metrics,
-                                                                     x0 = input$IndexRepeat1 + input$window_around_index_peak_min,
-                                                                     x1 = input$window_around_index_peak_max + input$IndexRepeat1))
+                                                                     x0 = debounced_IndexRepeat1() + input$window_around_index_peak_min,
+                                                                     x1 = input$window_around_index_peak_max + debounced_IndexRepeat1()))
             )
         }
       }
@@ -1072,14 +1067,14 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                                 range = ylim),
                    shapes = if(!is.na(input$IndexRepeat1)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
                                                                 #vertical line
-                                                                list(type = "line", x0 = input$IndexRepeat1,
-                                                                     x1 = input$IndexRepeat1,
+                                                                list(type = "line", x0 = debounced_IndexRepeat1(),
+                                                                     x1 = debounced_IndexRepeat1(),
                                                                      y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")),
                                                                 list(type = "rect",
                                                                      fillcolor = "red", line = list(color = "red"), opacity = 0.1,
                                                                      y0 = 0, y1 = input$ylim2_metrics,
-                                                                     x0 = input$IndexRepeat1 + input$window_around_index_peak_min,
-                                                                     x1 = input$window_around_index_peak_max + input$IndexRepeat1))
+                                                                     x0 = debounced_IndexRepeat1() + input$window_around_index_peak_min,
+                                                                     x1 = input$window_around_index_peak_max + debounced_IndexRepeat1()))
             )
         }
       }
@@ -1097,14 +1092,14 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                               range = ylim),
                  shapes = if(!is.na(input$IndexRepeat1)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
                                                               #vertical line
-                                                              list(type = "line", x0 = input$IndexRepeat1,
-                                                                   x1 = input$IndexRepeat1,
+                                                              list(type = "line", x0 = debounced_IndexRepeat1(),
+                                                                   x1 = debounced_IndexRepeat1(),
                                                                    y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")),
                                                               list(type = "rect",
                                                                    fillcolor = "red", line = list(color = "red"), opacity = 0.1,
                                                                    y0 = 0, y1 = input$ylim2_metrics,
-                                                                   x0 = input$IndexRepeat1 + input$window_around_index_peak_min,
-                                                                   x1 = input$window_around_index_peak_max + input$IndexRepeat1))
+                                                                   x0 = debounced_IndexRepeat1() + input$window_around_index_peak_min,
+                                                                   x1 = input$window_around_index_peak_max + debounced_IndexRepeat1()))
           )
       }
     }
@@ -1198,8 +1193,8 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                               range = ylim),
                  shapes = list(
                    #vertical line
-                   list(type = "line", x0 = input$IndexRepeat2,
-                        x1 = input$IndexRepeat2,
+                   list(type = "line", x0 = debounced_IndexRepeat2(),
+                        x1 = debounced_IndexRepeat2(),
                         y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")))
           )
       }
@@ -1219,8 +1214,8 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                             range = ylim),
                shapes = list(
                  #vertical line
-                 list(type = "line", x0 = input$IndexRepeat2,
-                      x1 = input$IndexRepeat2,
+                 list(type = "line", x0 = debounced_IndexRepeat2(),
+                      x1 = debounced_IndexRepeat2(),
                       y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")))
         )
     }

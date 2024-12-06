@@ -715,25 +715,22 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
     })
   })
 
-  observeEvent(input$IndexRepeat1_2, {
+  debounced_IndexRepeat1_2 <- debounce(input$IndexRepeat1_2, 2000)
+  debounced_IndexRepeat2_2 <- debounce(input$IndexRepeat2_2, 2000)
+
+  observeEvent(debounced_IndexRepeat1_2(), {
     if (!is.null(reactive_metrics2$Index_Table) && !is.null(reactive_metrics2$peak_list)) {
-      shinyjs::disable("IndexRepeat1_2")
-      Sys.sleep(0.5)
-      reactive_metrics2$Index_Table[which(reactive_metrics2$Index_Table$`Unique IDs` == input$sample_subset_metrics2),]$`Index Repeat` <- input$IndexRepeat1_2
-      shinyjs::enable("IndexRepeat1_2")
+      reactive_metrics2$Index_Table[which(reactive_metrics2$Index_Table$`Unique IDs` == input$sample_subset_metrics2),]$`Index Repeat` <- debounced_IndexRepeat1_2()
     }
   })
 
-  observeEvent(input$IndexRepeat2_2,  {
+  observeEvent(debounced_IndexRepeat2_2(),  {
     if (!is.null(upload_data$fastq()) && !is.null(input$sample_subset2_2) && !is.na(input$IndexRepeat1_2)) {
       if (any(grepl("TRUE", upload_data$metadata_table_fastq()$metrics_baseline_control))) {
         if (input$group_controls2 == TRUE) {
           if (!is.null(reactive_metrics2$Index_Table) && !is.null(reactive_metrics2$peak_list)) {
-            shinyjs::disable("IndexRepeat2_2")
-            Sys.sleep(0.5)
-            reactive_metrics2$Index_Table[which(reactive_metrics2$Index_Table$`Unique IDs` == input$sample_subset_metrics2),]$`Index Repeat` <- input$IndexRepeat2_2
-            reactive_metrics2$Index_Table[which(reactive_metrics2$Index_Table$`Unique IDs` == input$sample_subset2_2),]$`Index Repeat` <- input$IndexRepeat2_2
-            shinyjs::enable("IndexRepeat2_2")
+            reactive_metrics2$Index_Table[which(reactive_metrics2$Index_Table$`Unique IDs` == input$sample_subset_metrics2),]$`Index Repeat` <- debounced_IndexRepeat2_2()
+            reactive_metrics2$Index_Table[which(reactive_metrics2$Index_Table$`Unique IDs` == input$sample_subset2_2),]$`Index Repeat` <- debounced_IndexRepeat2_2()
           }
         }
       }
@@ -804,10 +801,10 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
           {if(!is.na(input$IndexRepeat1_2))
             list(geom_hline(yintercept = input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$index_signal,
                      color = "black", size=1),
-          geom_vline(xintercept = input$IndexRepeat1_2,
+          geom_vline(xintercept = debounced_IndexRepeat1_2(),
                      color = "red", size=1),
-          geom_rect(inherit.aes=F, aes(xmin=input$IndexRepeat1_2 + input$window_around_index_peak_min2,
-                                       xmax=input$window_around_index_peak_max2 + input$IndexRepeat1_2,
+          geom_rect(inherit.aes=F, aes(xmin=debounced_IndexRepeat1_2() + input$window_around_index_peak_min2,
+                                       xmax=input$window_around_index_peak_max2 + debounced_IndexRepeat1_2(),
                                        ymin=0, ymax=input$ylim2_metrics2), alpha=0.1, fill="red"))} +
           {if (input$show_line_fastq == T)
           list(geom_smooth(method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
@@ -821,10 +818,10 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
           {if(!is.na(input$IndexRepeat1_2))
             list(geom_hline(yintercept = input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$index_signal,
                        color = "black", size=1),
-              geom_vline(xintercept = input$IndexRepeat1_2,
+              geom_vline(xintercept = debounced_IndexRepeat1_2(),
                          color = "red", size=1),
-              geom_rect(inherit.aes=F, aes(xmin=input$IndexRepeat1_2 + input$window_around_index_peak_min2,
-                                           xmax=input$window_around_index_peak_max2 + input$IndexRepeat1_2,
+              geom_rect(inherit.aes=F, aes(xmin=debounced_IndexRepeat1_2() + input$window_around_index_peak_min2,
+                                           xmax=input$window_around_index_peak_max2 + debounced_IndexRepeat1_2(),
                                            ymin=0, ymax=input$ylim2_metrics2), alpha=0.1, fill="red"))} +
           {if (input$show_line_fastq == T)
           list(geom_smooth(inherit.aes=F, data = trace, aes(x=repeats, y = signal, colour = unique_id), method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
@@ -843,10 +840,10 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
             {if(!is.na(input$IndexRepeat1_2))
               list(geom_hline(yintercept = if(!is.na(input$IndexRepeat2_2)) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset2_2]]$.__enclos_env__$private$index_signal,
                        color = "black", size=1),
-            geom_vline(xintercept = input$IndexRepeat2_2,
+            geom_vline(xintercept = debounced_IndexRepeat2_2(),
                        color = "red", size=1),
-            geom_rect(inherit.aes=F, aes(xmin=input$IndexRepeat2_2 + input$window_around_index_peak_min2,
-                                         xmax=input$window_around_index_peak_max2 + input$IndexRepeat2_2,
+            geom_rect(inherit.aes=F, aes(xmin=debounced_IndexRepeat2_2() + input$window_around_index_peak_min2,
+                                         xmax=input$window_around_index_peak_max2 + debounced_IndexRepeat2_2(),
                                          ymin=0, ymax=input$ylim2_metrics2), alpha=0.1, fill="red"))} +
             {if (input$show_line_fastq == T)
             list(geom_smooth(method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
@@ -860,10 +857,10 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
             {if(!is.na(input$IndexRepeat1_2))
               list(geom_hline(yintercept = if(!is.na(input$IndexRepeat2_2)) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset2_2]]$.__enclos_env__$private$index_signal,
                        color = "black", size=1),
-            geom_vline(xintercept = input$IndexRepeat2_2,
+            geom_vline(xintercept = debounced_IndexRepeat2_2(),
                        color = "red", size=1),
-            geom_rect(inherit.aes=F, aes(xmin=input$IndexRepeat2_2 + input$window_around_index_peak_min2,
-                                         xmax=input$window_around_index_peak_max2 + input$IndexRepeat2_2,
+            geom_rect(inherit.aes=F, aes(xmin=debounced_IndexRepeat2_2() + input$window_around_index_peak_min2,
+                                         xmax=input$window_around_index_peak_max2 + debounced_IndexRepeat2_2(),
                                          ymin=0, ymax=input$ylim2_metrics2), alpha=0.1, fill="red"))} +
             {if (input$show_line_fastq == T)
             list(geom_smooth(inherit.aes=F, data = trace, aes(x=repeats, y = signal, colour = unique_id), method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
@@ -879,10 +876,10 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
             {if(!is.na(input$IndexRepeat1_2))
               list(geom_hline(yintercept = if(!is.na(input$IndexRepeat1_2)) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$index_signal,
                        color = "black", size=1),
-            geom_vline(xintercept = input$IndexRepeat1_2,
+            geom_vline(xintercept = debounced_IndexRepeat1_2(),
                        color = "red", size=1),
-            geom_rect(inherit.aes=F, aes(xmin=input$IndexRepeat1_2 + input$window_around_index_peak_min2,
-                                         xmax=input$window_around_index_peak_max2 + input$IndexRepeat1_2,
+            geom_rect(inherit.aes=F, aes(xmin=debounced_IndexRepeat1_2() + input$window_around_index_peak_min2,
+                                         xmax=input$window_around_index_peak_max2 + debounced_IndexRepeat1_2(),
                                          ymin=0, ymax=input$ylim2_metrics2), alpha=0.1, fill="red"))} +
             {if (input$show_line_fastq == T)
             list(geom_smooth(method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
@@ -896,10 +893,10 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
             {if(!is.na(input$IndexRepeat1_2))
               list(geom_hline(yintercept = if(!is.na(input$IndexRepeat1_2)) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$index_signal,
                        color = "black", size=1),
-            geom_vline(xintercept = input$IndexRepeat1_2,
+            geom_vline(xintercept = debounced_IndexRepeat1_2(),
                        color = "red", size=1),
-            geom_rect(inherit.aes=F, aes(xmin=input$IndexRepeat1_2 + input$window_around_index_peak_min2,
-                                         xmax=input$window_around_index_peak_max2 + input$IndexRepeat1_2,
+            geom_rect(inherit.aes=F, aes(xmin=debounced_IndexRepeat1_2() + input$window_around_index_peak_min2,
+                                         xmax=input$window_around_index_peak_max2 + debounced_IndexRepeat1_2(),
                                          ymin=0, ymax=input$ylim2_metrics2), alpha=0.1, fill="red"))} +
             {if (input$show_line_fastq == T)
             list(geom_smooth(inherit.aes=F, data = trace, aes(x=repeats, y = signal, colour = unique_id), method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
@@ -916,10 +913,10 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
             {if(!is.na(input$IndexRepeat1_2))
             list(geom_hline(yintercept = if(!is.na(input$IndexRepeat1_2)) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$index_signal,
                        color = "black", size=1),
-            geom_vline(xintercept = input$IndexRepeat1_2,
+            geom_vline(xintercept = debounced_IndexRepeat1_2(),
                        color = "red", size=1),
-            geom_rect(inherit.aes=F, aes(xmin=input$IndexRepeat1_2 + input$window_around_index_peak_min2,
-                                         xmax=input$window_around_index_peak_max2 + input$IndexRepeat1_2,
+            geom_rect(inherit.aes=F, aes(xmin=debounced_IndexRepeat1_2() + input$window_around_index_peak_min2,
+                                         xmax=input$window_around_index_peak_max2 + debounced_IndexRepeat1_2(),
                                          ymin=0, ymax=input$ylim2_metrics2), alpha=0.1, fill="red"))} +
             {if (input$show_line_fastq == T)
             list(geom_smooth(method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
@@ -933,10 +930,10 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
             {if(!is.na(input$IndexRepeat1_2))
               list(geom_hline(yintercept = if(!is.na(input$IndexRepeat1_2)) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$index_signal,
                        color = "black", size=1),
-            geom_vline(xintercept = input$IndexRepeat1_2,
+            geom_vline(xintercept = debounced_IndexRepeat1_2(),
                        color = "red", size=1),
-            geom_rect(inherit.aes=F, aes(xmin=input$IndexRepeat1_2 + input$window_around_index_peak_min2,
-                                         xmax=input$window_around_index_peak_max2 + input$IndexRepeat1_2,
+            geom_rect(inherit.aes=F, aes(xmin=debounced_IndexRepeat1_2() + input$window_around_index_peak_min2,
+                                         xmax=input$window_around_index_peak_max2 + debounced_IndexRepeat1_2(),
                                          ymin=0, ymax=input$ylim2_metrics2), alpha=0.1, fill="red"))} +
             {if (input$show_line_fastq == T)
             list(geom_smooth(inherit.aes=F, data = trace, aes(x=repeats, y = signal, colour = unique_id), method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
@@ -972,7 +969,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
         xlim(xlim) +
         ylim(ylim) +
         {if(!is.na(input$IndexRepeat2_2))
-          list(geom_vline(xintercept = input$IndexRepeat2_2,
+          list(geom_vline(xintercept = debounced_IndexRepeat2_2(),
                           color = "red", size=1))} +
         {if (input$show_line_fastq == T)
         list(geom_smooth(method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
@@ -984,7 +981,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
         xlim(xlim) +
         ylim(ylim) +
         {if(!is.na(input$IndexRepeat2_2))
-          list(geom_vline(xintercept = input$IndexRepeat2_2,
+          list(geom_vline(xintercept = debounced_IndexRepeat2_2(),
                           color = "red", size=1))} +
         {if (input$show_line_fastq == T)
         list(geom_smooth(inherit.aes=F, data = trace, aes(x=repeats, y = signal, colour = unique_id), method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
