@@ -347,6 +347,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
           {if (input$show_line_fastq == T)
           list(geom_smooth(inherit.aes=F, data = trace[which(trace$unique_id == i), ], aes(x=repeats, y = signal, colour = unique_id), method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
           geom_histogram(binwidth = 1, show.legend = FALSE, fill= "grey") +
+          ylab("Signal") +
           theme_bw()
         print(p)
         }
@@ -826,6 +827,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
           {if (input$show_line_fastq == T)
           list(geom_smooth(inherit.aes=F, data = trace, aes(x=repeats, y = signal, colour = unique_id), method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
           geom_histogram(binwidth = 1, show.legend = FALSE, fill= "grey") +
+          ylab("Signal") +
           theme_bw()
       }
     }
@@ -865,6 +867,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
             {if (input$show_line_fastq == T)
             list(geom_smooth(inherit.aes=F, data = trace, aes(x=repeats, y = signal, colour = unique_id), method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
             geom_histogram(binwidth = 1, show.legend = FALSE, fill= "grey") +
+            ylab("Signal") +
             theme_bw()
         }
       }
@@ -901,6 +904,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
             {if (input$show_line_fastq == T)
             list(geom_smooth(inherit.aes=F, data = trace, aes(x=repeats, y = signal, colour = unique_id), method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
             geom_histogram(binwidth = 1, show.legend = FALSE, fill= "grey") +
+            ylab("Signal") +
             theme_bw()
         }
       }
@@ -938,6 +942,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
             {if (input$show_line_fastq == T)
             list(geom_smooth(inherit.aes=F, data = trace, aes(x=repeats, y = signal, colour = unique_id), method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
             geom_histogram(binwidth = 1, show.legend = FALSE, fill= "grey") +
+            ylab("Signal") +
             theme_bw()
         }
       }
@@ -986,6 +991,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
         {if (input$show_line_fastq == T)
         list(geom_smooth(inherit.aes=F, data = trace, aes(x=repeats, y = signal, colour = unique_id), method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
         geom_histogram(binwidth = 1, show.legend = FALSE, fill= "grey") +
+        ylab("Signal") +
         theme_bw()
     }
 

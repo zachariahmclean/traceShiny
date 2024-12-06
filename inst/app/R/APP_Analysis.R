@@ -211,17 +211,17 @@ analysis_server <- function(input, output, session, continue_module, upload_data
         updateNumericInput(session, "ylim2_analysis", value = 0.3)
       }
       else if (input$normalize == "None") {
-        updateNumericInput(session, "ylim2_analysis", value = max(peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_signal) + 300)
+        updateNumericInput(session, "ylim2_analysis", value = max(metrics_module$metrics_table()$modal_peak_signal) + 300)
       }
     }
   })
 
   observe({
     if (!is.null(peaks_module$index_list()) && !is.null(input$sample_subset_metrics)) {
-      updateNumericInput(session, "xlim1_analysis", value = min(peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat) - 50)
-      updateNumericInput(session, "xlim2_analysis", value = max(peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat) + 50)
+      updateNumericInput(session, "xlim1_analysis", value = min(metrics_module$metrics_table()$modal_peak_repeat) - 50)
+      updateNumericInput(session, "xlim2_analysis", value = max(metrics_module$metrics_table()$modal_peak_repeat) + 50)
       updateNumericInput(session, "ylim1_analysis", value = -200)
-      updateNumericInput(session, "ylim2_analysis", value = max(peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_signal) + 300)
+      updateNumericInput(session, "ylim2_analysis", value = max(metrics_module$metrics_table()$modal_peak_signal) + 300)
 
     if (input$index_normalize == TRUE) {
       updateNumericInput(session, "xlim1_analysis", value = -50)
@@ -244,12 +244,12 @@ analysis_server <- function(input, output, session, continue_module, upload_data
         updateNumericInput(session, "ylim2_analysis", value = 0.3)
       }
       else if (input$normalize == "None") {
-        updateNumericInput(session, "ylim2_analysis", value = max(peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_signal) + 300)
+        updateNumericInput(session, "ylim2_analysis", value = max(metrics_module$metrics_table()$modal_peak_signal) + 300)
       }
     }
     else {
-      updateNumericInput(session, "xlim1_analysis", value = min(peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat) - 50)
-      updateNumericInput(session, "xlim2_analysis", value = max(peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat) + 50)
+      updateNumericInput(session, "xlim1_analysis", value = min(metrics_module$metrics_table()$modal_peak_repeat) - 50)
+      updateNumericInput(session, "xlim2_analysis", value = max(metrics_module$metrics_table()$modal_peak_repeat) + 50)
 
       if (input$normalize == "Highest Peak") {
         updateNumericInput(session, "ylim1_analysis", value = -0.3)
@@ -268,7 +268,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
         updateNumericInput(session, "ylim2_analysis", value = 0.3)
       }
       else if (input$normalize == "None") {
-        updateNumericInput(session, "ylim2_analysis", value = max(peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_signal) + 300)
+        updateNumericInput(session, "ylim2_analysis", value = max(metrics_module$metrics_table()$modal_peak_signal) + 300)
       }
     }
     }
