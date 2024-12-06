@@ -248,8 +248,8 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                         paste0("fragments_list <- find_fragments(fsa_list, ",
                                "smoothing_window = ", paste(input$smoothing_window), ", ",
                                "minimum_peak_signal = ", paste(input$minimum_peak_signal), ", ",
-                               "min_bp_size = ", paste(input$min_bp_size), ", ",
-                               "max_bp_size = ", paste(input$max_bp_size), ")"))
+                               "min_bp_size = ", paste((input$min_bp_size + input$assay_size_without_repeat)*input$repeat_size), ", ",
+                               "max_bp_size = ", paste((input$max_bp_size + input$assay_size_without_repeat)*input$repeat_size), ")"))
 
       strAddMeta <- ifelse(is.null(upload_data$metadata_table()),
                            paste0("##No Metadata was uploaded"),
@@ -261,7 +261,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
       strAlleles <- paste("##Find Alleles", "\n",
                           paste0("find_alleles(fragments_list, ",
                                  "peak_region_size_gap_threshold = ", paste(input$peak_region_size_gap_threshold), ", ",
-                                 "peak_region_height_threshold_multiplier = ", paste(input$peak_region_height_threshold_multiplier), ")"))
+                                 "peak_region_signal_threshold_multiplier = ", paste(input$peak_region_signal_threshold_multiplier), ")"))
 
       strRepeats <- paste("##Find Repeats", "\n",
                           paste0("call_repeats(fragments_list, assay_size_without_repeat = ", paste(input$assay_size_without_repeat), ", ",
@@ -363,16 +363,16 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
         for (i in 1:length(names(peaks_module$index_list()))) {
           trace::plot_traces(peaks_module$index_list()[i],
                              show_peaks = T,
-                             xlim = c(input$xlim1_metrics, input$xlim2_metrics),
-                             ylim = c(input$ylim1_metrics, input$ylim2_metrics))
+                             xlim = c(input$xlim1_plot, input$xlim2_plot),
+                             ylim = c(input$ylim1_plot, input$ylim2_plot))
         }
       }
       else {
         for (i in 1:length(names(peaks_module$index_list()))) {
           trace::plot_traces(peaks_module$index_list()[i],
                              show_peaks = F,
-                             xlim = c(input$xlim1_metrics, input$xlim2_metrics),
-                             ylim = c(input$ylim1_metrics, input$ylim2_metrics))
+                             xlim = c(input$xlim1_plot, input$xlim2_plot),
+                             ylim = c(input$ylim1_plot, input$ylim2_plot))
         }
       }
 
@@ -383,16 +383,37 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
   observeEvent(input$downloadPlotButton, {
     showModal(modalDialog(
       title = strong("Download Plots"),
-      numericInput("downloadPlotHeight", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Height of plot')),
-                   value = 7,
-                   min = 0,
-                   max = 20),
-      numericInput("downloadPlotWidth", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Width of plot')),
-                   value = 7,
-                   min = 0,
-                   max = 20),
+      h4(HTML('<h4 style = "text-align:justify;color:#000000"><br>Plot Sizes')),
+      fluidRow(
+        column(6,
+               numericInput("downloadPlotHeight", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Height of plot')),
+                            value = 7,
+                            min = 0,
+                            max = 20)),
+        column(6,
+               numericInput("downloadPlotWidth", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Width of plot')),
+                            value = 7,
+                            min = 0,
+                            max = 20))
+      ),
+      h4(HTML('<h4 style = "text-align:justify;color:#000000"><br>Axis Limits')),
+      fluidRow(
+        column(3,
+               numericInput("xlim1_plot", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">X min')),
+                            value = 0)),
+
+        column(3,
+               numericInput("xlim2_plot", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">X max')),
+                            value = 250)),
+        column(3,
+               numericInput("ylim1_plot", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Y min')),
+                            value = 0)),
+
+        column(3,
+               numericInput("ylim2_plot", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Y max')),
+                            value = 2000))),
       downloadBttn("downloadPlot", "Download"),
-      size = "s",
+      size = "m",
       easyClose = TRUE,
       footer = NULL
     ))
@@ -555,7 +576,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
       updateNumericInput(session, "xlim1_metrics", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat - 50)
       updateNumericInput(session, "xlim2_metrics", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat + 50)
       updateNumericInput(session, "ylim1_metrics", value = -200)
-      updateNumericInput(session, "ylim2_metrics", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_height + 300)
+      updateNumericInput(session, "ylim2_metrics", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_signal + 300)
     }
   })
 
@@ -689,7 +710,9 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
   observeEvent(input$IndexRepeat1, {
     if (!is.null(reactive_metrics$Index_Table) && !is.null(peaks_module$index_list())) {
       shinyjs::disable("IndexRepeat1")
+      Sys.sleep(0.5)
       reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset_metrics),]$`Index Repeat` <- input$IndexRepeat1
+      Sys.sleep(0.5)
       shinyjs::enable("IndexRepeat1")
     }
   })
@@ -700,8 +723,10 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
         if (input$group_controls == TRUE) {
           if (!is.null(reactive_metrics$Index_Table) && !is.null(peaks_module$index_list())) {
             shinyjs::disable("IndexRepeat2")
+            Sys.sleep(0.5)
             reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset_metrics),]$`Index Repeat` <- input$IndexRepeat2
             reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset2),]$`Index Repeat` <- input$IndexRepeat2
+            Sys.sleep(0.5)
             shinyjs::enable("IndexRepeat2")
           }
         }
@@ -767,7 +792,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
 
     xlim = c(input$xlim1_metrics, input$xlim2_metrics)
     ylim = c(input$ylim1_metrics, input$ylim2_metrics)
-    height_color_threshold = input$minimum_peak_signal
+    signal_color_threshold = input$minimum_peak_signal
     plot_title = NULL
 
     #there must be a simpler way of the following if else below
@@ -787,15 +812,15 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
         peak_table <- peak_table[which(peak_table$x < xlim[2] & peak_table$x > xlim[1]), ]
       }
 
-      tallest_peak_height <- peak_table[which(peak_table$height == max(peak_table$height)), "height"]
-      tallest_peak_x <- peak_table[which(peak_table$height == tallest_peak_height), "x"]
-      if (!is.null(peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_height) && !is.na(peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_height)) {
-        tallest_peak_height <- peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_height
+      tallest_peak_signal <- peak_table[which(peak_table$signal == max(peak_table$signal)), "signal"]
+      tallest_peak_x <- peak_table[which(peak_table$signal == tallest_peak_signal), "x"]
+      if (!is.null(peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_signal) && !is.na(peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_signal)) {
+        tallest_peak_signal <- peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_signal
         tallest_peak_x <- peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat
       }
 
-      peaks_above <- peak_table[which(peak_table$height > height_color_threshold), ]
-      peaks_below <- peak_table[which(peak_table$height < height_color_threshold), ]
+      peaks_above <- peak_table[which(peak_table$signal > signal_color_threshold), ]
+      peaks_below <- peak_table[which(peak_table$signal < signal_color_threshold), ]
 
     }
 
@@ -809,21 +834,21 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                   height = (300 + input$HeightPeaks_metrics*20),
                   name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), "")) %>%
             add_trace(x = peaks_above$x,
-                      y = peaks_above$height,
+                      y = peaks_above$signal,
                       mode = "markers",
                       name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Peaks Above Threshold")) %>%
             add_trace(x = peaks_below$x,
-                      y = peaks_below$height,
+                      y = peaks_below$signal,
                       mode = "markers",
                       name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Peaks Below Threshold")) %>%
             add_trace(x = tallest_peak_x,
-                      y = tallest_peak_height,
+                      y = tallest_peak_signal,
                       mode = "markers",
                       name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Modal Peak")) %>%
             add_segments(x = peak_table$repeats,
-                         y = peak_table$height,
+                         y = peak_table$signal,
                          xend = peak_table$calculated_repeats,
-                         yend = peak_table$height,
+                         yend = peak_table$signal,
                          line = list(dash = "dash"),
                          name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Force Whole Repeats")) %>%
             layout(title = ifelse(is.null(plot_title), peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id, plot_title),
@@ -831,7 +856,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                                 range = xlim),
                    yaxis = list(title = "Signal",
                                 range = ylim),
-                   shapes = if(!is.na(input$IndexRepeat1)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_height),
+                   shapes = if(!is.na(input$IndexRepeat1)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
                                                                 #vertical line
                                                                 list(type = "line", x0 = input$IndexRepeat1,
                                                                      x1 = input$IndexRepeat1,
@@ -856,7 +881,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                               range = xlim),
                  yaxis = list(title = "Signal",
                               range = ylim),
-                 shapes = if(!is.na(input$IndexRepeat1)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_height),
+                 shapes = if(!is.na(input$IndexRepeat1)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
                                                               #vertical line
                                                               list(type = "line", x0 = input$IndexRepeat1,
                                                                    x1 = input$IndexRepeat1,
@@ -882,21 +907,21 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                     height = (300 + input$HeightPeaks_metrics*20),
                     name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), "")) %>%
               add_trace(x = peaks_above$x,
-                        y = peaks_above$height,
+                        y = peaks_above$signal,
                         mode = "markers",
                         name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Peak Above Threshold")) %>%
               add_trace(x = peaks_below$x,
-                        y = peaks_below$height,
+                        y = peaks_below$signal,
                         mode = "markers",
                         name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Peaks Below Threshold")) %>%
               add_trace(x = tallest_peak_x,
-                        y = tallest_peak_height,
+                        y = tallest_peak_signal,
                         mode = "markers",
                         name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Modal Peak")) %>%
               add_segments(x = peak_table$repeats,
-                           y = peak_table$height,
+                           y = peak_table$signal,
                            xend = peak_table$calculated_repeats,
-                           yend = peak_table$height,
+                           yend = peak_table$signal,
                            line = list(dash = "dash"),
                            name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Force Whole Repeats")) %>%
               layout(title = ifelse(is.null(plot_title), peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id, plot_title),
@@ -904,7 +929,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                                   range = xlim),
                      yaxis = list(title = "Signal",
                                   range = ylim),
-                     shapes = if(!is.na(input$IndexRepeat2)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_height),
+                     shapes = if(!is.na(input$IndexRepeat2)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
                                                                   #vertical line
                                                                   list(type = "line", x0 = input$IndexRepeat2,
                                                                        x1 = input$IndexRepeat2,
@@ -929,7 +954,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                                 range = xlim),
                    yaxis = list("Signal",
                                 range = ylim),
-                   shapes = if(!is.na(input$IndexRepeat2)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_height),
+                   shapes = if(!is.na(input$IndexRepeat2)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
                                                                 #vertical line
                                                                 list(type = "line", x0 = input$IndexRepeat2,
                                                                      x1 = input$IndexRepeat2,
@@ -952,21 +977,21 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                     height = (300 + input$HeightPeaks_metrics*20),
                     name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), "")) %>%
               add_trace(x = peaks_above$x,
-                        y = peaks_above$height,
+                        y = peaks_above$signal,
                         mode = "markers",
                         name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Peaks Above Threshold")) %>%
               add_trace(x = peaks_below$x,
-                        y = peaks_below$height,
+                        y = peaks_below$signal,
                         mode = "markers",
                         name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Peaks Below Threshold")) %>%
               add_trace(x = tallest_peak_x,
-                        y = tallest_peak_height,
+                        y = tallest_peak_signal,
                         mode = "markers",
                         name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Modal Peak")) %>%
               add_segments(x = peak_table$repeats,
-                           y = peak_table$height,
+                           y = peak_table$signal,
                            xend = peak_table$calculated_repeats,
-                           yend = peak_table$height,
+                           yend = peak_table$signal,
                            line = list(dash = "dash"),
                            name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Force Whole Repeats")) %>%
               layout(title = ifelse(is.null(plot_title), peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id, plot_title),
@@ -974,7 +999,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                                   range = xlim),
                      yaxis = list(title = "Signal",
                                   range = ylim),
-                     shapes = if(!is.na(input$IndexRepeat1)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_height),
+                     shapes = if(!is.na(input$IndexRepeat1)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
                                                                   #vertical line
                                                                   list(type = "line", x0 = input$IndexRepeat1,
                                                                        x1 = input$IndexRepeat1,
@@ -999,7 +1024,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                                 range = xlim),
                    yaxis = list(title = "Signal",
                                 range = ylim),
-                   shapes = if(!is.na(input$IndexRepeat1)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_height),
+                   shapes = if(!is.na(input$IndexRepeat1)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
                                                                 #vertical line
                                                                 list(type = "line", x0 = input$IndexRepeat1,
                                                                      x1 = input$IndexRepeat1,
@@ -1023,21 +1048,21 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                   height = (300 + input$HeightPeaks_metrics*20),
                   name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), "")) %>%
             add_trace(x = peaks_above$x,
-                      y = peaks_above$height,
+                      y = peaks_above$signal,
                       mode = "markers",
                       name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Peaks Above Threshold")) %>%
             add_trace(x = peaks_below$x,
-                      y = peaks_below$height,
+                      y = peaks_below$signal,
                       mode = "markers",
                       name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Peaks Below Threshold")) %>%
             add_trace(x = tallest_peak_x,
-                      y = tallest_peak_height,
+                      y = tallest_peak_signal,
                       mode = "markers",
                       name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Modal Peak")) %>%
             add_segments(x = peak_table$repeats,
-                         y = peak_table$height,
+                         y = peak_table$signal,
                          xend = peak_table$calculated_repeats,
-                         yend = peak_table$height,
+                         yend = peak_table$signal,
                          line = list(dash = "dash"),
                          name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id)), " Force Whole Repeats")) %>%
             layout(title = ifelse(is.null(plot_title), peaks_module$index_list()[[input$sample_subset_metrics]]$unique_id, plot_title),
@@ -1045,7 +1070,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                                 range = xlim),
                    yaxis = list(title = "Signal",
                                 range = ylim),
-                   shapes = if(!is.na(input$IndexRepeat1)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_height),
+                   shapes = if(!is.na(input$IndexRepeat1)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
                                                                 #vertical line
                                                                 list(type = "line", x0 = input$IndexRepeat1,
                                                                      x1 = input$IndexRepeat1,
@@ -1070,7 +1095,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                               range = xlim),
                  yaxis = list(title = "Signal",
                               range = ylim),
-                 shapes = if(!is.na(input$IndexRepeat1)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_height),
+                 shapes = if(!is.na(input$IndexRepeat1)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
                                                               #vertical line
                                                               list(type = "line", x0 = input$IndexRepeat1,
                                                                    x1 = input$IndexRepeat1,
@@ -1107,7 +1132,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
 
     xlim = c(input$xlim1_metrics, input$xlim2_metrics)
     ylim = c(input$ylim1_metrics, input$ylim2_metrics)
-    height_color_threshold = input$minimum_peak_signal
+    signal_color_threshold = input$minimum_peak_signal
     plot_title = NULL
 
     #there must be a simpler way of the following if else below
@@ -1127,15 +1152,15 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
         peak_table <- peak_table[which(peak_table$x < xlim[2] & peak_table$x > xlim[1]), ]
       }
 
-      tallest_peak_height <- peak_table[which(peak_table$height == max(peak_table$height)), "height"]
-      tallest_peak_x <- peak_table[which(peak_table$height == tallest_peak_height), "x"]
-      if (!is.null(peaks_module$index_list()[[input$sample_subset2]]$get_allele_peak()$allele_height) && !is.na(peaks_module$index_list()[[input$sample_subset2]]$get_allele_peak()$allele_height)) {
-        tallest_peak_height <- peaks_module$index_list()[[input$sample_subset2]]$get_allele_peak()$allele_height
+      tallest_peak_signal <- peak_table[which(peak_table$signal == max(peak_table$signal)), "signal"]
+      tallest_peak_x <- peak_table[which(peak_table$signal == tallest_peak_signal), "x"]
+      if (!is.null(peaks_module$index_list()[[input$sample_subset2]]$get_allele_peak()$allele_signal) && !is.na(peaks_module$index_list()[[input$sample_subset2]]$get_allele_peak()$allele_signal)) {
+        tallest_peak_signal <- peaks_module$index_list()[[input$sample_subset2]]$get_allele_peak()$allele_signal
         tallest_peak_x <- peaks_module$index_list()[[input$sample_subset2]]$get_allele_peak()$allele_repeat
       }
 
-      peaks_above <- peak_table[which(peak_table$height > height_color_threshold), ]
-      peaks_below <- peak_table[which(peak_table$height < height_color_threshold), ]
+      peaks_above <- peak_table[which(peak_table$signal > signal_color_threshold), ]
+      peaks_below <- peak_table[which(peak_table$signal < signal_color_threshold), ]
 
     }
 
@@ -1149,21 +1174,21 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                 height = (300 + input$HeightPeaks_metrics*20),
                 name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset2]]$unique_id)), "")) %>%
           add_trace(x = peaks_above$x,
-                    y = peaks_above$height,
+                    y = peaks_above$signal,
                     mode = "markers",
                     name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset2]]$unique_id)), " Peaks Above Threshold")) %>%
           add_trace(x = peaks_below$x,
-                    y = peaks_below$height,
+                    y = peaks_below$signal,
                     mode = "markers",
                     name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset2]]$unique_id)), " Peaks Below Threshold")) %>%
           add_trace(x = tallest_peak_x,
-                    y = tallest_peak_height,
+                    y = tallest_peak_signal,
                     mode = "markers",
                     name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset2]]$unique_id)), " Modal Peak")) %>%
           add_segments(x = peak_table$repeats,
-                       y = peak_table$height,
+                       y = peak_table$signal,
                        xend = peak_table$calculated_repeats,
-                       yend = peak_table$height,
+                       yend = peak_table$signal,
                        line = list(dash = "dash"),
                        name = paste0(gsub(".fsa", "", unique(peaks_module$index_list()[[input$sample_subset2]]$unique_id)), " Force Whole Repeats")) %>%
           layout(title = ifelse(is.null(plot_title), peaks_module$index_list()[[input$sample_subset2]]$unique_id, plot_title),
@@ -1348,7 +1373,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
       minimum_peak_signal <- peaks_module$minimum_peak_signal()
       batchcorrectionswitch <- peaks_module$batchcorrectionswitch()
       peak_region_size_gap_threshold <- peaks_module$peak_region_size_gap_threshold()
-      peak_region_height_threshold_multiplier <- peaks_module$peak_region_height_threshold_multiplier()
+      peak_region_signal_threshold_multiplier <- peaks_module$peak_region_signal_threshold_multiplier()
       assay_size_without_repeat <- peaks_module$assay_size_without_repeat()
       repeat_size <- peaks_module$repeat_size()
       force_whole_repeat_units <- peaks_module$force_whole_repeat_units()
@@ -1382,7 +1407,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
       save("laddertable", "fsa_list", "metadata_table", "DataUpload", "DataUploadMeta", "Ladder_switch",
            "ladders", "scan", "size", "LadderChannel", "SignalChannel", "LadderSizes", "spikeswitch", "spikelocation", "ladderselectionwindow", "maxcombinations", "minimum_peak_signal_ladder", "minimum_peak_signal_number", "scan_subset", "scan_subset1", "scan_subset2",
            "index_list", "min_bp_size", "max_bp_size", "smoothing_window_peaks", "minimum_peak_signal", "batchcorrectionswitch", "peak_region_size_gap_threshold",
-           "peak_region_height_threshold_multiplier", "assay_size_without_repeat", "repeat_size", "force_whole_repeat_units", "force_repeat_pattern",
+           "peak_region_signal_threshold_multiplier", "assay_size_without_repeat", "repeat_size", "force_whole_repeat_units", "force_repeat_pattern",
            "force_repeat_pattern_size_period", "force_repeat_pattern_size_window", "sample_traces_size", "sample_traces_repeats",
            "instability_metrics", "peak_threshold", "window_around_index_peak_min", "window_around_index_peak_max", "repeat_range1", "repeat_range2", "repeat_range3", "percentile_range1", "percentile_range2", "percentile_range3",
            "sample_subset2", "sample_subset_metrics", "Package_version", "Index_Table", "Index_Table_original", "group_controls",

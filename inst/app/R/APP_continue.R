@@ -118,7 +118,7 @@ continue_server <- function(input, output, session) {
                      updateNumericInput(session, "minimum_peak_signal", value = minimum_peak_signal)
                      updatePickerInput(session, "batchcorrectionswitch", selected = batchcorrectionswitch)
                      updateNumericInput(session, "peak_region_size_gap_threshold", value = peak_region_size_gap_threshold)
-                     updateNumericInput(session, "peak_region_height_threshold_multiplier", value = peak_region_height_threshold_multiplier)
+                     updateNumericInput(session, "peak_region_signal_threshold_multiplier", value = peak_region_signal_threshold_multiplier)
                      updateNumericInput(session, "assay_size_without_repeat", value = assay_size_without_repeat)
                      updateRadioGroupButtons(session, "force_whole_repeat_units", selected = force_whole_repeat_units)
                      updatePickerInput(session,"force_repeat_pattern", selected = force_repeat_pattern)

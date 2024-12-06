@@ -211,17 +211,17 @@ analysis_server <- function(input, output, session, continue_module, upload_data
         updateNumericInput(session, "ylim2_analysis", value = 0.3)
       }
       else if (input$normalize == "None") {
-        updateNumericInput(session, "ylim2_analysis", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_height + 300)
+        updateNumericInput(session, "ylim2_analysis", value = max(peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_signal) + 300)
       }
     }
   })
 
   observe({
     if (!is.null(peaks_module$index_list()) && !is.null(input$sample_subset_metrics)) {
-      updateNumericInput(session, "xlim1_analysis", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat - 50)
-      updateNumericInput(session, "xlim2_analysis", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat + 50)
+      updateNumericInput(session, "xlim1_analysis", value = min(peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat) - 50)
+      updateNumericInput(session, "xlim2_analysis", value = max(peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat) + 50)
       updateNumericInput(session, "ylim1_analysis", value = -200)
-      updateNumericInput(session, "ylim2_analysis", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_height + 300)
+      updateNumericInput(session, "ylim2_analysis", value = max(peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_signal) + 300)
 
     if (input$index_normalize == TRUE) {
       updateNumericInput(session, "xlim1_analysis", value = -50)
@@ -244,12 +244,12 @@ analysis_server <- function(input, output, session, continue_module, upload_data
         updateNumericInput(session, "ylim2_analysis", value = 0.3)
       }
       else if (input$normalize == "None") {
-        updateNumericInput(session, "ylim2_analysis", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_height + 300)
+        updateNumericInput(session, "ylim2_analysis", value = max(peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_signal) + 300)
       }
     }
     else {
-      updateNumericInput(session, "xlim1_analysis", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat - 50)
-      updateNumericInput(session, "xlim2_analysis", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat + 50)
+      updateNumericInput(session, "xlim1_analysis", value = min(peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat) - 50)
+      updateNumericInput(session, "xlim2_analysis", value = max(peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat) + 50)
 
       if (input$normalize == "Highest Peak") {
         updateNumericInput(session, "ylim1_analysis", value = -0.3)
@@ -268,7 +268,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
         updateNumericInput(session, "ylim2_analysis", value = 0.3)
       }
       else if (input$normalize == "None") {
-        updateNumericInput(session, "ylim2_analysis", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_height + 300)
+        updateNumericInput(session, "ylim2_analysis", value = max(peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_signal) + 300)
       }
     }
     }
@@ -416,7 +416,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
           trace <- left_join(trace, upload_data$metadata_table())
         }
 
-        trace <- mutate(trace, Normalised_Signal = height)
+        trace <- mutate(trace, Normalised_Signal = signal)
 
         trace$plot <- col_concat(as.data.frame(trace[, which(colnames(trace) %in% input$group_samples)]), sep = ":")
       }
@@ -425,12 +425,12 @@ analysis_server <- function(input, output, session, continue_module, upload_data
         lookup <- trace[trace$repeats > input$threshold_min, ]
         lookup <- lookup[lookup$repeats < input$threshold_max, ]
 
-        lookup <- lookup %>% group_by(unique_id) %>% dplyr::summarise(sum(height))
+        lookup <- lookup %>% group_by(unique_id) %>% dplyr::summarise(sum(signal))
         colnames(lookup)[2] <- c("norm_factor")
 
         trace <- left_join(trace, lookup)
 
-        trace <- mutate(trace, Normalised_Signal = height/norm_factor)
+        trace <- mutate(trace, Normalised_Signal = signal/norm_factor)
 
         if (!is.null(upload_data$metadata_table())) {
           trace <- left_join(trace, upload_data$metadata_table())
@@ -443,12 +443,12 @@ analysis_server <- function(input, output, session, continue_module, upload_data
         lookup <- trace[trace$repeats > input$threshold_min, ]
         lookup <- lookup[lookup$repeats < input$threshold_max, ]
 
-        lookup <- lookup %>% group_by(unique_id) %>% dplyr::summarise(max(height))
+        lookup <- lookup %>% group_by(unique_id) %>% dplyr::summarise(max(signal))
         colnames(lookup)[2] <- c("norm_factor")
 
         trace <- left_join(trace, lookup)
 
-        trace <- mutate(trace, Normalised_Signal = height/norm_factor)
+        trace <- mutate(trace, Normalised_Signal = signal/norm_factor)
 
         if (!is.null(upload_data$metadata_table())) {
           trace <- left_join(trace, upload_data$metadata_table())
@@ -561,10 +561,10 @@ analysis_server <- function(input, output, session, continue_module, upload_data
 
     #perform cross-validation
     if (input$peaks_traces == "Traces") {
-      model <- train(height_corrected ~ calculated_repeats, data = reactive_analysis$trace, method = "gamLoess", tuneGrid=grid, trControl = ctrl)
+      model <- train(signal_corrected ~ calculated_repeats, data = reactive_analysis$trace, method = "gamLoess", tuneGrid=grid, trControl = ctrl)
     }
     else {
-      model <- train(height_corrected ~ repeats, data = reactive_analysis$trace, method = "gamLoess", tuneGrid=grid, trControl = ctrl)
+      model <- train(signal_corrected ~ repeats, data = reactive_analysis$trace, method = "gamLoess", tuneGrid=grid, trControl = ctrl)
     }
 
     datatable(model$results,

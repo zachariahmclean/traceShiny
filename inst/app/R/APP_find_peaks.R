@@ -22,16 +22,16 @@ peaks_box_ui2 <- function(id) {
                h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Find Fragments</b>')),
                fluidRow(
                  column(6,
-                        numericInput("min_bp_size", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Minimum Base Pair Size')),
+                        numericInput("min_bp_size", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Minimum Repeat Size')),
                                      min = 1,
-                                     value = 200, step = 1)
+                                     value = 35, step = 1)
                  ),
                  conditionalPanel(
                    condition = 'input.advancesettings_Peaks == true',
                    column(6,
-                          numericInput("max_bp_size", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Maximum Base Pair Size')),
+                          numericInput("max_bp_size", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Maximum Repeat Size')),
                                        min = 1,
-                                       value = 1000, step = 1)
+                                       value = 500, step = 1)
                    )
                  )
                ),
@@ -63,7 +63,7 @@ peaks_box_ui2 <- function(id) {
                                        value = 6, step = 1)
                    ),
                    column(6,
-                          numericInput("peak_region_height_threshold_multiplier", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Peak Region Height Threshold Multiplier')),
+                          numericInput("peak_region_signal_threshold_multiplier", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Peak Region Signal Threshold Multiplier')),
                                        min = 1,
                                        value = 1, step = 1)
                    )
@@ -418,8 +418,8 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                      reactive_peaks$peaks <- find_fragments(ladder_module$ladders(),
                                                             smoothing_window = input$smoothing_window,
                                                             minimum_peak_signal = input$minimum_peak_signal,
-                                                            min_bp_size = input$min_bp_size,
-                                                            max_bp_size = input$max_bp_size
+                                                            min_bp_size = (input$min_bp_size + input$assay_size_without_repeat)*input$repeat_size,
+                                                            max_bp_size = (input$max_bp_size + input$assay_size_without_repeat)*input$repeat_size
                      )
 
                      if (!is.null(upload_data$metadata_table())) {
@@ -435,7 +435,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
                      find_alleles(reactive_peaks$peaks,
                                   peak_region_size_gap_threshold = input$peak_region_size_gap_threshold,
-                                  peak_region_height_threshold_multiplier = input$peak_region_height_threshold_multiplier)
+                                  peak_region_signal_threshold_multiplier = input$peak_region_signal_threshold_multiplier)
 
                      call_repeats(fragments_list = reactive_peaks$peaks,
                                   assay_size_without_repeat = input$assay_size_without_repeat,
@@ -479,7 +479,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
       updateNumericInput(session, "xlim1", value = reactive_peaks$peaks[[input$sample_subset]]$get_allele_peak()$allele_repeat - 50)
       updateNumericInput(session, "xlim2", value = reactive_peaks$peaks[[input$sample_subset]]$get_allele_peak()$allele_repeat + 50)
       updateNumericInput(session, "ylim1", value = -200)
-      updateNumericInput(session, "ylim2", value = reactive_peaks$peaks[[input$sample_subset]]$get_allele_peak()$allele_height + 100)
+      updateNumericInput(session, "ylim2", value = reactive_peaks$peaks[[input$sample_subset]]$get_allele_peak()$allele_signal + 100)
     }
   })
 
@@ -520,7 +520,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     xlim = c(input$xlim1, input$xlim2)
     ylim = c(input$ylim1, input$ylim2)
 
-    height_color_threshold = 0.05
+    signal_color_threshold = input$minimum_peak_signal
     plot_title = NULL
 
     data <- fragments$trace_bp_df
@@ -540,16 +540,16 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
         peak_table <- peak_table[which(peak_table$x < xlim[2] & peak_table$x > xlim[1]), ]
       }
 
-      tallest_peak_height <- peak_table[which(peak_table$height == max(peak_table$height)), "height"]
-      tallest_peak_x <- peak_table[which(peak_table$height == tallest_peak_height), "x"]
-      if (!is.null(fragments$get_allele_peak()$allele_height) && !is.na(fragments$get_allele_peak()$allele_height)) {
-        tallest_peak_height <- fragments$get_allele_peak()$allele_height
+      tallest_peak_signal <- peak_table[which(peak_table$signal == max(peak_table$signal)), "signal"]
+      tallest_peak_x <- peak_table[which(peak_table$signal == tallest_peak_signal), "x"]
+      if (!is.null(fragments$get_allele_peak()$allele_signal) && !is.na(fragments$get_allele_peak()$allele_signal)) {
+        tallest_peak_signal <- fragments$get_allele_peak()$allele_signal
         tallest_peak_x <- fragments$get_allele_peak()$allele_repeat
       }
 
 
-      peaks_above <- peak_table[which(peak_table$height > input$minimum_peak_signal), ]
-      peaks_below <- peak_table[which(peak_table$height < input$minimum_peak_signal), ]
+      peaks_above <- peak_table[which(peak_table$signal > input$minimum_peak_signal), ]
+      peaks_below <- peak_table[which(peak_table$signal < input$minimum_peak_signal), ]
 
     }
 
@@ -562,21 +562,21 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                 height = (300 + input$HeightPeaks*20),
                 name = paste0(gsub(".fsa", "", unique(fragments$unique_id)), "")) %>%
           add_trace(x = peaks_above$x,
-                    y = peaks_above$height,
+                    y = peaks_above$signal,
                     mode = "markers",
                     name = paste0(gsub(".fsa", "", unique(fragments$unique_id)), " Peaks Above Threshold")) %>%
           add_trace(x = peaks_below$x,
-                    y = peaks_below$height,
+                    y = peaks_below$signal,
                     mode = "markers",
                     name = paste0(gsub(".fsa", "", unique(fragments$unique_id)), " Peaks Below Threshold")) %>%
           add_trace(x = tallest_peak_x,
-                    y = tallest_peak_height,
+                    y = tallest_peak_signal,
                     mode = "markers",
                     name = paste0(gsub(".fsa", "", unique(fragments$unique_id)), " Modal Peak")) %>%
           add_segments(x = peak_table$repeats,
-                       y = peak_table$height,
+                       y = peak_table$signal,
                        xend = peak_table$calculated_repeats,
-                       yend = peak_table$height,
+                       yend = peak_table$signal,
                        line = list(dash = "dash"),
                        name = paste0(gsub(".fsa", "", unique(fragments$unique_id)), " Force Whole Repeats")) %>%
           layout(title = ifelse(is.null(plot_title), fragments$unique_id, plot_title),
@@ -663,13 +663,13 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     # normalize signal to samples have the same maximum
     sample_traces_size <- lapply(sample_traces_size, function(x){
       x$signal <- x$signal - min(x$signal)
-      x$rel_signal <- x$signal / max(x[which(x$calculated_repeats > (input$min_bp_size - input$assay_size_without_repeat)/input$repeat_size) ,]$signal)
+      x$rel_signal <- x$signal / max(x[which(x$calculated_repeats > input$min_bp_size),]$signal)
       return(x)
     })
 
     sample_traces_repeats <- lapply(sample_traces_repeats, function(x){
       x$signal <- x$signal - min(x$signal)
-      x$rel_signal <- x$signal / max(x[which(x$calculated_repeats > (input$min_bp_size - input$assay_size_without_repeat)/input$repeat_size),]$signal)
+      x$rel_signal <- x$signal / max(x[which(x$calculated_repeats > input$min_bp_size),]$signal)
       return(x)
     })
 
@@ -692,13 +692,13 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     })
 
     peak_table_peaks_tallest <- lapply(peak_table_peaks, function(y) {
-      tallest_peak_height <- y[which(y$signal == max(y[which(y$calculated_repeats > (input$min_bp_size - input$assay_size_without_repeat)/input$repeat_size),]$signal)), "x"]
-      return(tallest_peak_height)
+      tallest_peak_signal <- y[which(y$signal == max(y[which(y$calculated_repeats > input$min_bp_size),]$signal)), "x"]
+      return(tallest_peak_signal)
     })
 
     peak_table_repeats_tallest <- lapply(peak_table_repeats, function(y) {
-      tallest_peak_height <- y[which(y$height == max(y$height)), "x"]
-      return(tallest_peak_height)
+      tallest_peak_signal <- y[which(y$signal == max(y$signal)), "x"]
+      return(tallest_peak_signal)
     })
 
     xlim_corrected = c(peak_table_repeats_tallest[[1]]-50, peak_table_repeats_tallest[[1]]+50)
@@ -967,7 +967,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
       find_alleles(reactive_peaks$peaks,
                    peak_region_size_gap_threshold = input$peak_region_size_gap_threshold,
-                   peak_region_height_threshold_multiplier = input$peak_region_height_threshold_multiplier)
+                   peak_region_signal_threshold_multiplier = input$peak_region_signal_threshold_multiplier)
 
       call_repeats(fragments_list = reactive_peaks$peaks,
                    assay_size_without_repeat = input$assay_size_without_repeat,
@@ -1011,7 +1011,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     fragments <- reactive_peaks$peaks[[input$sample_subset_Manual]]
     xlim = c(input$xlim1, input$xlim2)
     ylim = c(input$ylim1, input$ylim2)
-    height_color_threshold = input$minimum_peak_signal
+    signal_color_threshold = input$minimum_peak_signal
     plot_title = NULL
 
     data <- fragments$trace_bp_df
@@ -1029,18 +1029,18 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
       peak_table <- peak_table[which(peak_table$x < xlim[2] & peak_table$x > xlim[1]), ]
     }
 
-    tallest_peak_height <- peak_table[which(peak_table$height == max(peak_table$height)), "height"]
-    tallest_peak_x <- peak_table[which(peak_table$height == tallest_peak_height), "x"]
-    if (!is.null(fragments$get_allele_peak()$allele_height) && !is.na(fragments$get_allele_peak()$allele_height)) {
-      tallest_peak_height <- fragments$get_allele_peak()$allele_height
+    tallest_peak_signal <- peak_table[which(peak_table$signal == max(peak_table$signal)), "signal"]
+    tallest_peak_x <- peak_table[which(peak_table$signal == tallest_peak_signal), "x"]
+    if (!is.null(fragments$get_allele_peak()$allele_signal) && !is.na(fragments$get_allele_peak()$allele_signal)) {
+      tallest_peak_signal <- fragments$get_allele_peak()$allele_signal
       tallest_peak_x <- fragments$get_allele_peak()$allele_repeat
     }
 
-    peaks_above <- peak_table[which(peak_table$height > height_color_threshold), ]
-    peaks_below <- peak_table[which(peak_table$height < height_color_threshold), ]
+    peaks_above <- peak_table[which(peak_table$signal > signal_color_threshold), ]
+    peaks_below <- peak_table[which(peak_table$signal < signal_color_threshold), ]
 
     xlim_corrected = c(tallest_peak_x[[1]]-50, tallest_peak_x[[1]]+50)
-    ylim_corrected = c(-200, tallest_peak_height + 100)
+    ylim_corrected = c(-200, tallest_peak_signal + 100)
 
     if (!is.null(peak_table$repeats) && !is.null(peak_table$calculated_repeats)) {
       plot_ly(data = data,
@@ -1050,7 +1050,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
               height = (300 + input$HeightPeaks_Manual*20),
               name = paste0(gsub(".fsa", "", unique(fragments$unique_id)), "")) %>%
         add_trace(x = tallest_peak_x,
-                  y = tallest_peak_height,
+                  y = tallest_peak_signal,
                   mode = "markers",
                   name = paste0(gsub(".fsa", "", unique(fragments$unique_id)), " Modal Peak")) %>%
         layout(title = ifelse(is.null(plot_title), fragments$unique_id, plot_title),
@@ -1072,7 +1072,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     minimum_peak_signal = reactive(input$minimum_peak_signal),
     batchcorrectionswitch = reactive(input$batchcorrectionswitch),
     peak_region_size_gap_threshold = reactive(input$peak_region_size_gap_threshold),
-    peak_region_height_threshold_multiplier = reactive(input$peak_region_height_threshold_multiplier),
+    peak_region_signal_threshold_multiplier = reactive(input$peak_region_signal_threshold_multiplier),
     assay_size_without_repeat = reactive(input$assay_size_without_repeat),
     repeat_size = reactive(input$repeat_size),
     force_whole_repeat_units = reactive(input$force_whole_repeat_units),

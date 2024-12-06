@@ -329,7 +329,9 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
 
       if (input$points_histo == "Points") {
         for (i in unique(trace$unique_id)) {
-        p <- ggplot(trace[which(trace$unique_id == i), ], aes(x=repeats, y = height, colour = unique_id)) +
+        p <- ggplot(trace[which(trace$unique_id == i), ], aes(x=repeats, y = signal, colour = unique_id)) +
+          xlim(c(input$xlim1_plot2, input$xlim2_plot2)) +
+          ylim(c(input$ylim1_plot2, input$ylim2_plot2)) +
           {if (input$show_line_fastq == T)
           list(geom_smooth(method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
           geom_point(show.legend = FALSE) +
@@ -340,8 +342,10 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
       else {
         for (i in unique(upload_data$fastq()$SampleID)) {
         p <- ggplot(upload_data$fastq()[which(upload_data$fastq()$SampleID == i),], aes(x=`Repeat Length`, fill = SampleID)) +
+          xlim(c(input$xlim1_plot2, input$xlim2_plot2)) +
+          ylim(c(input$ylim1_plot2, input$ylim2_plot2)) +
           {if (input$show_line_fastq == T)
-          list(geom_smooth(inherit.aes=F, data = trace[which(trace$unique_id == i), ], aes(x=repeats, y = height, colour = unique_id), method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
+          list(geom_smooth(inherit.aes=F, data = trace[which(trace$unique_id == i), ], aes(x=repeats, y = signal, colour = unique_id), method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
           geom_histogram(binwidth = 1, show.legend = FALSE, fill= "grey") +
           theme_bw()
         print(p)
@@ -355,16 +359,38 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
   observeEvent(input$downloadPlotButton2, {
     showModal(modalDialog(
       title = strong("Download Plots"),
-      numericInput("downloadPlotHeight2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Height of plot')),
-                   value = 7,
-                   min = 0,
-                   max = 20),
-      numericInput("downloadPlotWidth2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Width of plot')),
-                   value = 7,
-                   min = 0,
-                   max = 20),
+      h4(HTML('<h4 style = "text-align:justify;color:#000000"><br>Plot Sizes')),
+      fluidRow(
+        column(6,
+               numericInput("downloadPlotHeight2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Height of plot')),
+                            value = 7,
+                            min = 0,
+                            max = 20)),
+        column(6,
+               numericInput("downloadPlotWidth2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Width of plot')),
+                            value = 7,
+                            min = 0,
+                            max = 20))
+      ),
+
+      h4(HTML('<h4 style = "text-align:justify;color:#000000"><br>Axis Limits')),
+      fluidRow(
+        column(3,
+               numericInput("xlim1_plot2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">X min')),
+                            value = 0)),
+
+        column(3,
+               numericInput("xlim2_plot2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">X max')),
+                            value = 250)),
+        column(3,
+               numericInput("ylim1_plot2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Y min')),
+                            value = 0)),
+
+        column(3,
+               numericInput("ylim2_plot2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Y max')),
+                            value = 2000))),
       downloadBttn("downloadPlot2", "Download"),
-      size = "s",
+      size = "m",
       easyClose = TRUE,
       footer = NULL
     ))
@@ -376,7 +402,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
     #Transform data
     Instability <- upload_data$fastq()[,c(2,5)]
     Instability <- Instability %>% group_by(`Repeat Length`, SampleID) %>%
-      summarise(Height = n())
+      summarise(signal = n())
 
     Instability <- Instability[,c(2,1,3)]
     colnames(Instability) <- c("unique_id", "Repeat Length", "Counts")
@@ -556,7 +582,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
       updateNumericInput(session, "xlim1_metrics2", value = reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$get_allele_peak()$allele_repeat - 50)
       updateNumericInput(session, "xlim2_metrics2", value = reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$get_allele_peak()$allele_repeat + 50)
       updateNumericInput(session, "ylim1_metrics2", value = -2)
-      updateNumericInput(session, "ylim2_metrics2", value = reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$get_allele_peak()$allele_height + 300)
+      updateNumericInput(session, "ylim2_metrics2", value = reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$get_allele_peak()$allele_signal + 300)
     }
   })
 
@@ -692,6 +718,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
   observeEvent(input$IndexRepeat1_2, {
     if (!is.null(reactive_metrics2$Index_Table) && !is.null(reactive_metrics2$peak_list)) {
       shinyjs::disable("IndexRepeat1_2")
+      Sys.sleep(0.5)
       reactive_metrics2$Index_Table[which(reactive_metrics2$Index_Table$`Unique IDs` == input$sample_subset_metrics2),]$`Index Repeat` <- input$IndexRepeat1_2
       shinyjs::enable("IndexRepeat1_2")
     }
@@ -703,6 +730,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
         if (input$group_controls2 == TRUE) {
           if (!is.null(reactive_metrics2$Index_Table) && !is.null(reactive_metrics2$peak_list)) {
             shinyjs::disable("IndexRepeat2_2")
+            Sys.sleep(0.5)
             reactive_metrics2$Index_Table[which(reactive_metrics2$Index_Table$`Unique IDs` == input$sample_subset_metrics2),]$`Index Repeat` <- input$IndexRepeat2_2
             reactive_metrics2$Index_Table[which(reactive_metrics2$Index_Table$`Unique IDs` == input$sample_subset2_2),]$`Index Repeat` <- input$IndexRepeat2_2
             shinyjs::enable("IndexRepeat2_2")
@@ -770,11 +798,11 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
     if (is.null(upload_data$metadata_table_fastq())) {
 
       if (input$points_histo == "Points") {
-        p <- ggplot(trace, aes(x=repeats, y = height, colour = unique_id)) +
+        p <- ggplot(trace, aes(x=repeats, y = signal, colour = unique_id)) +
           xlim(xlim) +
           ylim(ylim) +
           {if(!is.na(input$IndexRepeat1_2))
-            list(geom_hline(yintercept = input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$index_height,
+            list(geom_hline(yintercept = input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$index_signal,
                      color = "black", size=1),
           geom_vline(xintercept = input$IndexRepeat1_2,
                      color = "red", size=1),
@@ -791,7 +819,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
           xlim(xlim) +
           ylim(ylim) +
           {if(!is.na(input$IndexRepeat1_2))
-            list(geom_hline(yintercept = input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$index_height,
+            list(geom_hline(yintercept = input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$index_signal,
                        color = "black", size=1),
               geom_vline(xintercept = input$IndexRepeat1_2,
                          color = "red", size=1),
@@ -799,7 +827,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
                                            xmax=input$window_around_index_peak_max2 + input$IndexRepeat1_2,
                                            ymin=0, ymax=input$ylim2_metrics2), alpha=0.1, fill="red"))} +
           {if (input$show_line_fastq == T)
-          list(geom_smooth(inherit.aes=F, data = trace, aes(x=repeats, y = height, colour = unique_id), method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
+          list(geom_smooth(inherit.aes=F, data = trace, aes(x=repeats, y = signal, colour = unique_id), method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
           geom_histogram(binwidth = 1, show.legend = FALSE, fill= "grey") +
           theme_bw()
       }
@@ -809,11 +837,11 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
 
       if (input$group_controls2 == TRUE) {
         if (input$points_histo == "Points") {
-          p <- ggplot(trace, aes(x=repeats, y = height, colour = unique_id)) +
+          p <- ggplot(trace, aes(x=repeats, y = signal, colour = unique_id)) +
             xlim(xlim) +
             ylim(ylim) +
             {if(!is.na(input$IndexRepeat1_2))
-              list(geom_hline(yintercept = if(!is.na(input$IndexRepeat2_2)) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset2_2]]$.__enclos_env__$private$index_height,
+              list(geom_hline(yintercept = if(!is.na(input$IndexRepeat2_2)) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset2_2]]$.__enclos_env__$private$index_signal,
                        color = "black", size=1),
             geom_vline(xintercept = input$IndexRepeat2_2,
                        color = "red", size=1),
@@ -830,7 +858,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
             xlim(xlim) +
             ylim(ylim) +
             {if(!is.na(input$IndexRepeat1_2))
-              list(geom_hline(yintercept = if(!is.na(input$IndexRepeat2_2)) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset2_2]]$.__enclos_env__$private$index_height,
+              list(geom_hline(yintercept = if(!is.na(input$IndexRepeat2_2)) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset2_2]]$.__enclos_env__$private$index_signal,
                        color = "black", size=1),
             geom_vline(xintercept = input$IndexRepeat2_2,
                        color = "red", size=1),
@@ -838,18 +866,18 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
                                          xmax=input$window_around_index_peak_max2 + input$IndexRepeat2_2,
                                          ymin=0, ymax=input$ylim2_metrics2), alpha=0.1, fill="red"))} +
             {if (input$show_line_fastq == T)
-            list(geom_smooth(inherit.aes=F, data = trace, aes(x=repeats, y = height, colour = unique_id), method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
+            list(geom_smooth(inherit.aes=F, data = trace, aes(x=repeats, y = signal, colour = unique_id), method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
             geom_histogram(binwidth = 1, show.legend = FALSE, fill= "grey") +
             theme_bw()
         }
       }
       else {
         if (input$points_histo == "Points") {
-          p <- ggplot(trace, aes(x=repeats, y = height, colour = unique_id)) +
+          p <- ggplot(trace, aes(x=repeats, y = signal, colour = unique_id)) +
             xlim(xlim) +
             ylim(ylim) +
             {if(!is.na(input$IndexRepeat1_2))
-              list(geom_hline(yintercept = if(!is.na(input$IndexRepeat1_2)) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$index_height,
+              list(geom_hline(yintercept = if(!is.na(input$IndexRepeat1_2)) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$index_signal,
                        color = "black", size=1),
             geom_vline(xintercept = input$IndexRepeat1_2,
                        color = "red", size=1),
@@ -866,7 +894,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
             xlim(xlim) +
             ylim(ylim) +
             {if(!is.na(input$IndexRepeat1_2))
-              list(geom_hline(yintercept = if(!is.na(input$IndexRepeat1_2)) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$index_height,
+              list(geom_hline(yintercept = if(!is.na(input$IndexRepeat1_2)) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$index_signal,
                        color = "black", size=1),
             geom_vline(xintercept = input$IndexRepeat1_2,
                        color = "red", size=1),
@@ -874,7 +902,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
                                          xmax=input$window_around_index_peak_max2 + input$IndexRepeat1_2,
                                          ymin=0, ymax=input$ylim2_metrics2), alpha=0.1, fill="red"))} +
             {if (input$show_line_fastq == T)
-            list(geom_smooth(inherit.aes=F, data = trace, aes(x=repeats, y = height, colour = unique_id), method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
+            list(geom_smooth(inherit.aes=F, data = trace, aes(x=repeats, y = signal, colour = unique_id), method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
             geom_histogram(binwidth = 1, show.legend = FALSE, fill= "grey") +
             theme_bw()
         }
@@ -882,11 +910,11 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
     }
       else {
         if (input$points_histo == "Points") {
-          p <- ggplot(trace, aes(x=repeats, y = height, colour = unique_id)) +
+          p <- ggplot(trace, aes(x=repeats, y = signal, colour = unique_id)) +
             xlim(xlim) +
             ylim(ylim) +
             {if(!is.na(input$IndexRepeat1_2))
-            list(geom_hline(yintercept = if(!is.na(input$IndexRepeat1_2)) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$index_height,
+            list(geom_hline(yintercept = if(!is.na(input$IndexRepeat1_2)) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$index_signal,
                        color = "black", size=1),
             geom_vline(xintercept = input$IndexRepeat1_2,
                        color = "red", size=1),
@@ -903,7 +931,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
             xlim(xlim) +
             ylim(ylim) +
             {if(!is.na(input$IndexRepeat1_2))
-              list(geom_hline(yintercept = if(!is.na(input$IndexRepeat1_2)) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$index_height,
+              list(geom_hline(yintercept = if(!is.na(input$IndexRepeat1_2)) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$index_signal,
                        color = "black", size=1),
             geom_vline(xintercept = input$IndexRepeat1_2,
                        color = "red", size=1),
@@ -911,7 +939,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
                                          xmax=input$window_around_index_peak_max2 + input$IndexRepeat1_2,
                                          ymin=0, ymax=input$ylim2_metrics2), alpha=0.1, fill="red"))} +
             {if (input$show_line_fastq == T)
-            list(geom_smooth(inherit.aes=F, data = trace, aes(x=repeats, y = height, colour = unique_id), method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
+            list(geom_smooth(inherit.aes=F, data = trace, aes(x=repeats, y = signal, colour = unique_id), method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
             geom_histogram(binwidth = 1, show.legend = FALSE, fill= "grey") +
             theme_bw()
         }
@@ -940,7 +968,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
     trace <- trace[which(trace$unique_id == input$sample_subset2_2), ]
 
     if (input$points_histo == "Points") {
-      p <- ggplot(trace, aes(x=repeats, y = height, colour = unique_id)) +
+      p <- ggplot(trace, aes(x=repeats, y = signal, colour = unique_id)) +
         xlim(xlim) +
         ylim(ylim) +
         {if(!is.na(input$IndexRepeat2_2))
@@ -959,7 +987,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
           list(geom_vline(xintercept = input$IndexRepeat2_2,
                           color = "red", size=1))} +
         {if (input$show_line_fastq == T)
-        list(geom_smooth(inherit.aes=F, data = trace, aes(x=repeats, y = height, colour = unique_id), method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
+        list(geom_smooth(inherit.aes=F, data = trace, aes(x=repeats, y = signal, colour = unique_id), method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
         geom_histogram(binwidth = 1, show.legend = FALSE, fill= "grey") +
         theme_bw()
     }

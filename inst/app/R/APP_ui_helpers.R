@@ -61,7 +61,7 @@ extract_fragment_summary <- function(fragments_list) {
       unique_id = x$unique_id,
       number_of_peaks = nrow(x$repeat_table_df),
       modal_repeat = x$get_allele_peak()$allele_repeat,
-      modal_height = x$get_allele_peak()$allele_height
+      modal_signal = x$get_allele_peak()$allele_signal
     )
   })
   extracted_df <- do.call(rbind, extracted)
@@ -95,7 +95,7 @@ plot_trace_helper <- function(fragments,
                               x_axis,
                               ylim,
                               xlim,
-                              height_color_threshold,
+                              signal_color_threshold,
                               plot_title) {
   if (is.null(fragments$trace_bp_df)) {
     stop(
@@ -166,36 +166,36 @@ plot_trace_helper <- function(fragments,
       peak_table <- peak_table[which(peak_table$x < xlim[2] & peak_table$x > xlim[1]), ]
     }
 
-    tallest_peak_height <- peak_table[which(peak_table$height == max(peak_table$height)), "height"]
-    tallest_peak_x <- peak_table[which(peak_table$height == tallest_peak_height), "x"]
-    if (!is.null(fragments$get_alleles()$allele_1_height) && !is.na(fragments$get_alleles()$allele_1_height)) {
-      tallest_peak_height <- fragments$get_alleles()$allele_1_height
+    tallest_peak_signal <- peak_table[which(peak_table$signal == max(peak_table$signal)), "signal"]
+    tallest_peak_x <- peak_table[which(peak_table$signal == tallest_peak_signal), "x"]
+    if (!is.null(fragments$get_allele_peak()$allele_signal) && !is.na(fragments$get_allele_peak()$allele_signal)) {
+      tallest_peak_signal <- fragments$get_allele_peak()$allele_signal
       # find the tallest peak x axis position
-      if (is.null(x_axis) && is.na(fragments$get_alleles()$allele_1_repeat)) {
-        tallest_peak_x <- fragments$get_alleles()$allele_1_size
-      } else if (is.null(x_axis) && !is.na(fragments$get_alleles()$allele_1_repeat)) {
-        tallest_peak_x <- fragments$get_alleles()$allele_1_repeat
+      if (is.null(x_axis) && is.na(fragments$get_allele_peak()$allele_repeat)) {
+        tallest_peak_x <- fragments$get_allele_peak()$allele_size
+      } else if (is.null(x_axis) && !is.na(fragments$get_allele_peak()$allele_repeat)) {
+        tallest_peak_x <- fragments$get_allele_peak()$allele_repeat
       } else if (x_axis == "size") {
-        tallest_peak_x <- fragments$get_alleles()$allele_1_size
+        tallest_peak_x <- fragments$get_allele_peak()$allele_size
       } else {
-        tallest_peak_x <- fragments$get_alleles()$allele_1_repeat
+        tallest_peak_x <- fragments$get_allele_peak()$allele_repeat
       }
     }
 
-    peaks_above <- peak_table[which(peak_table$height > tallest_peak_height * height_color_threshold), ]
-    peaks_below <- peak_table[which(peak_table$height < tallest_peak_height * height_color_threshold), ]
+    peaks_above <- peak_table[which(peak_table$signal > input$minimum_peak_signal), ]
+    peaks_below <- peak_table[which(peak_table$signal < input$minimum_peak_signal), ]
 
     # Adding peaks
     points(peaks_above$x,
-           peaks_above$height,
+           peaks_above$signal,
            col = "blue"
     )
     points(peaks_below$x,
-           peaks_below$height,
+           peaks_below$signal,
            col = "purple"
     )
     points(tallest_peak_x,
-           tallest_peak_height,
+           tallest_peak_signal,
            col = "green"
     )
 
@@ -204,9 +204,9 @@ plot_trace_helper <- function(fragments,
       for (i in 1:nrow(peak_table)) {
         segments(
           x0 = peak_table$repeats[i],
-          y0 = peak_table$height[i],
+          y0 = peak_table$signal[i],
           x1 = peak_table$calculated_repeats[i],
-          y1 = peak_table$height[i],
+          y1 = peak_table$signal[i],
           lty = 2
         )
       }
@@ -229,8 +229,8 @@ extract_fragments <- function(fragments_list) {
         data.frame(
           unique_id = rep(x$unique_id, df_length),
           main_peak_size = rep(x$get_allele_peak()$allele_size, df_length),
-          main_peak_height = rep(x$get_allele_peak()$allele_height, df_length),
-          height = x$peak_table_df$height,
+          main_peak_signal = rep(x$get_allele_peak()$allele_signal, df_length),
+          signal = x$peak_table_df$signal,
           index_repeat = rep(x$get_index_peak()$index_repeat, df_length),
           size = x$peak_table_df$size
           #peak_region = x$.__enclos_env__$private$peak_regions
@@ -240,8 +240,8 @@ extract_fragments <- function(fragments_list) {
         data.frame(
           unique_id = rep(x$unique_id, df_length),
           main_peak_repeat = rep(x$get_allele_peak()$allele_repeat, df_length),
-          main_peak_height = rep(x$get_allele_peak()$allele_height, df_length),
-          height = x$repeat_table_df$height,
+          main_peak_signal = rep(x$get_allele_peak()$allele_signal, df_length),
+          signal = x$repeat_table_df$signal,
           index_repeat = rep(x$get_index_peak()$index_repeat, df_length),
           repeats = x$repeat_table_df$repeats
           #peak_region = x$.__enclos_env__$private$peak_regions
@@ -341,21 +341,21 @@ reactivity_trigger <- function(
 find_alleles_fastq <- function(
     fragments_list,
     peak_region_size_gap_threshold = 6,
-    peak_region_height_threshold_multiplier = 1) {
+    peak_region_signal_threshold_multiplier = 1) {
   # internal helper functions
-  find_peak_regions <- function(height, size) {
-    peak_regions <- rep(NA_real_, length(height))
-    mean_height <- mean(height) * peak_region_height_threshold_multiplier
+  find_peak_regions <- function(signal, size) {
+    peak_regions <- rep(NA_real_, length(signal))
+    mean_signal <- mean(signal) * peak_region_signal_threshold_multiplier
     # loop over each fragment and check to see if it's within the thresholds
-    for (i in seq_along(height)) {
-      if (height[i] < mean_height || i == 1 || i == length(height)) {
+    for (i in seq_along(signal)) {
+      if (signal[i] < mean_signal || i == 1 || i == length(signal)) {
         peak_regions[i] <- NA_real_
-      } else if (height[i - 1] < mean_height && height[i + 1] < mean_height) {
+      } else if (signal[i - 1] < mean_signal && signal[i + 1] < mean_signal) {
         peak_regions[i] <- NA_real_
       } else {
         # check to see if peaks before it are within the size threshold
         current_size <- size[i]
-        valid_lower_peaks <- which(size < current_size & size > current_size - peak_region_size_gap_threshold & height > mean_height)
+        valid_lower_peaks <- which(size < current_size & size > current_size - peak_region_size_gap_threshold & signal > mean_signal)
         unique_regions <- unique(na.omit(peak_regions))
         if (length(valid_lower_peaks) > 0) {
           if (length(unique_regions) > 0) {
@@ -383,14 +383,14 @@ find_alleles_fastq <- function(
 
 
     # first select if working off repeat size or bp size
-    fragment_height <- if (is.null(fragment$repeat_table_df)) fragment$peak_table_df$height else fragment$repeat_table_df$height
+    fragment_signal <- if (is.null(fragment$repeat_table_df)) fragment$peak_table_df$signal else fragment$repeat_table_df$signal
     fragment_sizes <- if (is.null(fragment$repeat_table_df)) fragment$peak_table_df$size else fragment$repeat_table_df$repeats
 
     # Find peak regions
-    peak_regions <- find_peak_regions(fragment_height, fragment_sizes)
+    peak_regions <- find_peak_regions(fragment_signal, fragment_sizes)
 
     # find all possible peaks
-    all_peaks <- pracma::findpeaks(fragment_height, peakpat = "[+]{1,}[0]*[-]{1,}")
+    all_peaks <- pracma::findpeaks(fragment_signal, peakpat = "[+]{1,}[0]*[-]{1,}")
 
     # Find unique peak regions
     unique_regions <- unique(na.omit(peak_regions))
@@ -407,13 +407,13 @@ find_alleles_fastq <- function(
       } else {
         # just pick the tallest if somehow the peak region doesn't have a peak called
         # not sure if this will happen, just dealing with a possible case
-        top_regional_peaks_positions[i] <- region_positions[which.max(fragment_height[region_positions])][1]
+        top_regional_peaks_positions[i] <- region_positions[which.max(fragment_signal[region_positions])][1]
       }
     }
 
     # Now we need to pick the tallest of the candidates
     top_regional_peaks_positions <-
-      top_regional_peaks_positions[order(fragment_height[top_regional_peaks_positions], decreasing = TRUE)][1]
+      top_regional_peaks_positions[order(fragment_signal[top_regional_peaks_positions], decreasing = TRUE)][1]
 
 
     if (length(top_regional_peaks_positions) == 0) {
@@ -425,7 +425,7 @@ find_alleles_fastq <- function(
     size_diff <- df[["repeats"]]- fragment_sizes[top_regional_peaks_positions]
     allele_df <- df[which.min(abs(size_diff)), , drop = FALSE]
 
-    fragment$.__enclos_env__$private$allele_height <- ifelse(!is.na(fragment_sizes[top_regional_peaks_positions]), allele_df$height, NA_real_)
+    fragment$.__enclos_env__$private$allele_signal <- ifelse(!is.na(fragment_sizes[top_regional_peaks_positions]), allele_df$signal, NA_real_)
     fragment$.__enclos_env__$private$allele_repeat <- ifelse(!is.null(fragment$repeat_table_df) && !is.na(fragment_sizes[top_regional_peaks_positions]), allele_df$repeats, NA_real_)
 
     return(fragment)
@@ -436,32 +436,32 @@ find_alleles_fastq <- function(
 
 # instability index ---------------------------------------------------------
 instability_index <- function(repeats,
-                              heights,
-                              index_peak_height,
+                              signals,
+                              index_peak_signal,
                               index_peak_repeat,
                               peak_threshold,
                               abs_sum = FALSE) {
-  # apply height threshold
-  peak_over_threshold <- which(heights / index_peak_height > peak_threshold)
+  # apply signal threshold
+  peak_over_threshold <- which(signals / index_peak_signal > peak_threshold)
   repeats <- repeats[peak_over_threshold]
-  heights <- heights[peak_over_threshold]
+  signals <- signals[peak_over_threshold]
 
-  # normalized peak height
-  heights_normalized <- heights / sum(heights)
+  # normalized peak signal
+  signals_normalized <- signals / sum(signals)
 
   # distance to index peak
   repeat_delta <- repeats - index_peak_repeat
   if (abs_sum == FALSE) {
-    sum(heights_normalized * repeat_delta)
+    sum(signals_normalized * repeat_delta)
   } else if (abs_sum == TRUE) {
-    sum(abs(heights_normalized * repeat_delta))
+    sum(abs(signals_normalized * repeat_delta))
   }
 }
 
 # function for finding quantiles -----------------------------------------------
 
 find_percentiles <- function(repeats,
-                             heights,
+                             signals,
                              index_peak_repeat,
                              type, # "percentile" or "repeat"
                              range,
@@ -474,8 +474,8 @@ find_percentiles <- function(repeats,
   if (sum(repeats > index_peak_repeat) <= 1) {
     percentile_df <- as.data.frame(setNames(as.list(rep(0, length(range))), df_names))
   } else {
-    unique_repeat_df <- aggregate(heights ~ repeats, FUN = max)
-    cumsum_pct <- cumsum(unique_repeat_df$heights) / sum(unique_repeat_df$heights)
+    unique_repeat_df <- aggregate(signals ~ repeats, FUN = max)
+    cumsum_pct <- cumsum(unique_repeat_df$signals) / sum(unique_repeat_df$signals)
     repeat_delta <- unique_repeat_df$repeats - index_peak_repeat
 
     values <- vector("numeric", length(range))
@@ -530,14 +530,14 @@ fishers_kurtosis <- function(x, y) {
 # subsetting repeat table ---------------------------------------------------
 
 repeat_table_subset <- function(repeat_table_df,
-                                allele_height,
+                                allele_signal,
                                 index_repeat,
                                 peak_threshold,
                                 window_around_index_peak) {
   # Filter to include only the peaks above the certain threshold
-  # height threshold is set on the modal peak rather than the index peak
-  repeat_table_df$peak_percent <- repeat_table_df$height / allele_height
-  height_filtered_df <- repeat_table_df[which(repeat_table_df$peak_percent > peak_threshold), ]
+  # signal threshold is set on the modal peak rather than the index peak
+  repeat_table_df$peak_percent <- repeat_table_df$signal / allele_signal
+  signal_filtered_df <- repeat_table_df[which(repeat_table_df$peak_percent > peak_threshold), ]
 
   # Ensure window_around_index_peak is exactly length 2
   if (length(window_around_index_peak) != 2) {
@@ -546,14 +546,14 @@ repeat_table_subset <- function(repeat_table_df,
 
   # Filter to include only peaks of a certain size
   lower_lim <- ifelse(is.na(window_around_index_peak[1]),
-                      min(height_filtered_df$repeats),
+                      min(signal_filtered_df$repeats),
                       index_repeat - abs(window_around_index_peak[1])
   )
   upper_lim <- ifelse(is.na(window_around_index_peak[1]),
-                      max(height_filtered_df$repeats),
+                      max(signal_filtered_df$repeats),
                       index_repeat + abs(window_around_index_peak[2])
   )
-  size_filtered_df <- height_filtered_df[which(height_filtered_df$repeats >= lower_lim & height_filtered_df$repeats <= upper_lim), ]
+  size_filtered_df <- signal_filtered_df[which(signal_filtered_df$repeats >= lower_lim & signal_filtered_df$repeats <= upper_lim), ]
 
   return(size_filtered_df)
 }
@@ -601,7 +601,7 @@ calculate_instability_metrics_fastq <- function(
     # filter dataset to user supplied thresholds
     size_filtered_df <- repeat_table_subset(
       repeat_table_df = fragments_repeats$repeat_table_df,
-      allele_height = fragments_repeats$get_allele_peak()$allele_height,
+      allele_signal = fragments_repeats$get_allele_peak()$allele_signal,
       index_repeat = fragments_repeats$get_index_peak()$index_repeat,
       peak_threshold = peak_threshold,
       window_around_index_peak = window_around_index_peak
@@ -611,13 +611,13 @@ calculate_instability_metrics_fastq <- function(
       control_weighted_mean_repeat <- sapply(fragments_repeats$.__enclos_env__$private$index_samples, function(x){
         control_filtered_df <- repeat_table_subset(
           repeat_table_df = x[[2]],
-          allele_height = x[[2]][which(x[[2]]$repeats == x[[1]]), "height"],
+          allele_signal = x[[2]][which(x[[2]]$repeats == x[[1]]), "signal"],
           index_repeat = x[[1]],
           peak_threshold = peak_threshold,
           window_around_index_peak = window_around_index_peak
         )
 
-        weighted.mean(control_filtered_df$repeats, control_filtered_df$height)
+        weighted.mean(control_filtered_df$repeats, control_filtered_df$signal)
       })
 
       index_weighted_mean_repeat <- median(control_weighted_mean_repeat, na.rm = TRUE)
@@ -631,9 +631,9 @@ calculate_instability_metrics_fastq <- function(
     contraction_filtered <- size_filtered_df[which(size_filtered_df$repeat_delta_index_peak <= 0), ]
 
     # QCs
-    QC_modal_peak_height <- if (fragments_repeats$get_allele_peak()$allele_height > 500) {
+    QC_modal_peak_signal <- if (fragments_repeats$get_allele_peak()$allele_signal > 500) {
       NA_character_
-    } else if (fragments_repeats$get_allele_peak()$allele_height > 100) {
+    } else if (fragments_repeats$get_allele_peak()$allele_signal > 100) {
       "Low"
     } else {
       "Extremely low"
@@ -660,13 +660,13 @@ calculate_instability_metrics_fastq <- function(
     metrics <- data.frame(
       unique_id = fragments_repeats$unique_id,
       QC_comments = NA_character_,
-      QC_modal_peak_height = QC_modal_peak_height,
+      QC_modal_peak_signal = QC_modal_peak_signal,
       QC_peak_number = QC_peak_number,
       QC_off_scale = QC_off_scale,
       modal_peak_repeat = fragments_repeats$get_allele_peak()$allele_repeat,
-      modal_peak_height = fragments_repeats$get_allele_peak()$allele_height,
+      modal_peak_signal = fragments_repeats$get_allele_peak()$allele_signal,
       index_peak_repeat = fragments_repeats$get_index_peak()$index_repeat,
-      index_peak_height = fragments_repeats$get_index_peak()$index_height,
+      index_peak_signal = fragments_repeats$get_index_peak()$index_signal,
       index_weighted_mean_repeat = index_weighted_mean_repeat,
       n_peaks_total = nrow(fragments_repeats$repeat_table_df),
       n_peaks_analysis_subset = nrow(size_filtered_df),
@@ -674,43 +674,43 @@ calculate_instability_metrics_fastq <- function(
       min_repeat = min(size_filtered_df$repeats),
       max_repeat = max(size_filtered_df$repeats),
       mean_repeat = mean(size_filtered_df$repeats),
-      weighted_mean_repeat = weighted.mean(size_filtered_df$repeats, size_filtered_df$height),
+      weighted_mean_repeat = weighted.mean(size_filtered_df$repeats, size_filtered_df$signal),
       median_repeat = median(size_filtered_df$repeats),
-      max_height = max(size_filtered_df$height),
+      max_signal = max(size_filtered_df$signal),
       max_delta_neg = min(size_filtered_df$repeat_delta_index_peak),
       max_delta_pos = max(size_filtered_df$repeat_delta_index_peak),
-      skewness = fishers_skewness(size_filtered_df$repeats, size_filtered_df$height),
-      kurtosis = fishers_kurtosis(size_filtered_df$repeats, size_filtered_df$height),
+      skewness = fishers_skewness(size_filtered_df$repeats, size_filtered_df$signal),
+      kurtosis = fishers_kurtosis(size_filtered_df$repeats, size_filtered_df$signal),
       modal_repeat_delta = fragments_repeats$get_allele_peak()$allele_repeat - fragments_repeats$get_index_peak()$index_repeat,
-      average_repeat_gain = weighted.mean(size_filtered_df$repeats, size_filtered_df$height) - index_weighted_mean_repeat,
+      average_repeat_gain = weighted.mean(size_filtered_df$repeats, size_filtered_df$signal) - index_weighted_mean_repeat,
       instability_index = instability_index(
         repeats = size_filtered_df$repeats,
-        heights = size_filtered_df$height,
-        index_peak_height = fragments_repeats$get_allele_peak()$allele_height,
+        signals = size_filtered_df$signal,
+        index_peak_signal = fragments_repeats$get_allele_peak()$allele_signal,
         index_peak_repeat = fragments_repeats$get_index_peak()$index_repeat,
         peak_threshold = peak_threshold,
         abs_sum = FALSE
       ),
       instability_index_abs = instability_index(
         repeats = size_filtered_df$repeats,
-        heights = size_filtered_df$height,
-        index_peak_height = fragments_repeats$get_allele_peak()$allele_height,
+        signals = size_filtered_df$signal,
+        index_peak_signal = fragments_repeats$get_allele_peak()$allele_signal,
         index_peak_repeat = fragments_repeats$get_index_peak()$index_repeat,
         peak_threshold = peak_threshold,
         abs_sum = TRUE
       ),
       expansion_index = instability_index(
         repeats = expansion_filtered$repeats,
-        heights = expansion_filtered$height,
-        index_peak_height = fragments_repeats$get_allele_peak()$allele_height,
+        signals = expansion_filtered$signal,
+        index_peak_signal = fragments_repeats$get_allele_peak()$allele_signal,
         index_peak_repeat = fragments_repeats$get_index_peak()$index_repeat,
         peak_threshold = peak_threshold,
         abs_sum = FALSE
       ),
       contraction_index = instability_index(
         repeats = contraction_filtered$repeats,
-        heights = contraction_filtered$height,
-        index_peak_height = fragments_repeats$get_allele_peak()$allele_height,
+        signals = contraction_filtered$signal,
+        index_peak_signal = fragments_repeats$get_allele_peak()$allele_signal,
         index_peak_repeat = fragments_repeats$get_index_peak()$index_repeat,
         peak_threshold = peak_threshold,
         abs_sum = FALSE
@@ -721,7 +721,7 @@ calculate_instability_metrics_fastq <- function(
 
     expansion_percentile <- find_percentiles(
       expansion_filtered$repeats,
-      expansion_filtered$height,
+      expansion_filtered$signal,
       fragments_repeats$get_index_peak()$index_repeat,
       type = "percentile",
       range = percentile_range,
@@ -730,7 +730,7 @@ calculate_instability_metrics_fastq <- function(
 
     expansion_repeat <- find_percentiles(
       expansion_filtered$repeats,
-      expansion_filtered$height,
+      expansion_filtered$signal,
       fragments_repeats$get_index_peak()$index_repeat,
       type = "repeat",
       range = repeat_range,

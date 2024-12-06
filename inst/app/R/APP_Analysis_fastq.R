@@ -201,7 +201,7 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
         updateNumericInput(session, "ylim2_analysis2", value = 0.3)
       }
       else if (input$normalize2 == "None") {
-        updateNumericInput(session, "ylim2_analysis2", value = metrics2_module$peak_list()[[input$sample_subset_metrics2]]$get_allele_peak()$allele_height + 300)
+        updateNumericInput(session, "ylim2_analysis2", value = metrics2_module$peak_list()[[input$sample_subset_metrics2]]$get_allele_peak()$allele_signal + 300)
       }
     }
   })
@@ -211,7 +211,7 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
       updateNumericInput(session, "xlim1_analysis2", value = metrics2_module$peak_list()[[input$sample_subset_metrics2]]$get_allele_peak()$allele_repeat - 50)
       updateNumericInput(session, "xlim2_analysis2", value = metrics2_module$peak_list()[[input$sample_subset_metrics2]]$get_allele_peak()$allele_repeat + 50)
       updateNumericInput(session, "ylim1_analysis2", value = -2)
-      updateNumericInput(session, "ylim2_analysis2", value = metrics2_module$peak_list()[[input$sample_subset_metrics2]]$get_allele_peak()$allele_height + 300)
+      updateNumericInput(session, "ylim2_analysis2", value = metrics2_module$peak_list()[[input$sample_subset_metrics2]]$get_allele_peak()$allele_signal + 300)
 
     if (input$index_normalize2 == TRUE) {
       updateNumericInput(session, "xlim1_analysis2", value = -50)
@@ -234,7 +234,7 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
         updateNumericInput(session, "ylim2_analysis2", value = 0.3)
       }
       else if (input$normalize2 == "None") {
-        updateNumericInput(session, "ylim2_analysis2", value = metrics2_module$peak_list()[[input$sample_subset_metrics2]]$get_allele_peak()$allele_height + 300)
+        updateNumericInput(session, "ylim2_analysis2", value = metrics2_module$peak_list()[[input$sample_subset_metrics2]]$get_allele_peak()$allele_signal + 300)
       }
     }
     else {
@@ -258,7 +258,7 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
         updateNumericInput(session, "ylim2_analysis2", value = 0.3)
       }
       else if (input$normalize2 == "None") {
-        updateNumericInput(session, "ylim2_analysis2", value = metrics2_module$peak_list()[[input$sample_subset_metrics2]]$get_allele_peak()$allele_height + 300)
+        updateNumericInput(session, "ylim2_analysis2", value = metrics2_module$peak_list()[[input$sample_subset_metrics2]]$get_allele_peak()$allele_signal + 300)
       }
     }
     }
@@ -279,7 +279,7 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
 
       trace <- extract_fragments(metrics2_module$peak_list())
 
-      trace <- mutate(trace, Normalised_Height = height)
+      trace <- mutate(trace, Normalised_signal = signal)
 
       trace <- trace[which(trace$unique_id %in% input$Analysis_samples2),]
 
@@ -296,12 +296,12 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
         lookup <- trace[trace$repeats > input$threshold_min2, ]
         lookup <- lookup[lookup$repeats < input$threshold_max2, ]
 
-        lookup <- lookup %>% group_by(unique_id) %>% dplyr::summarise(sum(height))
+        lookup <- lookup %>% group_by(unique_id) %>% dplyr::summarise(sum(signal))
         colnames(lookup)[2] <- c("norm_factor")
 
         trace <- left_join(trace, lookup)
 
-        trace <- mutate(trace, Normalised_Height = height/norm_factor)
+        trace <- mutate(trace, Normalised_signal = signal/norm_factor)
 
         if (!is.null(upload_data$metadata_table_fastq())) {
           trace <- left_join(trace, upload_data$metadata_table_fastq())
@@ -314,12 +314,12 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
         lookup <- trace[trace$repeats > input$threshold_min2, ]
         lookup <- lookup[lookup$repeats < input$threshold_max2, ]
 
-        lookup <- lookup %>% group_by(unique_id) %>% dplyr::summarise(max(height))
+        lookup <- lookup %>% group_by(unique_id) %>% dplyr::summarise(max(signal))
         colnames(lookup)[2] <- c("norm_factor")
 
         trace <- left_join(trace, lookup)
 
-        trace <- mutate(trace, Normalised_Height = height/norm_factor)
+        trace <- mutate(trace, Normalised_signal = signal/norm_factor)
 
         if (!is.null(upload_data$metadata_table_fastq())) {
           trace <- left_join(trace, upload_data$metadata_table_fastq())
@@ -336,14 +336,14 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
 
       if (input$line_show2 == TRUE) {
         if (input$dot_show2 == TRUE) {
-          p <- ggplot(trace, aes(x=repeats, y=Normalised_Height, fill = plot,
+          p <- ggplot(trace, aes(x=repeats, y=Normalised_signal, fill = plot,
                                                    text=paste0("Repeats: ", repeats, "\n",
-                                                               if (input$normalize2 == "None") "Signal: " else "Normalised_Height: ", Normalised_Height, "\n",
+                                                               if (input$normalize2 == "None") "Signal: " else "Normalised_signal: ", Normalised_signal, "\n",
                                                                "Grouping: ", plot))) +
-            geom_smooth(aes(x=repeats, y=Normalised_Height, colour = plot), inherit.aes = FALSE, method = "loess", span=input$span2, level=input$CI2, se = input$CI_show2) +
+            geom_smooth(aes(x=repeats, y=Normalised_signal, colour = plot), inherit.aes = FALSE, method = "loess", span=input$span2, level=input$CI2, se = input$CI_show2) +
             geom_bar(aes(group = unique_id), alpha = input$opacity2, stat='identity', position = position_dodge(width = 0, preserve = "single"), width = length(unique(trace$unique_id))) +
             xlab("Repeats") +
-            ylab(if (input$normalize2 == "None") "Signal" else "Normalised_Height") +
+            ylab(if (input$normalize2 == "None") "Signal" else "Normalised_signal") +
             xlim(c(input$xlim1_analysis2, input$xlim2_analysis2)) +
             ylim(c(input$ylim1_analysis2, input$ylim2_analysis2)) +
             scale_color_manual(values= color) +
@@ -351,13 +351,13 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
             theme_bw()
         }
         else {
-          p <- ggplot(trace, aes(x=repeats, y=Normalised_Height, colour = plot,
+          p <- ggplot(trace, aes(x=repeats, y=Normalised_signal, colour = plot,
                                                    text=paste0("Repeats: ", repeats, "\n",
-                                                               if (input$normalize2 == "None") "Signal: " else "Normalised_Height: ", Normalised_Height, "\n",
+                                                               if (input$normalize2 == "None") "Signal: " else "Normalised_signal: ", Normalised_signal, "\n",
                                                                "Grouping: ", plot))) +
-            geom_smooth(aes(x=repeats, y=Normalised_Height, colour = plot), inherit.aes = FALSE, method = "loess", span=input$span2, level=input$CI2, se = input$CI_show2) +
+            geom_smooth(aes(x=repeats, y=Normalised_signal, colour = plot), inherit.aes = FALSE, method = "loess", span=input$span2, level=input$CI2, se = input$CI_show2) +
             xlab("Repeats") +
-            ylab(if (input$normalize2 == "None") "Signal" else "Normalised_Height") +
+            ylab(if (input$normalize2 == "None") "Signal" else "Normalised_signal") +
             xlim(c(input$xlim1_analysis2, input$xlim2_analysis2)) +
             ylim(c(input$ylim1_analysis2, input$ylim2_analysis2)) +
             scale_color_manual(values= color) +
@@ -367,13 +367,13 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
       }
       else {
         if (input$dot_show2 == TRUE) {
-          p <- ggplot(trace, aes(x=repeats, y=Normalised_Height, fill = plot,
+          p <- ggplot(trace, aes(x=repeats, y=Normalised_signal, fill = plot,
                                                    text=paste0("Repeats: ", repeats, "\n",
-                                                               if (input$normalize2 == "None") "Signal: " else "Normalised_Height: ", Normalised_Height, "\n",
+                                                               if (input$normalize2 == "None") "Signal: " else "Normalised_signal: ", Normalised_signal, "\n",
                                                                "Grouping: ", plot))) +
             geom_bar(aes(group = unique_id), alpha = input$opacity2, stat='identity', position = position_dodge(width = 0, preserve = "single"), width = length(unique(trace$unique_id))) +
             xlab("Repeats") +
-            ylab(if (input$normalize2 == "None") "Signal" else "Normalised_Height") +
+            ylab(if (input$normalize2 == "None") "Signal" else "Normalised_signal") +
             xlim(c(input$xlim1_analysis2, input$xlim2_analysis2)) +
             ylim(c(input$ylim1_analysis2, input$ylim2_analysis2)) +
             scale_color_manual(values= color) +
@@ -381,12 +381,12 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
             theme_bw()
         }
         else {
-          p <- ggplot(trace, aes(x=repeats, y=Normalised_Height, colour = plot,
+          p <- ggplot(trace, aes(x=repeats, y=Normalised_signal, colour = plot,
                                                    text=paste0("Repeats: ", repeats, "\n",
-                                                               if (input$normalize2 == "None") "Signal: " else "Normalised_Height: ", Normalised_Height, "\n",
+                                                               if (input$normalize2 == "None") "Signal: " else "Normalised_signal: ", Normalised_signal, "\n",
                                                                "Grouping: ", plot))) +
             xlab("Repeats") +
-            ylab(if (input$normalize2 == "None") "Signal" else "Normalised_Height") +
+            ylab(if (input$normalize2 == "None") "Signal" else "Normalised_signal") +
             xlim(c(input$xlim1_analysis2, input$xlim2_analysis2)) +
             ylim(c(input$ylim1_analysis2, input$ylim2_analysis2)) +
             scale_color_manual(values= color) +
@@ -399,7 +399,7 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
     else {
       trace <- extract_fragments(metrics2_module$peak_list())
 
-      trace <- mutate(trace, Normalised_Height = height)
+      trace <- mutate(trace, Normalised_signal = signal)
 
       trace <- trace[which(trace$unique_id %in% input$Analysis_samples2),]
 
@@ -409,7 +409,7 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
           trace <- left_join(trace, upload_data$metadata_table_fastq())
         }
 
-        trace <- mutate(trace, Normalised_Height = height)
+        trace <- mutate(trace, Normalised_signal = signal)
 
         trace$plot <- col_concat(as.data.frame(trace[, which(colnames(trace) %in% input$group_samples2)]), sep = ":")
       }
@@ -418,12 +418,12 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
         lookup <- trace[trace$repeats > input$threshold_min2, ]
         lookup <- lookup[lookup$repeats < input$threshold_max2, ]
 
-        lookup <- lookup %>% group_by(unique_id) %>% dplyr::summarise(sum(height))
+        lookup <- lookup %>% group_by(unique_id) %>% dplyr::summarise(sum(signal))
         colnames(lookup)[2] <- c("norm_factor")
 
         trace <- left_join(trace, lookup)
 
-        trace <- mutate(trace, Normalised_Height = height/norm_factor)
+        trace <- mutate(trace, Normalised_signal = signal/norm_factor)
 
         if (!is.null(upload_data$metadata_table_fastq())) {
           trace <- left_join(trace, upload_data$metadata_table_fastq())
@@ -436,12 +436,12 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
         lookup <- trace[trace$repeats > input$threshold_min2, ]
         lookup <- lookup[lookup$repeats < input$threshold_max2, ]
 
-        lookup <- lookup %>% group_by(unique_id) %>% dplyr::summarise(max(height))
+        lookup <- lookup %>% group_by(unique_id) %>% dplyr::summarise(max(signal))
         colnames(lookup)[2] <- c("norm_factor")
 
         trace <- left_join(trace, lookup)
 
-        trace <- mutate(trace, Normalised_Height = height/norm_factor)
+        trace <- mutate(trace, Normalised_signal = signal/norm_factor)
 
         if (!is.null(upload_data$metadata_table_fastq())) {
           trace <- left_join(trace, upload_data$metadata_table_fastq())
@@ -460,14 +460,14 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
       if (input$line_show2 == TRUE) {
         if (input$dot_show2 == TRUE) {
 
-          p <- ggplot(trace, aes(x=repeats, y=Normalised_Height, colour = plot,
+          p <- ggplot(trace, aes(x=repeats, y=Normalised_signal, colour = plot,
                                                    text=paste0("Repeats: ", repeats, "\n",
-                                                               if (input$normalize2 == "None") "Signal: " else "Normalised_Height: ", Normalised_Height, "\n",
+                                                               if (input$normalize2 == "None") "Signal: " else "Normalised_signal: ", Normalised_signal, "\n",
                                                                "Grouping: ", plot))) +
             geom_point(alpha = input$opacity2) +
             xlab("Repeats") +
-            ylab(if (input$normalize2 == "None") "Signal" else "Normalised_Height") +
-            geom_smooth(aes(x=repeats, y=Normalised_Height, colour = plot), inherit.aes = FALSE, method = "loess", span=input$span2, level=input$CI2, se = input$CI_show2) +
+            ylab(if (input$normalize2 == "None") "Signal" else "Normalised_signal") +
+            geom_smooth(aes(x=repeats, y=Normalised_signal, colour = plot), inherit.aes = FALSE, method = "loess", span=input$span2, level=input$CI2, se = input$CI_show2) +
             xlim(c(input$xlim1_analysis2, input$xlim2_analysis2)) +
             ylim(c(input$ylim1_analysis2, input$ylim2_analysis2)) +
             scale_color_manual(values= color) +
@@ -476,13 +476,13 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
         }
         else {
 
-          p <- ggplot(trace, aes(x=repeats, y=Normalised_Height, colour = plot,
+          p <- ggplot(trace, aes(x=repeats, y=Normalised_signal, colour = plot,
                                                    text=paste0("Repeats: ", repeats, "\n",
-                                                               if (input$normalize2 == "None") "Signal: " else "Normalised_Height: ", Normalised_Height, "\n",
+                                                               if (input$normalize2 == "None") "Signal: " else "Normalised_signal: ", Normalised_signal, "\n",
                                                                "Grouping: ", plot))) +
             xlab("Repeats") +
-            ylab(if (input$normalize2 == "None") "Signal" else "Normalised_Height") +
-            geom_smooth(aes(x=repeats, y=Normalised_Height, colour = plot), inherit.aes = FALSE, method = "loess", span=input$span2, level=input$CI2, se = input$CI_show2) +
+            ylab(if (input$normalize2 == "None") "Signal" else "Normalised_signal") +
+            geom_smooth(aes(x=repeats, y=Normalised_signal, colour = plot), inherit.aes = FALSE, method = "loess", span=input$span2, level=input$CI2, se = input$CI_show2) +
             xlim(c(input$xlim1_analysis2, input$xlim2_analysis2)) +
             ylim(c(input$ylim1_analysis2, input$ylim2_analysis2)) +
             scale_color_manual(values= color) +
@@ -493,13 +493,13 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
       else {
 
         if (input$dot_show2 == TRUE) {
-          p <- ggplot(trace, aes(x=repeats, y=Normalised_Height, colour = plot,
+          p <- ggplot(trace, aes(x=repeats, y=Normalised_signal, colour = plot,
                                                    text=paste0("Repeats: ", repeats, "\n",
-                                                               if (input$normalize2 == "None") "Signal: " else "Normalised_Height: ", Normalised_Height, "\n",
+                                                               if (input$normalize2 == "None") "Signal: " else "Normalised_signal: ", Normalised_signal, "\n",
                                                                "Grouping: ", plot))) +
             geom_point(alpha = input$opacity2)+
             xlab("Repeats") +
-            ylab(if (input$normalize2 == "None") "Signal" else "Normalised_Height") +
+            ylab(if (input$normalize2 == "None") "Signal" else "Normalised_signal") +
             xlim(c(input$xlim1_analysis2, input$xlim2_analysis2)) +
             ylim(c(input$ylim1_analysis2, input$ylim2_analysis2)) +
             scale_color_manual(values= color) +
@@ -507,12 +507,12 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
             theme_bw()
         }
         else {
-          p <- ggplot(trace, aes(x=repeats, y=Normalised_Height, colour = plot,
+          p <- ggplot(trace, aes(x=repeats, y=Normalised_signal, colour = plot,
                                                    text=paste0("Repeats: ", repeats, "\n",
-                                                               if (input$normalize2 == "None") "Signal: " else "Normalised_Height: ", Normalised_Height, "\n",
+                                                               if (input$normalize2 == "None") "Signal: " else "Normalised_signal: ", Normalised_signal, "\n",
                                                                "Grouping: ", plot))) +
             xlab("Repeats") +
-            ylab(if (input$normalize2 == "None") "Signal" else "Normalised_Height") +
+            ylab(if (input$normalize2 == "None") "Signal" else "Normalised_signal") +
             xlim(c(input$xlim1_analysis2, input$xlim2_analysis2)) +
             ylim(c(input$ylim1_analysis2, input$ylim2_analysis2)) +
             scale_color_manual(values= color) +

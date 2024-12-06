@@ -6,7 +6,9 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of traceShiny is to …
+This is the web-server version of our R package, TRACE (Tandem Repeat
+Analysis from Capillary Electrophoresis), please visit the TRACE Github
+page for more [details](https://github.com/zachariahmclean/trace).
 
 ## Installation
 
@@ -23,7 +25,6 @@ devtools::install_github("zachariahmclean/traceShiny")
 This is a basic example which shows you how to solve a common problem:
 
 ``` r
-library(traceShiny)
 ## basic example code
 ```
 
@@ -47,11 +48,9 @@ use GitHub Actions to re-render `README.Rmd` every time you push. An
 example workflow can be found here:
 <https://github.com/r-lib/actions/tree/v1/examples>.
 
-You can also embed plots, for example: Test
+You can also embed plots, for example:
 
 <img src="man/figures/README-pressure-1.png" width="100%" />
-
-Tes
 
 In that case, don’t forget to commit and push the resulting figure
 files, so they display on GitHub and CRAN.
