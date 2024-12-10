@@ -418,8 +418,8 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                      reactive_peaks$peaks <- find_fragments(ladder_module$ladders(),
                                                             smoothing_window = input$smoothing_window,
                                                             minimum_peak_signal = input$minimum_peak_signal,
-                                                            min_bp_size = (input$min_bp_size + input$assay_size_without_repeat)*input$repeat_size,
-                                                            max_bp_size = (input$max_bp_size + input$assay_size_without_repeat)*input$repeat_size
+                                                            min_bp_size = input$min_bp_size*input$repeat_size + input$assay_size_without_repeat,
+                                                            max_bp_size = input$max_bp_size*input$repeat_size + input$assay_size_without_repeat
                      )
 
                      if (!is.null(upload_data$metadata_table())) {
