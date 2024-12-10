@@ -422,7 +422,7 @@ body <- dashboardBody(
 
     ui <- function () {dashboardPage(
       dashboardHeader(
-        title = img(id="Ditto",src="dancing-ditto-ditto.gif",width="30%"),
+        title = img(id="Ditto",src="TRACE.jpg",width="100%"),
         leftUi = tagList(tags$li(class = "dropdown", p(style="text-align: center; margin-top:10px;", tags$a(href="javascript:history.go(0)",
                         popify(tags$i(class="fa fa-refresh fa-3x"),
                                title = "",

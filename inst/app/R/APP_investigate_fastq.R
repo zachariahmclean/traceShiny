@@ -31,10 +31,10 @@ metrics2_box_ui2 <- function(id) {
                fluidRow(
                  column(6,
                         numericInput("window_around_index_peak_min2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Minimum Window')),
-                                     value = -5, step = 1)),
+                                     value = 50, step = 1)),
                  column(6,
                         numericInput("window_around_index_peak_max2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Maximum Window')),
-                                     value = 40, step = 1))
+                                     value = 50, step = 1))
                )
         )
       ),
@@ -519,6 +519,14 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
     colnames(reactive_metrics2$Index_Table) <- c("Unique IDs", "Metrics Group ID", "Allele Repeat", "Index Repeat")
 
     reactive_metrics2$Index_Table_original <- reactive_metrics2$Index_Table
+
+    if (!is.null(reactive_metrics2$Index_Table) && !is.null(input$sample_subset_metrics2)) {
+      updateNumericInput(session, "IndexRepeat1_2", value = reactive_metrics2$Index_Table[which(reactive_metrics2$Index_Table$`Unique IDs` == input$sample_subset_metrics2),]$`Index Repeat`)
+
+      if (!is.null(input$sample_subset2_2) && !is.na(input$IndexRepeat1_2)) {
+        updateNumericInput(session, "IndexRepeat2_2", value = reactive_metrics2$Index_Table[which(reactive_metrics2$Index_Table$`Unique IDs` == input$sample_subset2_2),]$`Index Repeat`)
+      }
+    }
   })
 
   observe({
@@ -558,7 +566,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
                                                               badgeColor = "green", badgeLabel = "new")))
   })
 
-  observe({
+  observeEvent(input$sample_subset_metrics2, {
     if (!is.null(reactive_metrics2$Index_Table) && !is.null(input$sample_subset_metrics2)) {
       updateNumericInput(session, "IndexRepeat1_2", value = reactive_metrics2$Index_Table[which(reactive_metrics2$Index_Table$`Unique IDs` == input$sample_subset_metrics2),]$`Index Repeat`)
 
