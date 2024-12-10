@@ -148,10 +148,12 @@ upload_data_box_ui4 <- function(id) {
       value = FALSE
     ),
 
+    downloadBttn("downloadTemplateMetadata", "Generate MetaData Template Based on Loaded Samples"),
+
     conditionalPanel(
       condition = 'input.DataUploadMeta == false',
       fileInput("MetadataUpload", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-75px;">Metadata Upload'), downloadBttn("downloadExampleMetadata", "Download Example MetaData")),
-                multiple = F, accept = c(".txt", ".csv", ".xlsx", ".xls")),
+                multiple = F, accept = c(".txt", ".csv", ".xlsx", ".xls"))
     ),
 
     withSpinner(DT::dataTableOutput("Metadata_table", width = "100%", height = 400))
@@ -635,6 +637,8 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                    value = 0, {
                      incProgress(0.1)
 
+                     table_columns <- c("unique_id", "metrics_group_id", "metrics_baseline_control", "batch_run_id", "batch_sample_id", "batch_sample_modal_repeat")
+
                      if (is.null(reactive$df_final)) {
 
                        if (grepl(".csv$", input$MetadataUpload$datapath)) {
@@ -652,13 +656,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
 
                        reactive$metadata_table[reactive$metadata_table==""] <- NA
 
-                       if (any(grepl("unique_id", colnames(reactive$metadata_table))) &&
-                           any(grepl("metrics_group_id", colnames(reactive$metadata_table))) &&
-                           any(grepl("metrics_baseline_control", colnames(reactive$metadata_table))) &&
-                           any(grepl("batch_run_id", colnames(reactive$metadata_table))) &&
-                           any(grepl("batch_sample_id", colnames(reactive$metadata_table))) &&
-                           any(grepl("batch_sample_modal_repeat", colnames(reactive$metadata_table)))
-                       )
+                       if (all(table_columns %in% colnames(reactive$metadata_table)))
                        {
                          reactive$metadata_table <- reactive$metadata_table[match(names(reactive$fsa_list), reactive$metadata_table$unique_id),]
 
@@ -722,13 +720,15 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                            }
                          }
                          else {
-                           shinyalert("ERROR!", "fsa filenames does not match the unique ID names in the metadata (or is not complete). Please check your loaded fsa files and corresponding metadata names.", type = "error", confirmButtonCol = "#337ab7")
+                           message <- names(reactive$fsa_list)[-which(reactive$metadata_table$unique_id %in% names(reactive$fsa_list))]
+                           shinyalert("ERROR!", paste0(message, " sample does not contain metadata, please check your uploaded metadata file."), type = "error", confirmButtonCol = "#337ab7")
                            shinyjs::hide("NextButtonLoad")
                            shinyjs::hide("NextButtonLoad2")
                          }
                        }
                        else {
-                         shinyalert("ERROR!", "File is not in correct format. Please check if your column names, make sure it is in the correct format.", type = "error", confirmButtonCol = "#337ab7")
+                         message <- table_columns[-which(table_columns %in% colnames(reactive$metadata_table))]
+                         shinyalert("ERROR!", paste0(message, " column is not identified in the metadata, please check your uploaded metadata file."), type = "error", confirmButtonCol = "#337ab7")
                          shinyjs::hide("NextButtonLoad")
                          shinyjs::hide("NextButtonLoad2")
                        }
@@ -819,13 +819,15 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                            }
                          }
                          else {
-                           shinyalert("ERROR!", "fsa filenames does not match the unique ID names in the metadata (or is not complete). Please check your loaded fsa files and corresponding metadata names.", type = "error", confirmButtonCol = "#337ab7")
+                           message <- unique(reactive$df_final$SampleID)[-which(reactive$metadata_table_fastq$unique_id %in% unique(reactive$df_final$SampleID))]
+                           shinyalert("ERROR!", paste0(message, " sample does not contain metadata, please check your uploaded metadata file."), type = "error", confirmButtonCol = "#337ab7")
                            shinyjs::hide("NextButtonLoad")
                            shinyjs::hide("NextButtonLoad2")
                          }
                        }
                        else {
-                         shinyalert("ERROR!", "File is not in correct format. Please check if your column names, make sure it is in the correct format.", type = "error", confirmButtonCol = "#337ab7")
+                         message <- table_columns[-which(table_columns %in% colnames(reactive$metadata_table_fastq))]
+                         shinyalert("ERROR!", paste0(message, " column is not identified in the metadata, please check your uploaded metadata file."), type = "error", confirmButtonCol = "#337ab7")
                          shinyjs::hide("NextButtonLoad")
                          shinyjs::hide("NextButtonLoad2")
                        }
@@ -869,6 +871,37 @@ upload_data_box_server <- function(input, output, session, continue_module) {
     }
 
   },  options = list(scrollX = TRUE))
+
+  output$downloadTemplateMetadata <- downloadHandler(
+    filename = function() {
+      paste("template_metadata.csv")
+    },
+
+    content = function(file) {
+
+      if (is.null(reactive$df_final)) {
+        csv <- data.frame(unique_id = character(length(names(reactive$fsa_list))),
+                         metrics_group_id = character(length(names(reactive$fsa_list))),
+                         metrics_baseline_control = character(length(names(reactive$fsa_list))),
+                         batch_run_id = character(length(names(reactive$fsa_list))),
+                         batch_sample_id = character(length(names(reactive$fsa_list))),
+                         batch_sample_modal_repeat = character(length(names(reactive$fsa_list)))
+        )
+        csv$unique_id <- names(reactive$fsa_list)
+      }
+      else {
+        csv <- data.frame(unique_id = character(length(unique(reactive$df_final$SampleID))),
+                          metrics_group_id = character(length(unique(reactive$df_final$SampleID))),
+                          metrics_baseline_control = character(length(unique(reactive$df_final$SampleID))),
+                          batch_run_id = character(length(unique(reactive$df_final$SampleID))),
+                          batch_sample_id = character(length(unique(reactive$df_final$SampleID))),
+                          batch_sample_modal_repeat = character(length(unique(reactive$df_final$SampleID))))
+
+        csv$unique_id <- unique(reactive$df_final$SampleID)
+      }
+      write.csv(csv, file, row.names = F, col.names = T)
+    }
+  )
 
   output$downloadExampleMetadata <- downloadHandler(
     filename = function() {

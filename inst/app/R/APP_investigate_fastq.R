@@ -662,7 +662,8 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
                      if (is.null(upload_data$metadata_table_fastq())) {
                        assign_index_peaks(
                          reactive_metrics2$peak_list,
-                         grouped = FALSE
+                         grouped = FALSE,
+                         index_override_dataframe = reactive_metrics2$Index_Table[,c(1,4)]
                        )
                      }
                      else if (any(grepl("TRUE", upload_data$metadata_table_fastq()$metrics_baseline_control))) {
@@ -676,14 +677,16 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
                        else {
                          assign_index_peaks(
                            reactive_metrics2$peak_list,
-                           grouped = FALSE
+                           grouped = FALSE,
+                           index_override_dataframe = reactive_metrics2$Index_Table[,c(1,4)]
                          )
                        }
                      }
                      else {
                        assign_index_peaks(
                          reactive_metrics2$peak_list,
-                         grouped = FALSE
+                         grouped = FALSE,
+                         index_override_dataframe = reactive_metrics2$Index_Table[,c(1,4)]
                        )
                      }
 

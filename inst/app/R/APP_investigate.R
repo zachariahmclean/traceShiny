@@ -266,7 +266,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
       strRepeats <- paste("##Find Repeats", "\n",
                           paste0("call_repeats(fragments_list, assay_size_without_repeat = ", paste(input$assay_size_without_repeat), ", ",
                                  "repeat_size = ", paste(input$repeat_size), ", ",
-                                 "force_repeat_pattern = ", "'", paste(ifelse(input$force_repeat_pattern == "YES", "TRUE", "FALSE")), "'", ", ",
+                                 "force_repeat_pattern = ", paste(ifelse(input$force_repeat_pattern == "YES", "TRUE", "FALSE")), ", ",
                                  "force_repeat_pattern_size_window = ", paste(input$force_repeat_pattern_size_window), ", ",
                                  "force_repeat_pattern_size_period = ", paste(input$force_repeat_pattern_size_period), ", ",
                                  "force_whole_repeat_units = ", paste(ifelse(input$force_whole_repeat_units == "YES", "TRUE", "FALSE")), ", ",
@@ -651,7 +651,8 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                      if (is.null(upload_data$metadata_table())) {
                        assign_index_peaks(
                          peaks_module$index_list(),
-                         grouped = FALSE
+                         grouped = FALSE,
+                         index_override_dataframe = reactive_metrics$Index_Table[,c(1,4)]
                        )
                      }
                      else if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
@@ -665,14 +666,16 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                        else {
                          assign_index_peaks(
                            peaks_module$index_list(),
-                           grouped = FALSE
+                           grouped = FALSE,
+                           index_override_dataframe = reactive_metrics$Index_Table[,c(1,4)]
                          )
                        }
                      }
                      else {
                        assign_index_peaks(
                          peaks_module$index_list(),
-                         grouped = FALSE
+                         grouped = FALSE,
+                         index_override_dataframe = reactive_metrics$Index_Table[,c(1,4)]
                        )
                      }
 
