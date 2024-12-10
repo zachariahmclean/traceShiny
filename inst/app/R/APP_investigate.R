@@ -31,10 +31,10 @@ metrics_box_ui2 <- function(id) {
                fluidRow(
                  column(6,
                         numericInput("window_around_index_peak_min", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Minimum Window')),
-                                     value = -5, step = 1)),
+                                     value = 50, step = 1)),
                  column(6,
                         numericInput("window_around_index_peak_max", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Maximum Window')),
-                                     value = 40, step = 1))
+                                     value = 50, step = 1))
                )
         )
       ),
@@ -510,6 +510,14 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
     colnames(reactive_metrics$Index_Table) <- c("Unique IDs", "Metrics Group ID", "Allele Repeat", "Index Repeat")
 
     reactive_metrics$Index_Table_original <- reactive_metrics$Index_Table
+
+    if (!is.null(peaks_module$index_list()) && !is.null(reactive_metrics$Index_Table) && !is.null(input$sample_subset_metrics)) {
+      updateNumericInput(session, "IndexRepeat1", value = reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset_metrics),]$`Index Repeat`)
+
+      if (!is.null(input$sample_subset2) && !is.na(input$IndexRepeat1)) {
+        updateNumericInput(session, "IndexRepeat2", value = reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset2),]$`Index Repeat`)
+      }
+    }
   })
 
   observe({
@@ -549,16 +557,6 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                                                      menuItem("Find Peaks", icon = icon("mountain"), tabName = "FindPeaks", selected = F),
                                                      menuItem("Instability Metrics", icon = icon("table"), tabName = "InstabilityMetrics", selected = T,
                                                               badgeColor = "green", badgeLabel = "new")))
-  })
-
-  observe({
-    if (!is.null(peaks_module$index_list()) && !is.null(reactive_metrics$Index_Table) && !is.null(input$sample_subset_metrics)) {
-      updateNumericInput(session, "IndexRepeat1", value = reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset_metrics),]$`Index Repeat`)
-
-      if (!is.null(input$sample_subset2) && !is.na(input$IndexRepeat1)) {
-        updateNumericInput(session, "IndexRepeat2", value = reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset2),]$`Index Repeat`)
-      }
-    }
   })
 
   observeEvent(input$sample_subset_metrics, {
@@ -728,6 +726,16 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
             reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset2),]$`Index Repeat` <- debounced_IndexRepeat2()
           }
         }
+      }
+    }
+  })
+
+  observeEvent(input$sample_subset_metrics, {
+    if (!is.null(peaks_module$index_list()) && !is.null(reactive_metrics$Index_Table) && !is.null(input$sample_subset_metrics)) {
+      updateNumericInput(session, "IndexRepeat1", value = reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset_metrics),]$`Index Repeat`)
+
+      if (!is.null(input$sample_subset2) && !is.na(input$IndexRepeat1)) {
+        updateNumericInput(session, "IndexRepeat2", value = reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset2),]$`Index Repeat`)
       }
     }
   })
