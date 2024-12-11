@@ -569,7 +569,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
     if (!is.null(reactive_metrics2$Index_Table) && !is.null(input$sample_subset_metrics2)) {
       updateNumericInput(session, "IndexRepeat1_2", value = reactive_metrics2$Index_Table[which(reactive_metrics2$Index_Table$`Unique IDs` == input$sample_subset_metrics2),]$`Index Repeat`)
 
-      if (!is.null(input$sample_subset2_2) && !is.na(input$IndexRepeat1_2)) {
+      if (!is.null(input$sample_subset2_2) && !is.na(debounced_IndexRepeat1_2())) {
         updateNumericInput(session, "IndexRepeat2_2", value = reactive_metrics2$Index_Table[which(reactive_metrics2$Index_Table$`Unique IDs` == input$sample_subset2_2),]$`Index Repeat`)
       }
     }
@@ -736,7 +736,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
   })
 
   observeEvent(debounced_IndexRepeat2_2(),  {
-    if (!is.null(upload_data$fastq()) && !is.null(input$sample_subset2_2) && !is.na(input$IndexRepeat1_2)) {
+    if (!is.null(upload_data$fastq()) && !is.null(input$sample_subset2_2) && !is.na(debounced_IndexRepeat1_2())) {
       if (any(grepl("TRUE", upload_data$metadata_table_fastq()$metrics_baseline_control))) {
         if (input$group_controls2 == TRUE) {
           if (!is.null(reactive_metrics2$Index_Table) && !is.null(reactive_metrics2$peak_list)) {
@@ -809,7 +809,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
         p <- ggplot(trace, aes(x=repeats, y = signal, colour = unique_id)) +
           xlim(xlim) +
           ylim(ylim) +
-          {if(!is.na(input$IndexRepeat1_2))
+          {if(!is.na(debounced_IndexRepeat1_2()))
             list(geom_hline(yintercept = input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$index_signal,
                      color = "black", size=1),
           geom_vline(xintercept = debounced_IndexRepeat1_2(),
@@ -826,7 +826,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
         p <- ggplot(upload_data$fastq()[which(upload_data$fastq()$SampleID == input$sample_subset_metrics2),], aes(x=`Repeat Length`, fill = SampleID)) +
           xlim(xlim) +
           ylim(ylim) +
-          {if(!is.na(input$IndexRepeat1_2))
+          {if(!is.na(debounced_IndexRepeat1_2()))
             list(geom_hline(yintercept = input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$index_signal,
                        color = "black", size=1),
               geom_vline(xintercept = debounced_IndexRepeat1_2(),
@@ -849,8 +849,8 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
           p <- ggplot(trace, aes(x=repeats, y = signal, colour = unique_id)) +
             xlim(xlim) +
             ylim(ylim) +
-            {if(!is.na(input$IndexRepeat1_2))
-              list(geom_hline(yintercept = if(!is.na(input$IndexRepeat2_2)) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset2_2]]$.__enclos_env__$private$index_signal,
+            {if(!is.na(debounced_IndexRepeat1_2()))
+              list(geom_hline(yintercept = if(!is.na(debounced_IndexRepeat2_2())) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset2_2]]$.__enclos_env__$private$index_signal,
                        color = "black", size=1),
             geom_vline(xintercept = debounced_IndexRepeat2_2(),
                        color = "red", size=1),
@@ -866,8 +866,8 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
           p <- ggplot(upload_data$fastq()[which(upload_data$fastq()$SampleID == input$sample_subset_metrics2),], aes(x=`Repeat Length`, fill = SampleID)) +
             xlim(xlim) +
             ylim(ylim) +
-            {if(!is.na(input$IndexRepeat1_2))
-              list(geom_hline(yintercept = if(!is.na(input$IndexRepeat2_2)) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset2_2]]$.__enclos_env__$private$index_signal,
+            {if(!is.na(debounced_IndexRepeat1_2()))
+              list(geom_hline(yintercept = if(!is.na(debounced_IndexRepeat2_2())) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset2_2]]$.__enclos_env__$private$index_signal,
                        color = "black", size=1),
             geom_vline(xintercept = debounced_IndexRepeat2_2(),
                        color = "red", size=1),
@@ -886,8 +886,8 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
           p <- ggplot(trace, aes(x=repeats, y = signal, colour = unique_id)) +
             xlim(xlim) +
             ylim(ylim) +
-            {if(!is.na(input$IndexRepeat1_2))
-              list(geom_hline(yintercept = if(!is.na(input$IndexRepeat1_2)) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$index_signal,
+            {if(!is.na(debounced_IndexRepeat1_2()))
+              list(geom_hline(yintercept = if(!is.na(debounced_IndexRepeat1_2())) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$index_signal,
                        color = "black", size=1),
             geom_vline(xintercept = debounced_IndexRepeat1_2(),
                        color = "red", size=1),
@@ -903,8 +903,8 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
           p <- ggplot(upload_data$fastq()[which(upload_data$fastq()$SampleID == input$sample_subset_metrics2),], aes(x=`Repeat Length`, fill = SampleID)) +
             xlim(xlim) +
             ylim(ylim) +
-            {if(!is.na(input$IndexRepeat1_2))
-              list(geom_hline(yintercept = if(!is.na(input$IndexRepeat1_2)) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$index_signal,
+            {if(!is.na(debounced_IndexRepeat1_2()))
+              list(geom_hline(yintercept = if(!is.na(debounced_IndexRepeat1_2())) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$index_signal,
                        color = "black", size=1),
             geom_vline(xintercept = debounced_IndexRepeat1_2(),
                        color = "red", size=1),
@@ -924,8 +924,8 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
           p <- ggplot(trace, aes(x=repeats, y = signal, colour = unique_id)) +
             xlim(xlim) +
             ylim(ylim) +
-            {if(!is.na(input$IndexRepeat1_2))
-            list(geom_hline(yintercept = if(!is.na(input$IndexRepeat1_2)) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$index_signal,
+            {if(!is.na(debounced_IndexRepeat1_2()))
+            list(geom_hline(yintercept = if(!is.na(debounced_IndexRepeat1_2())) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$index_signal,
                        color = "black", size=1),
             geom_vline(xintercept = debounced_IndexRepeat1_2(),
                        color = "red", size=1),
@@ -941,8 +941,8 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
           p <- ggplot(upload_data$fastq()[which(upload_data$fastq()$SampleID == input$sample_subset_metrics2),], aes(x=`Repeat Length`, fill = SampleID)) +
             xlim(xlim) +
             ylim(ylim) +
-            {if(!is.na(input$IndexRepeat1_2))
-              list(geom_hline(yintercept = if(!is.na(input$IndexRepeat1_2)) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$index_signal,
+            {if(!is.na(debounced_IndexRepeat1_2()))
+              list(geom_hline(yintercept = if(!is.na(debounced_IndexRepeat1_2())) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$index_signal,
                        color = "black", size=1),
             geom_vline(xintercept = debounced_IndexRepeat1_2(),
                        color = "red", size=1),
@@ -983,7 +983,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
       p <- ggplot(trace, aes(x=repeats, y = signal, colour = unique_id)) +
         xlim(xlim) +
         ylim(ylim) +
-        {if(!is.na(input$IndexRepeat2_2))
+        {if(!is.na(debounced_IndexRepeat2_2()))
           list(geom_vline(xintercept = debounced_IndexRepeat2_2(),
                           color = "red", size=1))} +
         {if (input$show_line_fastq == T)
@@ -995,7 +995,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
       p <- ggplot(upload_data$fastq()[which(upload_data$fastq()$SampleID == input$sample_subset2_2),], aes(x=`Repeat Length`, fill = SampleID)) +
         xlim(xlim) +
         ylim(ylim) +
-        {if(!is.na(input$IndexRepeat2_2))
+        {if(!is.na(debounced_IndexRepeat2_2()))
           list(geom_vline(xintercept = debounced_IndexRepeat2_2(),
                           color = "red", size=1))} +
         {if (input$show_line_fastq == T)

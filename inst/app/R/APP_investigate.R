@@ -714,7 +714,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
   })
 
   observeEvent(debounced_IndexRepeat2(),  {
-    if (!is.null(ladder_module$ladders()) && !is.null(input$sample_subset2) && !is.na(input$IndexRepeat1)) {
+    if (!is.null(ladder_module$ladders()) && !is.null(input$sample_subset2) && !is.na(debounced_IndexRepeat1())) {
       if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
         if (input$group_controls == TRUE) {
           if (!is.null(reactive_metrics$Index_Table) && !is.null(peaks_module$index_list())) {
@@ -730,7 +730,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
     if (!is.null(peaks_module$index_list()) && !is.null(reactive_metrics$Index_Table) && !is.null(input$sample_subset_metrics)) {
       updateNumericInput(session, "IndexRepeat1", value = reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset_metrics),]$`Index Repeat`)
 
-      if (!is.null(input$sample_subset2) && !is.na(input$IndexRepeat1)) {
+      if (!is.null(input$sample_subset2) && !is.na(debounced_IndexRepeat1())) {
         updateNumericInput(session, "IndexRepeat2", value = reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset2),]$`Index Repeat`)
       }
     }
@@ -858,7 +858,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                                 range = xlim),
                    yaxis = list(title = "Signal",
                                 range = ylim),
-                   shapes = if(!is.na(input$IndexRepeat1)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
+                   shapes = if(!is.na(debounced_IndexRepeat1())) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
                                                                 #vertical line
                                                                 list(type = "line", x0 = debounced_IndexRepeat1(),
                                                                      x1 = debounced_IndexRepeat1(),
@@ -883,7 +883,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                               range = xlim),
                  yaxis = list(title = "Signal",
                               range = ylim),
-                 shapes = if(!is.na(input$IndexRepeat1)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
+                 shapes = if(!is.na(debounced_IndexRepeat1())) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
                                                               #vertical line
                                                               list(type = "line", x0 = debounced_IndexRepeat1(),
                                                                    x1 = debounced_IndexRepeat1(),
@@ -931,7 +931,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                                   range = xlim),
                      yaxis = list(title = "Signal",
                                   range = ylim),
-                     shapes = if(!is.na(input$IndexRepeat2)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
+                     shapes = if(!is.na(debounced_IndexRepeat2())) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
                                                                   #vertical line
                                                                   list(type = "line", x0 = debounced_IndexRepeat2(),
                                                                        x1 = debounced_IndexRepeat2(),
@@ -956,7 +956,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                                 range = xlim),
                    yaxis = list("Signal",
                                 range = ylim),
-                   shapes = if(!is.na(input$IndexRepeat2)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
+                   shapes = if(!is.na(debounced_IndexRepeat2())) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
                                                                 #vertical line
                                                                 list(type = "line", x0 = debounced_IndexRepeat2(),
                                                                      x1 = debounced_IndexRepeat2(),
@@ -1001,7 +1001,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                                   range = xlim),
                      yaxis = list(title = "Signal",
                                   range = ylim),
-                     shapes = if(!is.na(input$IndexRepeat1)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
+                     shapes = if(!is.na(debounced_IndexRepeat1())) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
                                                                   #vertical line
                                                                   list(type = "line", x0 = debounced_IndexRepeat1(),
                                                                        x1 = debounced_IndexRepeat1(),
@@ -1026,7 +1026,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                                 range = xlim),
                    yaxis = list(title = "Signal",
                                 range = ylim),
-                   shapes = if(!is.na(input$IndexRepeat1)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
+                   shapes = if(!is.na(debounced_IndexRepeat1())) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
                                                                 #vertical line
                                                                 list(type = "line", x0 = debounced_IndexRepeat1(),
                                                                      x1 = debounced_IndexRepeat1(),
@@ -1072,7 +1072,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                                 range = xlim),
                    yaxis = list(title = "Signal",
                                 range = ylim),
-                   shapes = if(!is.na(input$IndexRepeat1)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
+                   shapes = if(!is.na(debounced_IndexRepeat1())) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
                                                                 #vertical line
                                                                 list(type = "line", x0 = debounced_IndexRepeat1(),
                                                                      x1 = debounced_IndexRepeat1(),
@@ -1097,7 +1097,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                               range = xlim),
                  yaxis = list(title = "Signal",
                               range = ylim),
-                 shapes = if(!is.na(input$IndexRepeat1)) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
+                 shapes = if(!is.na(debounced_IndexRepeat1())) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
                                                               #vertical line
                                                               list(type = "line", x0 = debounced_IndexRepeat1(),
                                                                    x1 = debounced_IndexRepeat1(),
