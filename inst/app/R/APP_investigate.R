@@ -511,13 +511,9 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
 
     reactive_metrics$Index_Table_original <- reactive_metrics$Index_Table
 
-    if (!is.null(peaks_module$index_list()) && !is.null(reactive_metrics$Index_Table) && !is.null(input$sample_subset_metrics)) {
       updateNumericInput(session, "IndexRepeat1", value = reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset_metrics),]$`Index Repeat`)
 
-      if (!is.null(input$sample_subset2) && !is.na(input$IndexRepeat1)) {
-        updateNumericInput(session, "IndexRepeat2", value = reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset2),]$`Index Repeat`)
-      }
-    }
+      updateNumericInput(session, "IndexRepeat2", value = reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset2),]$`Index Repeat`)
   })
 
   observe({

@@ -520,13 +520,8 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
 
     reactive_metrics2$Index_Table_original <- reactive_metrics2$Index_Table
 
-    if (!is.null(reactive_metrics2$Index_Table) && !is.null(input$sample_subset_metrics2)) {
-      updateNumericInput(session, "IndexRepeat1_2", value = reactive_metrics2$Index_Table[which(reactive_metrics2$Index_Table$`Unique IDs` == input$sample_subset_metrics2),]$`Index Repeat`)
-
-      if (!is.null(input$sample_subset2_2) && !is.na(input$IndexRepeat1_2)) {
-        updateNumericInput(session, "IndexRepeat2_2", value = reactive_metrics2$Index_Table[which(reactive_metrics2$Index_Table$`Unique IDs` == input$sample_subset2_2),]$`Index Repeat`)
-      }
-    }
+    updateNumericInput(session, "IndexRepeat1_2", value = reactive_metrics2$Index_Table[which(reactive_metrics2$Index_Table$`Unique IDs` == input$sample_subset_metrics2),]$`Index Repeat`)
+    updateNumericInput(session, "IndexRepeat2_2", value = reactive_metrics2$Index_Table[which(reactive_metrics2$Index_Table$`Unique IDs` == input$sample_subset2_2),]$`Index Repeat`)
   })
 
   observe({
@@ -546,6 +541,10 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
   })
 
   observeEvent(input$NextButtonLoad2, {
+
+    if (is.null(upload_data$metadata_table_fastq())) {
+      shinyalert("WARNING!", "No metadata was loaded!", type = "warning", confirmButtonCol = "#337ab7")
+    }
 
     reactive_metrics2$df <- NULL
 
