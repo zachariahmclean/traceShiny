@@ -332,6 +332,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
         p <- ggplot(trace[which(trace$unique_id == i), ], aes(x=repeats, y = signal, colour = unique_id)) +
           xlim(c(input$xlim1_plot2, input$xlim2_plot2)) +
           ylim(c(input$ylim1_plot2, input$ylim2_plot2)) +
+          ggtitle(i) +
           {if (input$show_line_fastq == T)
           list(geom_smooth(method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
           geom_point(show.legend = FALSE) +
@@ -344,6 +345,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
         p <- ggplot(upload_data$fastq()[which(upload_data$fastq()$SampleID == i),], aes(x=`Repeat Length`, fill = SampleID)) +
           xlim(c(input$xlim1_plot2, input$xlim2_plot2)) +
           ylim(c(input$ylim1_plot2, input$ylim2_plot2)) +
+          ggtitle(i) +
           {if (input$show_line_fastq == T)
           list(geom_smooth(inherit.aes=F, data = trace[which(trace$unique_id == i), ], aes(x=repeats, y = signal, colour = unique_id), method = "loess", span=input$span_fastq, se = F, show.legend = FALSE))} +
           geom_histogram(binwidth = 1, show.legend = FALSE, fill= "grey") +
