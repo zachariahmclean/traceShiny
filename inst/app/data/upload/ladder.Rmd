@@ -4,11 +4,4 @@ output: html_fragment
 
 To use the default ladders included in the package, simply keep the 'use default ladders' option ticked.
 
-To create a custom ladder file, you will want to have .csv file with a header and two columns. Column 1 is the ladder ID (which can be anything). Column 2 is the expected bp peaks, which should be separated by commas, i.e.: 15,25,50,60 etc.
-
-```{r, include=FALSE}
-#TOODO
-#change how custom ladder input works
-
-
-```
+To create a custom ladder please input the name and expected bp peaks (which needs to be separated by commas, i.e., 15,25,50,60 etc).

@@ -4,7 +4,7 @@ output: html_fragment
 
 # About traceShiny
 
-This is build with traceShiny v0.2.0 and trace v0.1.0.
+This is build with traceShiny v0.2.0 and trace v0.3.0.
 
 # Citation
 

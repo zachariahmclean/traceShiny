@@ -8,11 +8,11 @@ This function simply finds the maxima in the continuous trace data to call peaks
 
 If too many and inappropriate peaks are being called, this may also be solved with the different repeat calling algorithms in call repeats.
 
-### Minimum Base Pair Size	
-Minimum bp size of peaks to consider
+### Minimum Repeat Size	
+Minimum repeat size of peaks to consider
 
-### (advanced) Maximum Base Pair Size	
-Maximum bp size of peaks to consider
+### (advanced) Maximum Repeat Size	
+Maximum repeat size of peaks to consider
 
 ### (advanced) Smoothing Window
 Signal smoothing window size passed to smoothing algorithm

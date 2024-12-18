@@ -28,7 +28,6 @@ upload_data_box_ui2 <- function(id) {
                  inputId = "DataUpload",
                  label = h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Upload Method')),
                  choices = c("fsa",
-                             "fastq",
                              "Use Example"),
                  individual = TRUE,
                  checkIcon = list(

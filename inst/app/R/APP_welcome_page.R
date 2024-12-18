@@ -17,7 +17,9 @@ welcome_message_ui <- function(id) {
                                           style = "jelly",
                                           color = "primary"),
                                icon = icon("upload"), width = 12, color = "aqua"))
-      ))
+      ),
+      br(),
+      h5(includeHTML("data/welcome_page/License.html")))
   )
 }
 

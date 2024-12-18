@@ -31,7 +31,7 @@ metrics2_box_ui2 <- function(id) {
                fluidRow(
                  column(6,
                         numericInput("window_around_index_peak_min2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Minimum Window')),
-                                     value = -50, step = 1)),
+                                     value = -30, step = 1)),
                  column(6,
                         numericInput("window_around_index_peak_max2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Maximum Window')),
                                      value = 50, step = 1))
