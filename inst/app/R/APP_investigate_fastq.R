@@ -405,7 +405,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
     #Transform data
     Instability <- upload_data$fastq()[,c(2,5)]
     Instability <- Instability %>% group_by(`Repeat Length`, SampleID) %>%
-      summarise(signal = n())
+      dplyr::summarise(signal = n())
 
     Instability <- Instability[,c(2,1,3)]
     colnames(Instability) <- c("unique_id", "Repeat Length", "Counts")

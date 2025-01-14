@@ -323,7 +323,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
     },
     content = function(file) {
 
-      df <- reactive$df_final %>% group_by(`Sequence Short`, SampleID) %>% summarise(n())
+      df <- reactive$df_final %>% group_by(`Sequence Short`, SampleID) %>% dplyr::summarise(n())
       colnames(df)[3] <- "Number of Appearances"
       df <- arrange(df, desc(`Number of Appearances`))
       df <- df[,c(1,3,2)]
@@ -525,7 +525,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
     validate(
       need(!is.null(reactive$df_final), ''))
 
-    df <- reactive$df_final %>% group_by(`Sequence Short`, SampleID) %>% summarise(n())
+    df <- reactive$df_final %>% group_by(`Sequence Short`, SampleID) %>% dplyr::summarise(n = n())
     colnames(df)[3] <- "Number of Appearances"
     df <- arrange(df, desc(`Number of Appearances`))
     df <- df[,c(1,3,2)]

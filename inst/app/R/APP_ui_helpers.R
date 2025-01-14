@@ -107,7 +107,14 @@ extract_fragment_summary <- function(fragments_list) {
   })
   extracted_df <- do.call(rbind, extracted)
 
-  return(extracted_df)
+  allele_table <- extract_alleles(fragments_list)
+  allele_table <- allele_table[,-which(colnames(allele_table) %in% "allele_size")]
+  if (any(colnames(allele_table) %in% "allele_2_size")) {
+  allele_table <- allele_table[,-which(colnames(allele_table) %in% "allele_2_size")]
+  }
+  extracted_df_final <- right_join(extracted_df, allele_table)
+
+  return(extracted_df_final)
 }
 
 

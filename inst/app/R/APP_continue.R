@@ -116,6 +116,7 @@ continue_server <- function(input, output, session) {
                      updateNumericInput(session, "max_bp_size", value = max_bp_size)
                      updateNumericInput(session, "smoothing_window", value = smoothing_window_peaks)
                      updateNumericInput(session, "minimum_peak_signal", value = minimum_peak_signal)
+                     updatePickerInput(session, "number_of_alleles", selected = number_of_alleles)
                      updatePickerInput(session, "batchcorrectionswitch", selected = batchcorrectionswitch)
                      updateNumericInput(session, "peak_region_size_gap_threshold", value = peak_region_size_gap_threshold)
                      updateNumericInput(session, "peak_region_signal_threshold_multiplier", value = peak_region_signal_threshold_multiplier)
@@ -151,6 +152,7 @@ continue_server <- function(input, output, session) {
                      reactive_continue$size <- size
                      reactive_continue$sample_traces_size <- sample_traces_size
                      reactive_continue$sample_traces_repeats <- sample_traces_repeats
+                     reactive_continue$number_of_alleles <- number_of_alleles
                      reactive_continue$batchcorrectionswitch <- batchcorrectionswitch
                      reactive_continue$sample_subset_metrics <- sample_subset_metrics
                      reactive_continue$sample_subset2 <- sample_subset2
@@ -275,6 +277,7 @@ continue_server <- function(input, output, session) {
     Index_Table_original = reactive(reactive_continue$Index_Table_original),
     sample_traces_size = reactive(reactive_continue$sample_traces_size),
     sample_traces_repeats = reactive(reactive_continue$sample_traces_repeats),
+    number_of_alleles = reactive(reactive_continue$number_of_alleles),
     batchcorrectionswitch = reactive(reactive_continue$batchcorrectionswitch),
     instability_metrics_fastq = reactive(reactive_continue$instability_metrics_fastq),
     sample_subset_metrics2 = reactive(reactive_continue$sample_subset_metrics2),

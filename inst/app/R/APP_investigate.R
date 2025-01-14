@@ -260,6 +260,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
 
       strAlleles <- paste("##Find Alleles", "\n",
                           paste0("find_alleles(fragments_list, ",
+                                 "number_of_alleles = ", paste(input$number_of_alleles), ", ",
                                  "peak_region_size_gap_threshold = ", paste(input$peak_region_size_gap_threshold), ", ",
                                  "peak_region_signal_threshold_multiplier = ", paste(input$peak_region_signal_threshold_multiplier), ")"))
 
@@ -1373,6 +1374,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
       max_bp_size <- peaks_module$max_bp_size()
       smoothing_window_peaks <- peaks_module$smoothing_window()
       minimum_peak_signal <- peaks_module$minimum_peak_signal()
+      number_of_alleles <- peaks_module$number_of_alleles()
       batchcorrectionswitch <- peaks_module$batchcorrectionswitch()
       peak_region_size_gap_threshold <- peaks_module$peak_region_size_gap_threshold()
       peak_region_signal_threshold_multiplier <- peaks_module$peak_region_signal_threshold_multiplier()
@@ -1408,7 +1410,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
 
       save("laddertable", "fsa_list", "metadata_table", "DataUpload", "DataUploadMeta", "Ladder_switch",
            "ladders", "scan", "size", "LadderChannel", "SignalChannel", "LadderSizes", "spikeswitch", "spikelocation", "ladderselectionwindow", "maxcombinations", "minimum_peak_signal_ladder", "minimum_peak_signal_number", "scan_subset", "scan_subset1", "scan_subset2",
-           "index_list", "min_bp_size", "max_bp_size", "smoothing_window_peaks", "minimum_peak_signal", "batchcorrectionswitch", "peak_region_size_gap_threshold",
+           "index_list", "min_bp_size", "max_bp_size", "smoothing_window_peaks", "minimum_peak_signal", "number_of_alleles", "batchcorrectionswitch", "peak_region_size_gap_threshold",
            "peak_region_signal_threshold_multiplier", "assay_size_without_repeat", "repeat_size", "force_whole_repeat_units", "force_repeat_pattern",
            "force_repeat_pattern_size_period", "force_repeat_pattern_size_window", "sample_traces_size", "sample_traces_repeats",
            "instability_metrics", "peak_threshold", "window_around_index_peak_min", "window_around_index_peak_max", "repeat_range1", "repeat_range2", "repeat_range3", "percentile_range1", "percentile_range2", "percentile_range3",

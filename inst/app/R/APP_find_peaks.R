@@ -35,6 +35,11 @@ peaks_box_ui2 <- function(id) {
                    )
                  )
                ),
+               fluidRow(
+                 column(6,
+                        pickerInput("number_of_alleles", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Number of Alleles')),
+                                    choices = c("1", "2"), selected = "1"))
+               ),
                conditionalPanel(
                  condition = 'input.advancesettings_Peaks == true',
                  fluidRow(
@@ -266,6 +271,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
       reactive_peaks$sample_traces_size <- continue_module$sample_traces_size()
       reactive_peaks$sample_traces_repeats <- continue_module$sample_traces_repeats()
       reactive_peaks$batchcorrectionswitch <- continue_module$batchcorrectionswitch()
+      reactive_peaks$number_of_alleles <- continue_module$number_of_alleles()
     }
   })
 
@@ -274,6 +280,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     reactive_peaks$sample_traces_size <- NULL
     reactive_peaks$sample_traces_repeats <- NULL
     reactive_peaks$batchcorrectionswitch <- NULL
+    reactive_peaks$number_of_alleles <- NULL
   })
 
   #Download
@@ -434,6 +441,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                      }
 
                      find_alleles(reactive_peaks$peaks,
+                                  number_of_alleles = input$number_of_alleles,
                                   peak_region_size_gap_threshold = input$peak_region_size_gap_threshold,
                                   peak_region_signal_threshold_multiplier = input$peak_region_signal_threshold_multiplier)
 
@@ -966,6 +974,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
       }
 
       find_alleles(reactive_peaks$peaks,
+                   number_of_alleles = input$number_of_alleles,
                    peak_region_size_gap_threshold = input$peak_region_size_gap_threshold,
                    peak_region_signal_threshold_multiplier = input$peak_region_signal_threshold_multiplier)
 
@@ -1068,6 +1077,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     sample_traces_repeats = reactive(reactive_peaks$sample_traces_repeats),
     min_bp_size = reactive(input$min_bp_size),
     max_bp_size = reactive(input$max_bp_size),
+    number_of_alleles = reactive(input$number_of_alleles),
     smoothing_window = reactive(input$smoothing_window),
     minimum_peak_signal = reactive(input$minimum_peak_signal),
     batchcorrectionswitch = reactive(input$batchcorrectionswitch),
