@@ -12,7 +12,7 @@ page for more [details](https://github.com/zachariahmclean/trace).
 
 ## Web Server Version
 
-traceShiny is also available as a web server under
+traceShiny is available as a web server under
 <https://traceshiny.mgh.harvard.edu>.
 
 ## Installation
