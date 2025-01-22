@@ -418,7 +418,8 @@ upload_data_box_server <- function(input, output, session, continue_module) {
 
                        for (i in paste0(filesdir,'/',input$fastq$name)) {
                          CAG[[i]] <- microseq::readFastq(i)
-                         CAG_reverse[[i]]$Sequence <- microseq::reverseComplement(CAG[[i]]$Sequence)
+                         CAG_reverse[[i]] <- microseq::readFastq(i)
+                         CAG_reverse[[i]]$Sequence <- microseq::reverseComplement(CAG_reverse[[i]]$Sequence)
                          joined[[i]] <- Map(c, CAG[[i]], CAG_reverse[[i]])
                        }
 
