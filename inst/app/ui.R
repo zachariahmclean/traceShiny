@@ -1,9 +1,7 @@
 library(shiny)
 library(shinyjs)
 library(shinyBS)
-library(shinyalert)
 library(shinydashboard)
-library(dashboardthemes)
 library(shinybusy)
 library(shinycssloaders)
 library(shinydashboardPlus)
@@ -108,8 +106,8 @@ sidebar <- dashboardSidebar(
     tags$div(class = "prevent_click")
   ),
 
-  sidebarMenu(id = "orig_tabs",
-              menuItem("Introduction", icon = icon("info"), tabName = "intro"),
+  sidebarMenu(id = "tabs",
+              menuItem("Home", icon = icon("house"), tabName = "intro"),
               sidebarMenuOutput("dynamic_content"),
               menuItem("Help", icon = icon("question-circle"), tabName = "Help")
   )
@@ -396,6 +394,47 @@ body <- dashboardBody(
             )
     ),
 
+    ####DOCUMENTATION TAB####
+    tabItem(tabName = "Documentation1",
+
+            box(id = "DocumentationBox2", title = strong("Documentation"), status = "warning", solidHeader = F,
+                collapsible = T, width = 12,
+                h5(includeHTML("data/Documentation1.html"))
+            )
+    ),
+
+    tabItem(tabName = "Documentation2",
+
+            box(id = "DocumentationBox3", title = strong("Documentation"), status = "warning", solidHeader = F,
+                collapsible = T, width = 12,
+                h5(includeHTML("data/Documentation2.html"))
+            )
+    ),
+
+    tabItem(tabName = "Documentation3",
+
+            box(id = "DocumentationBox4", title = strong("Documentation"), status = "warning", solidHeader = F,
+                collapsible = T, width = 12,
+                h5(includeHTML("data/Documentation3.html"))
+            )
+    ),
+
+    tabItem(tabName = "Documentation4",
+
+            box(id = "DocumentationBox5", title = strong("Documentation"), status = "warning", solidHeader = F,
+                collapsible = T, width = 12,
+                h5(includeHTML("data/Documentation4.html"))
+            )
+    ),
+
+    tabItem(tabName = "Documentation5",
+
+            box(id = "DocumentationBox6", title = strong("Documentation"), status = "warning", solidHeader = F,
+                collapsible = T, width = 12,
+                h5(includeHTML("data/Documentation5.html"))
+            )
+    ),
+
     ####HELP TAB####
     tabItem(tabName = "Help",
 
@@ -404,10 +443,10 @@ body <- dashboardBody(
 
                 fluidRow(
                   column(6,
-                         h4(includeHTML("data/help_tab/help.html"))
+                         h5(includeHTML("data/help_tab/help.html"))
                          ),
                          column(6,
-                                h4(formUI(basicInfoForm))
+                                h5(formUI(basicInfoForm))
                          ))
                 ),
 
@@ -423,19 +462,13 @@ body <- dashboardBody(
     ui <- function () {dashboardPage(
       dashboardHeader(
         title = img(id="Ditto",src="TRACE.jpg",width="50%"),
-        leftUi = tagList(tags$li(class = "dropdown", p(style="text-align: center; margin-top:10px;", tags$a(href="javascript:history.go(0)",
-                        popify(tags$i(class="fa fa-refresh fa-3x"),
-                               title = "",
-                               content = "Click here to delete all data and restart the Shiny session",
-                               placement = "bottom"))))),
-        tags$li(class = "dropdown", p(img(id="CGM", src="cfgm-logo-animated.gif", width="85%"))),
         titleWidth = 250),
       sidebar,
       body,
       md = TRUE,
       skin = "black",
       title = "traceShiny",
-      footer = dashboardFooter(right = h6("Created by: Andrew Jiang & Zachariah Mclean", br(), "Github: zachariahmclean/trace", br(), "MGH Centre of Genomic Research", br(), "MGH & Harvard Medical School"),
+      footer = dashboardFooter(right = h6("Created by: Andrew Jiang & Zachariah Mclean", br(), "Github: zachariahmclean/trace", br(), "MIT License", br(), "Copyright (c) 2024 traceShiny authors"),
                                left = p(img(id="CGM_logo", src="CGM-Logo.webp", width="8%", style = "margin-right: 30px"), img(id="MGH", src="MGHRI_2C_RGB_nobgrd.webp", width="10%", style = "margin-right: 30px"),
                                         img(id="Harvard", src="hms_logo_final_rgb_0-3.webp", width="10%")))
     )

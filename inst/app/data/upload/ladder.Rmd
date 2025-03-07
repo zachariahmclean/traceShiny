@@ -2,6 +2,10 @@
 output: html_fragment
 ---
 
+### Select Ladder Channels
+
 To use the default ladders included in the package, simply keep the 'use default ladders' option ticked.
 
 To create a custom ladder please input the name and expected bp peaks (which needs to be separated by commas, i.e., 15,25,50,60 etc).
+
+![](Ladder_channels.png){width=100%}

@@ -6,6 +6,8 @@ output: html_fragment
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+### Metadata Options
+
 Metadata can be incorporated to allow additional functionality in repeat calling (correcting batch effects across fragment analysis runs) and index peak assignment (assigning index peak from another sample).
 
 There are several important factors to a successful repeat instability experiment and things to consider when using this tool:
@@ -34,6 +36,8 @@ Prepare a file (eg spreadsheet saved as .csv) with the following columns. Use th
 | batch_run_id              | `call_repeats`, allows setting `batch` or `repeat` correction | This groups the samples by batch. Provide a value for each fragment analysis run (eg date).                                                                                                                                                                                                                     |
 | batch_sample_id           | `call_repeats`, allows setting `batch` or `repeat` correction | This groups the sample across batches. Give a unique sample id to each different sample.                                                                                                                                                                                                                        |
 | batch_sample_modal_repeat | `call_repeats`, allows setting `repeat` correction            | The validated repeat length of the modal repeat of the sample.                                                                                                                                                                                                                                                  |
+
+![](Metadata.png){width=100%}
 
 ```{r, include=FALSE}
 #TOODO

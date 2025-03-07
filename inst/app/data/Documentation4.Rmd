@@ -1,0 +1,102 @@
+---
+output: html_fragment
+---
+
+## STEP 4: CALCULATE INSTABILITY METRICS
+In the previous steps we processed samples and collected all the information we need to now calculate instability metrics.
+
+A key part of instability metrics is the index peak. This is the repeat length used as the reference peak for relative instability metrics calculations, like expansion index. This is usually the the inherited repeat length of a mouse, or the modal repeat length for the cell line at a starting time point.
+
+If `metrics_group_id` and `metrics_baseline_control` are set in the metadata, we group the samples by their metrics_group_id and use the samples set as metrics_baseline_control to set the index peak. This is useful for cases like inferring repeat size of inherited alleles from mouse tail data. If the samples that are going to be used to assign index peak are from different fragment analysis runs, use batch_correction in call_repeats() to make sure the systematic differences between runs are corrected and the correct index peak is assigned. If there are multiple samples used as baseline control, the median value will be used to assign index peak to corresponding samples.
+
+See the [calculate_instability_metrics() documentation](https://zachariahmclean.github.io/trace/reference/calculate_instability_metrics.html) in the trace package for a detailed explanation of each metric returned.
+
+![](metrics/Plot.PNG){width=800px}
+
+#### Red vertical line
+Index repeat, this can be manually changed.
+
+#### Black horizontal line
+The threshold for peak heights to be considered in the calculations, relative to the modal peak height of the expanded allele.
+
+### Instability metrics
+
+![](metrics/Metrics_table.PNG){width=800px}
+
+
+### General sample metrics
+
+-  `modal_peak_repeat:` The repeat size of the modal peak.
+-  `modal_peak_signal:` The signal of the modal peak.
+-  `index_peak_repeat:` The repeat size of the index peak (the repeat value closest to the modal peak of the index sample).
+-  `index_peak_signal:` The signal of the index peak.
+-  `index_weighted_mean_repeat:` The weighted mean repeat size (weighted on the signal of the peaks) of the index sample.
+-  `n_peaks_total:` The total number of peaks in the repeat table.
+-  `n_peaks_analysis_subset:` The number of peaks in the analysis subset.
+-  `n_peaks_analysis_subset_expansions:` The number of expansion peaks in the analysis subset.
+-  `min_repeat:` The minimum repeat size in the analysis subset.
+-  `max_repeat:` The maximum repeat size in the analysis subset.
+-  `mean_repeat:` The mean repeat size in the analysis subset.
+-  `weighted_mean_repeat:` The weighted mean repeat size (weight on peak signal) in the analysis subset.
+-  `median_repeat:` The median repeat size in the analysis subset.
+-  `max_signal:` The maximum peak signal in the analysis subset.
+-  `max_delta_neg:` The maximum negative delta to the index peak.
+-  `max_delta_pos:` The maximum positive delta to the index peak.
+-  `skewness:` The skewness of the repeat size distribution.
+-  `kurtosis:` The kurtosis of the repeat size distribution.
+
+### Repeat instability metrics
+
+-  `modal_repeat_change:` The difference between the modal repeat and the index repeat.
+-  `average_repeat_change:` The weighted mean of the sample (weighted by peak signal) subtracted by the weighted mean repeat of the index sample(s).
+-  `instability_index_change:` The instability index of the sample subtracted by the instability index of the index sample(s). This will be very similar to the average_repeat_change, with the key difference of instability_index_change being that it is an internally calculated metric for each sample, and therefore the random slight fluctuations of bp size (or systematic if across plates for example) will be removed. However, it requires the index peak to be correctly set for each sample, and if set incorrectly, can produce large arbitrary differences.
+-  `instability_index:` The instability index based on peak signal and distance to the index peak. (See Lee et al., 2010, doi:10.1186/1752-0509-4-29 ).
+-  `instability_index_abs:` The absolute instability index. The absolute value is taken for the "Change from the main allele".
+-  `expansion_index:` The instability index for expansion peaks only.
+-  `contraction_index:` The instability index for contraction peaks only.
+-  `expansion_ratio:` The ratio of expansion peaks' signals to the main peak signal. Also known as "peak proportional sum" (See Genetic Modifiers of Huntington’s Disease (GeM-HD) Consortium, 2019, doi:10.1016/j.cell.2019.06.036 ).
+-  `contraction_ratio:` The ratio of contraction peaks' signals to the main peak signal.
+-  `expansion_percentile_*:` The repeat gain relative to the index peak at specified percentiles of the cumulative distribution of expansion peaks.
+-  `expansion_percentile_for_repeat_*:` The percentile rank of specified repeat sizes in the distribution of expansion peaks.
+
+### Settings
+
+![](metrics/Settings.PNG){width=400px}
+
+#### Grouped index assignment
+A key part of instability metrics is the index peak. This is the repeat length used as the reference peak for relative instability metrics calculations, like expansion index. This is usually the the inherited repeat length of a mouse, or the modal repeat length for the cell line at a starting time point.
+
+If grpuped index assignment is set, this function groups the samples by their `metrics_group_id` and uses the samples set as `metrics_baseline_control` to set the index peak. This is useful for cases like inferring repeat size of inherited alleles from mouse tail data. If the samples that are going to be used to assign index peak are from different fragment analysis runs, use batch or repeat correction to make sure the systematic differences between runs are corrected and the correct index peak is assigned. If there are multiple samples used as baseline control, the median value will be used to assign index peak to corresponding samples.
+
+If grouped index assignment is not set, the modal peak will be used as the index peak.
+
+#### peak threshold	
+The threshold for peak heights to be considered in the calculations, relative to the modal peak height of the expanded allele.
+
+#### window around index peak	
+A numeric vector (length = 2) defining the range around the index peak. First number specifies repeats before the index peak, second after. For example, c(-5, 40) around an index peak of 100 would analyze repeats 95 to 140. The sign of the numbers does not matter (The absolute value is found).
+
+#### (advanced) percentile range	
+Generate a number sequence for computation of repeat expansion_percentile_*. e.g. from 0.5 to 0.95 by interval 0.05 enables computation of percentiles 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95.
+
+#### (advanced) repeat range	
+A numeric vector specifying ranges of repeats for expansion_percentile_for_repeat_* computation. e.g. from 0.5 to 0.95 by interval 0.05 enables computation of percentiles 0 5 10 15 20.
+
+### Export Data
+
+![](metrics/Downloads.PNG){width=400px}
+
+#### Instability metrics table
+Download the instability metrics table as shown on the page.
+
+#### All plots
+Download the traces for each of the samples.
+
+#### R object
+Download the R object used to plot the traces and for analysis. This R-object is an R6 class object that may be further manipulated in R. Please refer to [trace documentation](https://github.com/zachariahmclean/trace)
+
+#### Code for current analysis
+Generates the code to reproduce the plots and instability metrics shown on the page using the trace R package.
+
+#### Save .Rdata file for re-load into traceShiny
+Downloads a .Rdata file that may be reloaded into traceShiny from the home page under CONTINUE.

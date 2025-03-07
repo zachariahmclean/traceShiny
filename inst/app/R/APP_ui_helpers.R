@@ -7,7 +7,7 @@ help_click <- function (id, helpfile) {
   moduleServer(id, function(input, output, session) {
     observeEvent(input$help, {
       showModal(modalDialog(
-        h4(includeHTML(helpfile)),
+        h5(includeHTML(helpfile)),
         easyClose = TRUE,
         footer = NULL,
         size = "l"
@@ -386,100 +386,67 @@ reactivity_trigger <- function(
   return(fragments_list)
 }
 
-find_alleles_fastq <- function(
-    fragments_list,
-    peak_region_size_gap_threshold = 6,
-    peak_region_signal_threshold_multiplier = 1) {
-  # internal helper functions
-  find_peak_regions <- function(signal, size) {
-    peak_regions <- rep(NA_real_, length(signal))
-    mean_signal <- mean(signal) * peak_region_signal_threshold_multiplier
-    # loop over each fragment and check to see if it's within the thresholds
-    for (i in seq_along(signal)) {
-      if (signal[i] < mean_signal || i == 1 || i == length(signal)) {
-        peak_regions[i] <- NA_real_
-      } else if (signal[i - 1] < mean_signal && signal[i + 1] < mean_signal) {
-        peak_regions[i] <- NA_real_
-      } else {
-        # check to see if peaks before it are within the size threshold
-        current_size <- size[i]
-        valid_lower_peaks <- which(size < current_size & size > current_size - peak_region_size_gap_threshold & signal > mean_signal)
-        unique_regions <- unique(na.omit(peak_regions))
-        if (length(valid_lower_peaks) > 0) {
-          if (length(unique_regions) > 0) {
-            peak_regions[i] <- unique_regions[length(unique_regions)]
-          } else {
-            peak_regions[i] <- 1
-          }
-        } else {
-          if (length(unique_regions) > 0) {
-            peak_regions[i] <- unique_regions[length(unique_regions)] + 1
-          } else {
-            peak_regions[i] <- 1
-          }
-        }
-      }
-    }
-
-    return(peak_regions)
+####Fastq helpers
+repeat_sizer <- function(
+    fastq_df,
+    left_flank_seq = "CAAGTCCTTC",
+    right_flank_seq = "CAACAGCCGCCACCG",
+    repeat_unit_seq = "CAG",
+    max.distance = 0.01,
+    min_n_repeats = 10,
+    interruptions_repeat_no = 3,
+    codon_start = 2
+){
+  repeat_matcher <- function(seq){
+    repeat_match <- aregexec(paste0(left_flank_seq, paste0("(", repeat_unit_seq, ")", "{", min_n_repeats, ",}"),  right_flank_seq), seq, max.distance = max.distance)
+    match_seq_list <- regmatches(seq, repeat_match)
+    return(match_seq_list)
   }
 
-  main_peaks <- lapply(fragments_list, function(fragment) {
-    # the main idea here is that PCR generates clusters of peaks around the main alleles.
-    # find the cluster of peaks and pick the tallest within each cluster
-    # then of those clusters, pick out the tallest of them all
+  calculation <- function(x) {
+    value <- as.numeric(x) > interruptions_repeat_no
+    return(sum(as.numeric(x)[which(value)[1]:which(value)[length(which(value))]]))
+  }
+
+  f_match_seq_list <- repeat_matcher(fastq_df$Sequence)
+  f_found_match_test <- sapply(f_match_seq_list, function(x) length(x) > 0)
+
+  # if hasn't found match search reverse complement
+  r_subset <- fastq_df[!f_found_match_test, ]
+  r_subset$Sequence <-  microseq::reverseComplement(r_subset$Sequence)
+
+  r_match_seq_list <- repeat_matcher(r_subset$Sequence)
+
+  f_subset <- fastq_df
+  f_subset$matched_sequence <- f_match_seq_list
+  r_subset$matched_sequence <- r_match_seq_list
 
 
-    # first select if working off repeat size or bp size
-    fragment_signal <- if (is.null(fragment$repeat_table_df)) fragment$peak_table_df$signal else fragment$repeat_table_df$signal
-    fragment_sizes <- if (is.null(fragment$repeat_table_df)) fragment$peak_table_df$size else fragment$repeat_table_df$repeats
+  r_subset <- r_subset[sapply(r_match_seq_list, function(x) length(x) > 0), ]
+  f_subset <- f_subset[f_found_match_test, ]
 
-    # Find peak regions
-    peak_regions <- find_peak_regions(fragment_signal, fragment_sizes)
-
-    # find all possible peaks
-    all_peaks <- pracma::findpeaks(fragment_signal, peakpat = "[+]{1,}[0]*[-]{1,}")
-
-    # Find unique peak regions
-    unique_regions <- unique(na.omit(peak_regions))
-    top_regional_peaks_positions <- numeric(length(unique_regions))
-
-    # Find the tallest peak within each peak region
-    for (i in seq_along(unique_regions)) {
-      region_positions <- which(peak_regions == i)
-
-      if (any(region_positions %in% all_peaks[, 2])) {
-        # Find the position of the tallest peak within the maxima positions
-        peak_region_subset <- all_peaks[which(all_peaks[, 2] %in% region_positions), , drop = FALSE]
-        top_regional_peaks_positions[i] <- peak_region_subset[which.max(peak_region_subset[, 1]), 2]
-      } else {
-        # just pick the tallest if somehow the peak region doesn't have a peak called
-        # not sure if this will happen, just dealing with a possible case
-        top_regional_peaks_positions[i] <- region_positions[which.max(fragment_signal[region_positions])][1]
-      }
-    }
-
-    # Now we need to pick the tallest of the candidates
-    top_regional_peaks_positions <-
-      top_regional_peaks_positions[order(fragment_signal[top_regional_peaks_positions], decreasing = TRUE)][1]
-
-
-    if (length(top_regional_peaks_positions) == 0) {
-      warning(paste0(fragment$unique_id, ": No main alleles identified"))
-    }
-
-    df <- fragment$repeat_table_df
-
-    size_diff <- df[["repeats"]]- fragment_sizes[top_regional_peaks_positions]
-    allele_df <- df[which.min(abs(size_diff)), , drop = FALSE]
-
-    fragment$.__enclos_env__$private$allele_signal <- ifelse(!is.na(fragment_sizes[top_regional_peaks_positions]), allele_df$signal, NA_real_)
-    fragment$.__enclos_env__$private$allele_repeat <- ifelse(!is.null(fragment$repeat_table_df) && !is.na(fragment_sizes[top_regional_peaks_positions]), allele_df$repeats, NA_real_)
-
-    return(fragment)
+  df <- rbind(f_subset, r_subset)
+  df$matched_sequence <- sapply(df$matched_sequence, function(x) x[[1]])
+  # df$repeat_length <- paste0(round((nchar(df$matched_sequence)- nchar(paste0(left_flank_seq, right_flank_seq)))/nchar(repeat_unit_seq)))
+  # df$repeat_length <- as.numeric(df$repeat_length)
+  df$short_seq <- sapply(df$matched_sequence, function(seq){
+    seq_subset <- substr(seq, codon_start, nchar(seq))
+    codon_list <- paste0(
+      rle(unlist(strsplit(seq_subset, paste0("(?<=.{", str_length(repeat_unit_seq), "})"), perl = TRUE)))$values,
+      rle(unlist(strsplit(seq_subset, paste0("(?<=.{", str_length(repeat_unit_seq), "})"), perl = TRUE)))$lengths
+    )
+    codon_vector <- paste(codon_list, collapse = " ")
+    return(codon_vector)
   })
 
-  invisible()
+  df <- transform(df, repeat_length = str_extract_all(short_seq, '\\d+(\\.\\d+)?')) |>
+    transform(short_seq_longest_repeat_length = map_dbl(repeat_length, ~max(as.numeric(.x)))) |>
+    transform(repeat_length = sapply(repeat_length, calculation)) |>
+    transform(Error_in_LFS = ifelse(grepl(paste0(left_flank_seq), df$Sequence), "No", "Yes")) |>
+    transform(Error_in_RFS = ifelse(grepl(paste0(right_flank_seq), df$Sequence), "No", "Yes")) |>
+    transform(Error_in_Repeat = ifelse(short_seq_longest_repeat_length < repeat_length, "Yes", "No"))
+
+  return(df)
 }
 
 # instability index ---------------------------------------------------------

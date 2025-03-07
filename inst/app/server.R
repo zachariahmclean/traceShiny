@@ -35,6 +35,16 @@ basicInfoForm <- list(
 
 server <- function(input, output, session) {
 
+  output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
+                                                   menuItem("Documentation", icon = icon("file"), startExpanded = T,
+                                                            menuSubItem("Step 1: Upload", tabName = "Documentation1"),
+                                                            menuSubItem("Step 2: Find Ladders", tabName = "Documentation2"),
+                                                            menuSubItem("Step 3: Find Peaks", tabName = "Documentation3"),
+                                                            menuSubItem("Step 4: Instability Metrics", tabName = "Documentation4"),
+                                                            menuSubItem("Step 5: Analysis", tabName = "Documentation5"))
+                                                            )
+  )
+
   # Intro module ------------------------------------------------------------
   Intro(input = input, output = output, session = session)
 

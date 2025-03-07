@@ -2,12 +2,13 @@
 welcome_message_ui <- function(id) {
   fluidRow(
   box(id = "intro", status = "warning", solidHeader = F, collapsible = T, width = 12,
-      title = h1(HTML('<h2 style = "text-align:justify; margin-top:-50px; margin-bottom:-10px; ">Welcome to the TRACE')),
-      img(id="Ditto",src="TRACE.jpg", width="17%", style = "float:right;"),
-      h4(includeHTML("data/welcome_page/welcome_page.html")),
+      title = strong('Welcome to TRACE'),
+      h5(includeHTML("data/welcome_page/welcome_page.html")),
       br(),
+      img(id="GA",src="Graphical Abstract.jpeg", width="35%"),
+      h5("Select START to start fresh analysis, or Continue to load in a previous analysis."),
       fluidRow(column(3,
-                      valueBox("NEW", actionBttn("startbuttonintro", "START",
+                      valueBox("BEGIN", actionBttn("startbuttonintro", "START",
                                                  style = "jelly",
                                                  color = "primary"),
                                icon = icon("paper-plane"), width = 12, color = "aqua")),
@@ -17,9 +18,7 @@ welcome_message_ui <- function(id) {
                                           style = "jelly",
                                           color = "primary"),
                                icon = icon("upload"), width = 12, color = "aqua"))
-      ),
-      br(),
-      h5(includeHTML("data/welcome_page/License.html")))
+      ))
   )
 }
 
@@ -31,7 +30,8 @@ observeEvent(input$startbuttonintro, {
                  incProgress(0.1)
 
                  incProgress(0.2, detail = "Loading Packages")
-
+                 library(shinyalert)
+                 library(dashboardthemes)
                  library(trace)
                  library(dplyr)
                  library(assertr)
@@ -41,6 +41,7 @@ observeEvent(input$startbuttonintro, {
                  library(stringr)
                  library(readxl)
                  library(microseq)
+                 library(purrr)
 
                  incProgress(0.8)
 
@@ -62,7 +63,13 @@ observeEvent(input$startbuttonintro, {
 
                  output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
                                                                   menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = T,
-                                                                           badgeColor = "green", badgeLabel = "new")
+                                                                           badgeColor = "green", badgeLabel = "new"),
+                                                                  menuItem("Documentation", icon = icon("file"), startExpanded = T,
+                                                                           menuSubItem("Step 1: Upload", tabName = "Documentation1"),
+                                                                           menuSubItem("Step 2: Find Ladders", tabName = "Documentation2"),
+                                                                           menuSubItem("Step 3: Find Peaks", tabName = "Documentation3"),
+                                                                           menuSubItem("Step 4: Instability Metrics", tabName = "Documentation4"),
+                                                                           menuSubItem("Step 5: Analysis", tabName = "Documentation5"))
                  ))
                })
 })

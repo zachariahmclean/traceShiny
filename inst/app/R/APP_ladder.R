@@ -2,11 +2,13 @@ ladder_box_ui1 <- function(id) {
   box(id = "LadderBoxIntro", title = strong("Find Ladders"), status = "warning", solidHeader = F,
       collapsible = T, collapsed = T, width = 12,
 
-      h4(includeHTML("data/find_ladders/find_ladders_landing_page.html")),
-      br(), br(),
+      h5(includeHTML("data/find_ladders/find_ladders_landing_page.html")),
+      img(id="pipe2",src="pipeline2.jpg", width="20%"),
+      br(),
+      br(),
 
       fluidRow(column(3,
-                      valueBox("NEW", actionBttn("LadderBoxSTART", "START",
+                      valueBox("PROCEED", actionBttn("LadderBoxSTART", "START",
                                                  style = "jelly",
                                                  color = "primary"), icon = icon("paper-plane"), width = 12, color = "aqua"))
       ))
@@ -16,15 +18,15 @@ ladder_box_ui2 <- function(id) {
   box(id = "LadderBox1", title = p("Settings", help_button("ladder_params")), status = "warning", solidHeader = F,
       collapsible = T, width = NULL,
 
-      materialSwitch("advancesettings_Ladder", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Show Advanced Settings')), value = FALSE, status = "primary"),
+      materialSwitch("advancesettings_Ladder", label = h5(HTML('<h5 style = "text-align:justify;color:#000000">Show Advanced Settings')), value = FALSE, status = "primary"),
 
-      pickerInput("LadderSizes", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Ladder Sizes')), choices = NULL),
+      pickerInput("LadderSizes", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Ladder Sizes')), choices = NULL),
 
-      materialSwitch("spikeswitch", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Use Default Ladder Scan Position')), value = TRUE, status = "primary"),
+      materialSwitch("spikeswitch", label = h5(HTML('<h5 style = "text-align:justify;color:#000000">Use Default Ladder Scan Position')), value = TRUE, status = "primary"),
 
       conditionalPanel(
         condition = 'input.spikeswitch == false',
-        numericInput("spikelocation", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-60px;">Input Ladder Starting Scan Position')),
+        numericInput("spikelocation", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-60px;">Input Ladder Starting Scan Position')),
                      min = 1,
                      value = 1, step = 1)
       ),
@@ -32,44 +34,44 @@ ladder_box_ui2 <- function(id) {
       conditionalPanel(
         condition = 'input.advancesettings_Ladder == true',
 
-        materialSwitch("minimum_peak_signal_ladder", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Use Default Minimum Peak Signal')), value = TRUE, status = "primary"),
+        materialSwitch("minimum_peak_signal_ladder", label = h5(HTML('<h5 style = "text-align:justify;color:#000000">Use Default Minimum Peak Signal')), value = TRUE, status = "primary"),
 
         conditionalPanel(
           condition = 'input.minimum_peak_signal_ladder == false',
-          numericInput("minimum_peak_signal_number", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-60px;">Input Minimal Peak Signal')),
+          numericInput("minimum_peak_signal_number", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-60px;">Input Minimal Peak Signal')),
                        min = 1,
                        value = 1, step = 1)
         ),
 
-        materialSwitch("scan_subset", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Use Default Scan Subset')), value = TRUE, status = "primary"),
+        materialSwitch("scan_subset", label = h5(HTML('<h5 style = "text-align:justify;color:#000000">Use Default Scan Subset')), value = TRUE, status = "primary"),
 
         conditionalPanel(
           condition = 'input.scan_subset == false',
 
           fluidRow(
             column(12,
-            h4(HTML('<h4 style = "text-align:left;color:#000000"><br>Scan Subset Input'))
+            h5(HTML('<h5 style = "text-align:left;color:#000000"><br>Scan Subset Input'))
             )
           ),
 
           fluidRow(
             column(6,
-                   numericInput("scan_subset1", label = h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">From')),
+                   numericInput("scan_subset1", label = h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">From')),
                                 value = 0.5,
                                 min = 0,
                                 step = 0.1)),
             column(6,
-                   numericInput("scan_subset2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">To')),
+                   numericInput("scan_subset2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">To')),
                                 min = 0,
                                 value = 0.95, step = 0.1))
           )
         ),
 
-        numericInput("ladderselectionwindow", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Ladder Selection Window')),
+        numericInput("ladderselectionwindow", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Ladder Selection Window')),
                      min = 1,
                      value = 5, step = 1),
 
-        numericInput("maxcombinations", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Max Combinations')),
+        numericInput("maxcombinations", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Max Combinations')),
                      min = 1,
                      value = 2500000, step = 1),
       ),
@@ -79,13 +81,13 @@ ladder_box_ui2 <- function(id) {
 }
 
 ladder_box_ui3 <- function(id) {
-  box(id = "LadderBox2", title = p("Interactive Ladder Fixing"),
+  box(id = "LadderBox2", title = p("Interactive Ladder Fixing", help_button("ladder_fixing")),
       status = "warning", solidHeader = F,
       collapsible = T, width = NULL,
 
       fluidRow(
         column(6,
-               pickerInput("unique_id_selection", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Sample Selection')), choices = NULL)
+               pickerInput("unique_id_selection", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Sample Selection')), choices = NULL)
         ),
         column(1,
                actionButton("up_ladder", NULL, icon("arrow-up"), style='text-align: left; margin-top:50px; font-size:200%'),
@@ -103,12 +105,12 @@ ladder_box_ui3 <- function(id) {
 
       fluidRow(
         column(6,
-               sliderInput("find_scan_max", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Snap to tallest scan window')),
+               sliderInput("find_scan_max", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Snap to tallest scan window')),
                            min = 1, max = 50,
                            value = 10, step = 1)
         ),
         column(6,
-               sliderInput("HeightLadder", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Plot Height')),
+               sliderInput("HeightLadder", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Plot Height')),
                            min = 1, max = 100,
                            value = 20, step = 1)
         )
@@ -142,6 +144,8 @@ ladder_box_ui3 <- function(id) {
 ladder_server <- function(input, output, session, upload_data, continue_module) {
   # help files
   help_click("ladder_params", helpfile = "data/find_ladders/ladder_params.html")
+
+  help_click("ladder_fixing", helpfile = "data/find_ladders/Interactive_ladder_fixing.html")
 
   fragment_trace_list_reactive <- shiny::reactiveValues()
   manual_ladder_list <- shiny::reactiveValues()
@@ -227,7 +231,13 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
     output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
                                                      menuItem("Upload", icon = icon("spinner"), tabName = "Upload"),
                                                      menuItem("Find Ladders", icon = icon("water-ladder"), tabName = "FindLadders", selected = T,
-                                                              badgeColor = "green", badgeLabel = "new")
+                                                              badgeColor = "green", badgeLabel = "new"),
+                                                     menuItem("Documentation", icon = icon("file"), startExpanded = T,
+                                                              menuSubItem("Step 1: Upload", tabName = "Documentation1"),
+                                                              menuSubItem("Step 2: Find Ladders", tabName = "Documentation2"),
+                                                              menuSubItem("Step 3: Find Peaks", tabName = "Documentation3"),
+                                                              menuSubItem("Step 4: Instability Metrics", tabName = "Documentation4"),
+                                                              menuSubItem("Step 5: Analysis", tabName = "Documentation5"))
     ))
   })
 
@@ -251,7 +261,13 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
 
     output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
                                                      menuItem("Upload", icon = icon("spinner"), tabName = "Upload"),
-                                                     menuItem("Find Ladders", icon = icon("water-ladder"), tabName = "FindLadders", selected = T)
+                                                     menuItem("Find Ladders", icon = icon("water-ladder"), tabName = "FindLadders", selected = T),
+                                                     menuItem("Documentation", icon = icon("file"), startExpanded = T,
+                                                              menuSubItem("Step 1: Upload", tabName = "Documentation1"),
+                                                              menuSubItem("Step 2: Find Ladders", tabName = "Documentation2"),
+                                                              menuSubItem("Step 3: Find Peaks", tabName = "Documentation3"),
+                                                              menuSubItem("Step 4: Instability Metrics", tabName = "Documentation4"),
+                                                              menuSubItem("Step 5: Analysis", tabName = "Documentation5"))
     ))
   })
 
@@ -300,7 +316,13 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
                                                                       menuItem("Upload", icon = icon("spinner"), tabName = "Upload"),
                                                                       menuItem("Find Ladders", icon = icon("water-ladder"), tabName = "FindLadders", selected = T),
                                                                       menuItem("Find Peaks", icon = icon("mountain"), tabName = "FindPeaks", selected = F,
-                                                                               badgeColor = "green", badgeLabel = "new")))
+                                                                               badgeColor = "green", badgeLabel = "new"),
+                                                                      menuItem("Documentation", icon = icon("file"), startExpanded = T,
+                                                                               menuSubItem("Step 1: Upload", tabName = "Documentation1"),
+                                                                               menuSubItem("Step 2: Find Ladders", tabName = "Documentation2"),
+                                                                               menuSubItem("Step 3: Find Peaks", tabName = "Documentation3"),
+                                                                               menuSubItem("Step 4: Instability Metrics", tabName = "Documentation4"),
+                                                                               menuSubItem("Step 5: Analysis", tabName = "Documentation5"))))
                    })
     },
     error = function(e) {
@@ -496,11 +518,11 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
   })
 
   output$laddertext1 <- renderUI({
-    h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Ladder R-squared Table (check this to see how well the ladder has fitted)</b>'))
+    h5(HTML('<h5 style = "text-align:justify;color:#000000"><b>Ladder R-squared Table (check this to see how well the ladder has fitted)</b>'))
   })
 
   output$laddertext2 <- renderUI({
-    h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Ladder Summary Table</b>'))
+    h5(HTML('<h5 style = "text-align:justify;color:#000000"><b>Ladder Summary Table</b>'))
   })
 
   observeEvent(input$ladder_summary_rows_selected, {

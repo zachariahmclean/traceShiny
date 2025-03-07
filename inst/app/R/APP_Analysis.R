@@ -4,28 +4,28 @@ Analysis_box_ui1 <- function(id) {
 
       fluidRow(
         column(1,
-               numericInput("xlim1_analysis", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">X min')),
+               numericInput("xlim1_analysis", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">X min')),
                             value = 0)),
 
         column(1,
-               numericInput("xlim2_analysis", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">X max')),
+               numericInput("xlim2_analysis", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">X max')),
                             value = 250)),
         column(1,
-               numericInput("ylim1_analysis", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Y min')),
+               numericInput("ylim1_analysis", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Y min')),
                             value = -200)),
 
         column(1,
-               numericInput("ylim2_analysis", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Y max')),
+               numericInput("ylim2_analysis", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Y max')),
                             value = 2000)),
 
         column(4,
-               sliderInput("opacity", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Opacity')),
+               sliderInput("opacity", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Opacity')),
                            min = 0, max = 1,
                            value = 0.6, step = 0.1)
         ),
 
         column(4,
-               sliderInput("HeightAnalysis", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Plot Height')),
+               sliderInput("HeightAnalysis", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Plot Height')),
                            min = 1, max = 100,
                            value = 20, step = 1)
         )
@@ -36,7 +36,7 @@ Analysis_box_ui1 <- function(id) {
 }
 
 Analysis_box_ui2 <- function(id) {
-  box(id = "AnalysisBox2", title = p("Instability Metrics Table"), status = "warning", solidHeader = F,
+  box(id = "AnalysisBox2", title = p("Instability Metrics Table", help_button("Metrics_analysis")), status = "warning", solidHeader = F,
       collapsible = T, width = NULL,
 
       fluidRow(
@@ -60,21 +60,21 @@ Analysis_box_ui2 <- function(id) {
 # }
 
 Analysis_box_ui3 <- function(id) {
-  box(id = "AnalysisBox3", title = p("Settings"), status = "warning", solidHeader = F,
+  box(id = "AnalysisBox3", title = p("Settings", help_button("settings")), status = "warning", solidHeader = F,
       collapsible = T, width = NULL,
 
       fluidRow(
         column(12,
                radioGroupButtons(
                  inputId = "peaks_traces",
-                 label = h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Show Peaks or Traces')),
+                 label = h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Show Peaks or Traces')),
                  choices = c("Peaks",
                              "Traces"),
                  justified = TRUE,
                  selected = "Peaks"
                ),
 
-               virtualSelectInput("Analysis_samples", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Plot to Overlay')),
+               virtualSelectInput("Analysis_samples", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Plot to Overlay')),
                                   choices = NULL,
                                   multiple = T,
                                   selected = NULL,
@@ -83,7 +83,7 @@ Analysis_box_ui3 <- function(id) {
                                   placeholder = "Please select your samples"
                ),
 
-               virtualSelectInput("group_samples", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Group Samples By')),
+               virtualSelectInput("group_samples", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Group Samples By')),
                                   choices = "unique_id",
                                   multiple = T,
                                   selected = NULL,
@@ -92,32 +92,32 @@ Analysis_box_ui3 <- function(id) {
                                   placeholder = "Please select your groupings"
                ),
 
-               pickerInput("normalize", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Normalization Method')),
+               pickerInput("normalize", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Normalization Method')),
                            choices = c("None", "Highest Peak", "Sum Of All Peaks")),
 
                htmlOutput("Normalization_settings"),
                fluidRow(
                  column(6,
-                        numericInput("threshold_min", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Min Repeat Size')),
+                        numericInput("threshold_min", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Min Repeat Size')),
                                      value = 10)),
                  column(6,
-                        numericInput("threshold_max", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Max Repeat Size')),
+                        numericInput("threshold_max", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Max Repeat Size')),
                                      value = 500))
                ),
-               materialSwitch("index_normalize", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Set Index Repeat as Zero')), value = FALSE, status = "primary"),
-               materialSwitch("dot_show", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Show peaks/traces')), value = TRUE, status = "primary"),
-               materialSwitch("line_show", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Show Best Fit Line')), value = FALSE, status = "primary"),
+               materialSwitch("index_normalize", label = h5(HTML('<h5 style = "text-align:justify;color:#000000">Set Index Repeat as Zero')), value = FALSE, status = "primary"),
+               materialSwitch("dot_show", label = h5(HTML('<h5 style = "text-align:justify;color:#000000">Show peaks/traces')), value = TRUE, status = "primary"),
+               materialSwitch("line_show", label = h5(HTML('<h5 style = "text-align:justify;color:#000000">Show Best Fit Line')), value = FALSE, status = "primary"),
 
                conditionalPanel(
                  condition = 'input.line_show == true',
-                 numericInput("span", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Span')),
+                 numericInput("span", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Span')),
                               value = 0.1, max = 1,
                               step = 0.01),
-                 materialSwitch("CI_show", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Show Confidence Intervals')), value = FALSE, status = "primary"),
+                 materialSwitch("CI_show", label = h5(HTML('<h5 style = "text-align:justify;color:#000000">Show Confidence Intervals')), value = FALSE, status = "primary"),
 
                  conditionalPanel(
                    condition = 'input.CI_show == true',
-                   numericInput("CI", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Confidence Interval')),
+                   numericInput("CI", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Confidence Interval')),
                                 value = 0.95, max = 1,
                                 step = 0.01)
                  )
@@ -127,6 +127,9 @@ Analysis_box_ui3 <- function(id) {
 }
 
 analysis_server <- function(input, output, session, continue_module, upload_data, ladder_module, peaks_module, metrics_module) {
+
+  help_click("settings", helpfile = "data/analysis/Settings.html")
+  help_click("Metrics_analysis", helpfile = "data/metrics/metrics_table.html")
 
   reactive_analysis <- reactiveValues()
 
@@ -172,11 +175,18 @@ analysis_server <- function(input, output, session, continue_module, upload_data
                                                      menuItem("Find Peaks", icon = icon("mountain"), tabName = "FindPeaks", selected = F),
                                                      menuItem("Instability Metrics", icon = icon("table"), tabName = "InstabilityMetrics", selected = F),
                                                      menuItem("Analysis", icon = icon("magnifying-glass-chart"), tabName = "Analysis", selected = T,
-                                                              badgeColor = "green", badgeLabel = "new")))
+                                                              badgeColor = "green", badgeLabel = "new"),
+                                                     menuItem("Documentation", icon = icon("file"), startExpanded = T,
+                                                              menuSubItem("Step 1: Upload", tabName = "Documentation1"),
+                                                              menuSubItem("Step 2: Find Ladders", tabName = "Documentation2"),
+                                                              menuSubItem("Step 3: Find Peaks", tabName = "Documentation3"),
+                                                              menuSubItem("Step 4: Instability Metrics", tabName = "Documentation4"),
+                                                              menuSubItem("Step 5: Analysis", tabName = "Documentation5"))
+                                                     ))
   })
 
   output$Normalization_settings <- renderUI({
-    h4(HTML('<b><h4 style = "text-align:justify;">Normalization Settings</b>'))
+    h5(HTML('<b><h5 style = "text-align:justify;">Normalization Settings</b>'))
   })
 
   observe({

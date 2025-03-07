@@ -1,11 +1,11 @@
 metrics2_box_ui1 <- function(id) {
   box(id = "Metrics2BoxIntro", title = strong("Calculate Instability Metrics"), status = "warning", solidHeader = F,
       collapsible = T, collapsed = T, width = 12,
-      h4(includeHTML("data/metrics/metrics_landing_page.html")),
+      h5(includeHTML("data/metrics/metrics_landing_page.html")),
       br(), br(),
 
       fluidRow(column(3,
-                      valueBox("NEW", actionBttn("Metrics2BoxSTART", "START",
+                      valueBox("PROCEED", actionBttn("Metrics2BoxSTART", "START",
                                                  style = "jelly",
                                                  color = "primary"), icon = icon("paper-plane"), width = 12, color = "aqua"))
       ))
@@ -15,25 +15,25 @@ metrics2_box_ui2 <- function(id) {
   box(id = "Metrics2Box1", title = p("Settings", help_button("metrics2_params")), status = "warning", solidHeader = F,
       collapsible = T, width = NULL,
 
-      materialSwitch("advancesettings_Metrics2", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Show Advanced Settings')), value = FALSE, status = "primary"),
+      materialSwitch("advancesettings_Metrics2", label = h5(HTML('<h5 style = "text-align:justify;color:#000000">Show Advanced Settings')), value = FALSE, status = "primary"),
 
-      materialSwitch("group_controls2", label = h4(HTML('<h4 style = "text-align:justify;color:#000000;margin-top:-50px;">Grouped Index Assignment')), value = TRUE, status = "primary"),
+      materialSwitch("group_controls2", label = h5(HTML('<h5 style = "text-align:justify;color:#000000;margin-top:-50px;">Grouped Index Assignment')), value = TRUE, status = "primary"),
 
       fluidRow(
         column(12,
-               h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Calculate Repeat Instability Metrics</b>')),
+               h5(HTML('<h5 style = "text-align:justify;color:#000000"><b>Calculate Repeat Instability Metrics</b>')),
                fluidRow(
                  column(6,
-                        numericInput("peak_threshold2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Peak Threshold')),
+                        numericInput("peak_threshold2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Peak Threshold')),
                                      min = 0.01,
                                      value = 0.05, step = 0.01))
                ),
                fluidRow(
                  column(6,
-                        numericInput("window_around_index_peak_min2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Minimum Window')),
+                        numericInput("window_around_index_peak_min2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Minimum Window')),
                                      value = -30, step = 1)),
                  column(6,
-                        numericInput("window_around_index_peak_max2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Maximum Window')),
+                        numericInput("window_around_index_peak_max2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Maximum Window')),
                                      value = 50, step = 1))
                )
         )
@@ -42,35 +42,35 @@ metrics2_box_ui2 <- function(id) {
         condition = 'input.advancesettings_Metrics2 == true',
         fluidRow(
           column(12,
-                 h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Instability Metrics Table Output</b><br>')),
-                 h4(HTML('<h4 style = "text-align:justify;color:#000000"><br>Percentile Range')),
+                 h5(HTML('<h5 style = "text-align:justify;color:#000000"><b>Instability Metrics Table Output</b><br>')),
+                 h5(HTML('<h5 style = "text-align:justify;color:#000000"><br>Percentile Range')),
                  fluidRow(
                    column(4,
-                          numericInput("percentile_range1_2", label = h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">From')),
+                          numericInput("percentile_range1_2", label = h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">From')),
                                        value = 0.5,
                                        min = 0,
                                        step = 0.1)),
                    column(4,
-                          numericInput("percentile_range2_2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">To')),
+                          numericInput("percentile_range2_2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">To')),
                                        min = 0,
                                        value = 0.95, step = 0.1)),
                    column(4,
-                          numericInput("percentile_range3_2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Interval')),
+                          numericInput("percentile_range3_2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Interval')),
                                        min = 0,
                                        value = 0.05, step = 0.1))
                  ),
-                 h4(HTML('<h4 style = "text-align:justify;color:#000000">Repeat Range')),
+                 h5(HTML('<h5 style = "text-align:justify;color:#000000">Repeat Range')),
                  fluidRow(
                    column(4,
-                          numericInput("repeat_range1_2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">From')),
+                          numericInput("repeat_range1_2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">From')),
                                        min = 0,
                                        value = 0, step = 1)),
                    column(4,
-                          numericInput("repeat_range2_2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">To')),
+                          numericInput("repeat_range2_2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">To')),
                                        min = 0,
                                        value = 20, step = 1)),
                    column(4,
-                          numericInput("repeat_range3_2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Interval')),
+                          numericInput("repeat_range3_2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Interval')),
                                        min = 0,
                                        value = 5, step = 1))
                  )
@@ -96,7 +96,7 @@ metrics2_box_ui4 <- function(id) {
 
       fluidRow(
         column(2,
-               pickerInput("sample_subset_metrics2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Samples')),
+               pickerInput("sample_subset_metrics2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Samples')),
                            choices = NULL)),
 
         column(1,
@@ -106,7 +106,7 @@ metrics2_box_ui4 <- function(id) {
         column(3,
                radioGroupButtons(
                  inputId = "points_histo",
-                 label = h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Plot Option')),
+                 label = h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Plot Option')),
                  choices = c("Points",
                              "Histogram"),
                  justified = TRUE,
@@ -114,28 +114,28 @@ metrics2_box_ui4 <- function(id) {
                )
         ),
         column(6,
-               sliderInput("HeightPeaks_metrics2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Plot Height')),
+               sliderInput("HeightPeaks_metrics2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Plot Height')),
                            min = 1, max = 100,
                            value = 20, step = 1)
         )),
 
       fluidRow(
         column(12,
-               h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Plot Controls</b>')),
+               h5(HTML('<h5 style = "text-align:justify;color:#000000"><b>Plot Controls</b>')),
                fluidRow(
                  column(1,
-                        numericInput("xlim1_metrics2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">X min')),
+                        numericInput("xlim1_metrics2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">X min')),
                                      value = 0)),
 
                  column(1,
-                        numericInput("xlim2_metrics2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">X max')),
+                        numericInput("xlim2_metrics2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">X max')),
                                      value = 250)),
                  column(1,
-                        numericInput("ylim1_metrics2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Y min')),
+                        numericInput("ylim1_metrics2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Y min')),
                                      value = -2)),
 
                  column(1,
-                        numericInput("ylim2_metrics2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Y max')),
+                        numericInput("ylim2_metrics2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Y max')),
                                      value = 2000)),
                  column(6,
                         prettySwitch("show_line_fastq", "Show Best Fit Line",
@@ -151,7 +151,7 @@ metrics2_box_ui4 <- function(id) {
 
       fluidRow(
         column(6,
-               numericInput("IndexRepeat1_2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Index Repeat (can be manually changed)')),
+               numericInput("IndexRepeat1_2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Index Repeat (can be manually changed)')),
                             value = NULL)
         )
       ),
@@ -160,13 +160,13 @@ metrics2_box_ui4 <- function(id) {
 
       fluidRow(
         column(3,
-               pickerInput("sample_subset2_2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Index Samples')),
+               pickerInput("sample_subset2_2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Index Samples')),
                            choices = NULL))
       ),
 
       fluidRow(
         column(6,
-               numericInput("IndexRepeat2_2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Index Repeat (can be manually changed)')),
+               numericInput("IndexRepeat2_2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Index Repeat (can be manually changed)')),
                             value = NULL)
         )
       ),
@@ -174,7 +174,7 @@ metrics2_box_ui4 <- function(id) {
 
       fluidRow(
         column(12,
-               h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Index Repeat Table</b>')),
+               h5(HTML('<h5 style = "text-align:justify;color:#000000"><b>Index Repeat Table</b>')),
                p(style="text-align: right;", downloadButton("Index_Table_download2")),
                withSpinner(DT::dataTableOutput("Index_Table2"))
         )
@@ -186,15 +186,15 @@ metrics2_box_ui5 <- function(id) {
   box(id = "Metrics2Box4", title = p("Export Data"), status = "warning", solidHeader = F,
       collapsible = T, width = NULL,
 
-      h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Download Data Output</b><br>')),
+      h5(HTML('<h5 style = "text-align:justify;color:#000000"><b>Download Data Output</b><br>')),
       downloadBttn("downloadmetrics2_fastq_2", "Instability Metrics Table"), br(), br(),
       actionBttn("downloadPlotButton2", "All Plots", icon = icon("download")), br(), br(),
 
-      h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Download R-related Files</b><br>')),
+      h5(HTML('<h5 style = "text-align:justify;color:#000000"><b>Download R-related Files</b><br>')),
       downloadBttn("downloadRDS2",  "R Object"), br(), br(),
       downloadBttn("downloadlogs2", "Code For Current Analysis"), br(), br(),
 
-      h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Save and Load</b><br>')),
+      h5(HTML('<h5 style = "text-align:justify;color:#000000"><b>Save and Load</b><br>')),
       downloadBttn("downloadDataSave2", "Save .Rdata File For Re-load into traceShiny")
   )
 }
@@ -362,35 +362,35 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
   observeEvent(input$downloadPlotButton2, {
     showModal(modalDialog(
       title = strong("Download Plots"),
-      h4(HTML('<h4 style = "text-align:justify;color:#000000"><br>Plot Sizes')),
+      h5(HTML('<h5 style = "text-align:justify;color:#000000"><br>Plot Sizes')),
       fluidRow(
         column(6,
-               numericInput("downloadPlotHeight2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Height of plot')),
+               numericInput("downloadPlotHeight2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Height of plot')),
                             value = 7,
                             min = 0,
                             max = 20)),
         column(6,
-               numericInput("downloadPlotWidth2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Width of plot')),
+               numericInput("downloadPlotWidth2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Width of plot')),
                             value = 7,
                             min = 0,
                             max = 20))
       ),
 
-      h4(HTML('<h4 style = "text-align:justify;color:#000000"><br>Axis Limits')),
+      h5(HTML('<h5 style = "text-align:justify;color:#000000"><br>Axis Limits')),
       fluidRow(
         column(3,
-               numericInput("xlim1_plot2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">X min')),
+               numericInput("xlim1_plot2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">X min')),
                             value = 0)),
 
         column(3,
-               numericInput("xlim2_plot2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">X max')),
+               numericInput("xlim2_plot2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">X max')),
                             value = 250)),
         column(3,
-               numericInput("ylim1_plot2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Y min')),
+               numericInput("ylim1_plot2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Y min')),
                             value = 0)),
 
         column(3,
-               numericInput("ylim2_plot2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Y max')),
+               numericInput("ylim2_plot2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Y max')),
                             value = 2000))),
       downloadBttn("downloadPlot2", "Download"),
       size = "m",
@@ -403,7 +403,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
   observeEvent(ignoreInit = TRUE, list(input$Metrics2BoxSTART, input$group_controls2), {
 
     #Transform data
-    Instability <- upload_data$fastq()[,c(2,5)]
+    Instability <- upload_data$fastq()[,c("Repeat Length", "SampleID")]
     Instability <- Instability %>% group_by(`Repeat Length`, SampleID) %>%
       dplyr::summarise(signal = n())
 
@@ -429,8 +429,9 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
       )
     }
 
-    find_alleles_fastq(
-      fragments_list = peak_list
+    find_alleles(
+      fragments_list = peak_list,
+      number_of_alleles = input$number_of_alleles_fastq
     )
 
     if (is.null(upload_data$metadata_table_fastq())) {

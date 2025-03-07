@@ -2,11 +2,13 @@ upload_data_box_ui1 <- function(id) {
   box(id = "LoadBoxIntro", title = strong("Load your data"), status = "warning", solidHeader = F,
       collapsible = T, collapsed = T, width = 12,
 
-      h4(includeHTML("data/upload/upload.html")),
+      h5(includeHTML("data/upload/upload.html")),
+      img(id="pipe1",src="pipeline1.jpg", width="20%"),
+      br(),
       br(),
 
       fluidRow(column(3,
-                      valueBox("NEW", actionBttn("LoadBoxSTART", "START",
+                      valueBox("PROCEED", actionBttn("LoadBoxSTART", "START",
                                                  style = "jelly",
                                                  color = "primary"), icon = icon("paper-plane"), width = 12, color = "aqua"))
       ))
@@ -26,7 +28,7 @@ upload_data_box_ui2 <- function(id) {
         column(12,
                radioGroupButtons(
                  inputId = "DataUpload",
-                 label = h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Upload Method')),
+                 label = h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Upload Method')),
                  choices = c("fsa",
                              "Use Example"),
                  individual = TRUE,
@@ -40,11 +42,11 @@ upload_data_box_ui2 <- function(id) {
       ),
       conditionalPanel(
         condition = 'input.DataUpload == "fsa"',
-        fileInput("DataFSA", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Upload fsa File(s)')), multiple = T, accept = c(".fsa"))
+        fileInput("DataFSA", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Upload fsa File(s)')), multiple = T, accept = c(".fsa"))
       ),
       conditionalPanel(
         condition = 'input.DataUpload == "fastq"',
-        fileInput("fastq", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Upload fastq Files(s)')), multiple = T, accept = c(".fastq", ".fq"))
+        fileInput("fastq", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Upload fastq Files(s)')), multiple = T, accept = c(".fastq", ".fq"))
       )
   )
 }
@@ -55,32 +57,38 @@ upload_data_box_ui_fastq1 <- function(id) {
 
       fluidRow(
         column(6,
-               textInput("flank_left", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Left Flanking Sequence')), placeholder = "CAAGTCCTTC")
+               textInput("flank_left", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Left Flanking Sequence')), placeholder = "CAAGTCCTTC")
         ),
         column(6,
-               textInput("flank_right", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Right Flanking Sequence')), placeholder = "CAACAGCCGCCACCG")
+               textInput("flank_right", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Right Flanking Sequence')), placeholder = "CAACAGCCGCCACCG")
         )
       ),
 
       fluidRow(
         column(6,
-               textInput("repeat_pattern", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Repeat Pattern')), placeholder = "CAG")
+               textInput("repeat_pattern", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Repeat Pattern')), placeholder = "CAG")
         ),
         column(6,
-               numericInput("no_repeats", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Find at least this many repeats')), value = 10,
+               numericInput("no_repeats", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Find at least this many repeats')), value = 10,
                             min = 0, step = 1)
         )
       ),
 
       fluidRow(
         column(6,
-               numericInput("Lev_distance", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Max Levenshtein Distance')), value = 0.1,
+               numericInput("Lev_distance", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Max Levenshtein Distance')), value = 0.05,
                             min = 0, max = 1, step = 0.01)
         ),
         column(6,
-               numericInput("codon_start", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Starting Codon Position (For Short-Hand Sequence Notation)')), value = 2,
+               numericInput("codon_start", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Starting Codon Position (For Short-Hand Sequence Notation)')), value = 2,
                             min = 0, step = 1)
         )
+      ),
+
+      fluidRow(
+        column(6,
+               pickerInput("number_of_alleles_fastq", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Number of Alleles')),
+                           choices = c("1", "2"), selected = "1"))
       ),
       p(style="text-align: center;", actionBttn("Fastq_Button", "APPLY", size = "lg"))
   )
@@ -92,7 +100,7 @@ upload_data_box_ui_fastq2 <- function(id) {
 
       fluidRow(
         column(3,
-               pickerInput("sample_subset_fastq", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Filter Samples')),
+               pickerInput("sample_subset_fastq", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Filter Samples')),
                            choices = "ALL"))
       ),
 
@@ -112,10 +120,10 @@ upload_data_box_ui3 <- function(id) {
 
       fluidRow(
         column(3,
-               pickerInput("sample_subset_upload", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Samples')),
+               pickerInput("sample_subset_upload", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Samples')),
                            choices = NULL)),
         column(3,
-               sliderInput("HeightDataChannels", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Plot Height')),
+               sliderInput("HeightDataChannels", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Plot Height')),
                            min = 1, max = 100,
                            value = 20, step = 1))
       ),
@@ -124,10 +132,10 @@ upload_data_box_ui3 <- function(id) {
 
       fluidRow(
         column(3,
-               pickerInput("LadderChannel", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Ladder Channel')),
+               pickerInput("LadderChannel", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Ladder Channel')),
                            choices = NULL)),
         column(3,
-               pickerInput("SignalChannel", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Sample Channel')),
+               pickerInput("SignalChannel", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Sample Channel')),
                            choices = NULL))
       ),
       p(style="text-align: center;", actionBttn("SelectionButton", "APPLY", size = "lg"))
@@ -141,7 +149,7 @@ upload_data_box_ui4 <- function(id) {
 
     materialSwitch(
       inputId = "DataUploadMeta",
-      label = h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Use Example Metadata')),
+      label = h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Use Example Metadata')),
       status = "primary",
       right = TRUE,
       value = FALSE
@@ -151,7 +159,7 @@ upload_data_box_ui4 <- function(id) {
 
     conditionalPanel(
       condition = 'input.DataUploadMeta == false',
-      fileInput("MetadataUpload", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-75px;">Metadata Upload'), downloadBttn("downloadExampleMetadata", "Download Example MetaData")),
+      fileInput("MetadataUpload", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-75px;">Metadata Upload'), downloadBttn("downloadExampleMetadata", "Download Example MetaData")),
                 multiple = F, accept = c(".txt", ".csv", ".xlsx", ".xls"))
     ),
 
@@ -164,7 +172,7 @@ upload_data_box_ui5 <- function(id) {
     id = "LoadBox4", title = p("Ladder Selection", help_button("ladder")), status = "warning", solidHeader = F,
     collapsible = T, width = NULL,
 
-    materialSwitch("Ladder_switch", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Use Ladder Defaults')), value = TRUE, status = "primary"),
+    materialSwitch("Ladder_switch", label = h5(HTML('<h5 style = "text-align:justify;color:#000000">Use Ladder Defaults')), value = TRUE, status = "primary"),
 
     conditionalPanel(
       condition = 'input.Ladder_switch == true',
@@ -176,10 +184,10 @@ upload_data_box_ui5 <- function(id) {
 
       fluidRow(
         column(3,
-               textInput("LadderUploadName", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Input Custom Ladders Name')))
+               textInput("LadderUploadName", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Input Custom Ladders Name')))
         ),
         column(5,
-               textInput("LadderUpload", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Input Custom Ladders Size (each size must be separated by a comma, see examples in the table below)')))
+               textInput("LadderUpload", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Input Custom Ladders Size (each size must be separated by a comma, see examples in the table below)')))
         ),
         column(3,
                p(style="text-align: left;", actionBttn("Ladderbutton", "APPLY", size = "lg")))
@@ -417,13 +425,10 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                        joined <- list()
 
                        for (i in paste0(filesdir,'/',input$fastq$name)) {
-                         CAG[[i]] <- microseq::readFastq(i)
-                         CAG_reverse[[i]] <- microseq::readFastq(i)
-                         CAG_reverse[[i]]$Sequence <- microseq::reverseComplement(CAG_reverse[[i]]$Sequence)
-                         joined[[i]] <- Map(c, CAG[[i]], CAG_reverse[[i]])
+                         CAG[[i]] <- microseq::readFastq(i) %>% mutate(SampleID = gsub(".+/", "", i))
                        }
 
-                       reactive$df <- joined
+                       reactive$df <- rbindlist(CAG)
 
                        reactive$fsa_list <- NULL
 
@@ -456,38 +461,16 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                    value = 0, {
                      incProgress(0.1)
 
-                     ALL <- list()
-                     df <- list()
+                     reactive$df_final <- repeat_sizer(fastq_df = reactive$df,
+                                                       left_flank_seq = input$flank_left,
+                                                       right_flank_seq = input$flank_right,
+                                                       repeat_unit_seq = input$repeat_pattern,
+                                                       max.distance = input$Lev_distance,
+                                                       min_n_repeats = input$no_repeats,
+                                                       codon_start = input$codon_start)
+                     reactive$df_final <- reactive$df_final[, c("Header", "repeat_length", "short_seq", "Sequence", "matched_sequence", "Error_in_LFS", "Error_in_RFS", "Error_in_Repeat", "SampleID")]
 
-                     for (i in names(reactive$df)) {
-
-                       ALL[[i]] <- aregexec(paste0(input$flank_left, paste0("(", input$repeat_pattern, ")", "{", input$no_repeats, ",}"),  input$flank_right), reactive$df[[i]]$Sequence, max.distance = input$Lev_distance)
-
-                       ## Extract matches
-                       df[[i]] <- regmatches(reactive$df[[i]]$Sequence, ALL[[i]])
-                       names(df[[i]]) <- reactive$df[[i]]$Header
-                       df[[i]] <- df[[i]][lapply(df[[i]],length)>0]
-
-                       df[[i]] <- as.data.frame(enframe(df[[i]]))
-                       df[[i]] <- unnest(df[[i]])
-                       df[[i]] <- df[[i]][!duplicated(df[[i]]$name), ]
-                       df[[i]] <- mutate(df[[i]], Repeat_length = paste0(round((nchar(df[[i]]$value)- nchar(paste0(input$flank_left, input$flank_right)))/nchar(input$repeat_pattern)))) %>% mutate(df[[i]], SampleID = gsub(".+/", "", i))
-                       df[[i]]$Repeat_length <- as.numeric(df[[i]]$Repeat_length)
-                     }
-
-                     df <- df[lapply(df,nrow)>4]
-
-                     reactive$df_final <- rbindlist(df)
-                     reactive$df_final <- reactive$df_final[,c(1,3,2,4)]
-                     colnames(reactive$df_final) <- c("Read ID", "Repeat Length", "Sequence", "SampleID")
-
-                     value <- str_sub(reactive$df_final$Sequence, input$codon_start)
-
-                     for (i in 1:length(value)) {
-                       reactive$df_final$`Sequence Short`[i] <- paste(paste0(rle(unlist(strsplit(value[i], "(?<=.{3})", perl = TRUE)))$values, rle(unlist(strsplit(value[i], "(?<=.{3})", perl = TRUE)))$lengths), collapse = " ")
-                     }
-
-                     reactive$df_final <-reactive$df_final[,c(1, 2, 5, 3, 4)]
+                     colnames(reactive$df_final) <- c("Read ID",	"Repeat Length",	"Sequence Short",	"Sequence", "Matched Sequence", "Error in Left Side Flanking Sequence", "Error in Right side Flanking Sequence", "Error in Repeat Sequence", "SampleID")
 
                      updatePickerInput(session, "sample_subset_metrics2", choices = unique(reactive$df_final$SampleID))
 
@@ -509,7 +492,7 @@ upload_data_box_server <- function(input, output, session, continue_module) {
   })
 
   output$short_form <- renderUI({
-    h4(HTML('<b><h4 style = "text-align:justify">Sequence Summary</b>'))
+    h5(HTML('<b><h5 style = "text-align:justify">Sequence Summary</b>'))
   })
 
   observe({

@@ -4,28 +4,28 @@ Analysis2_box_ui1 <- function(id) {
 
       fluidRow(
         column(1,
-               numericInput("xlim1_analysis2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">X min')),
+               numericInput("xlim1_analysis2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">X min')),
                             value = 0)),
 
         column(1,
-               numericInput("xlim2_analysis2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">X max')),
+               numericInput("xlim2_analysis2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">X max')),
                             value = 250)),
         column(1,
-               numericInput("ylim1_analysis2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Y min')),
+               numericInput("ylim1_analysis2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Y min')),
                             value = -100)),
 
         column(1,
-               numericInput("ylim2_analysis2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Y max')),
+               numericInput("ylim2_analysis2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Y max')),
                             value = 2000)),
 
         column(4,
-               sliderInput("opacity2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Opacity')),
+               sliderInput("opacity2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Opacity')),
                            min = 0, max = 1,
                            value = 0.6, step = 0.1)
         ),
 
         column(4,
-               sliderInput("HeightAnalysis2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Plot Height')),
+               sliderInput("HeightAnalysis2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Plot Height')),
                            min = 1, max = 100,
                            value = 20, step = 1)
         )
@@ -59,14 +59,14 @@ Analysis2_box_ui3 <- function(id) {
         column(12,
                radioGroupButtons(
                  inputId = "points_histo2",
-                 label = h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Plot Option')),
+                 label = h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Plot Option')),
                  choices = c("Points",
                              "Histogram"),
                  justified = TRUE,
                  selected = "Histogram"
                ),
 
-               virtualSelectInput("Analysis_samples2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Plot to Overlay')),
+               virtualSelectInput("Analysis_samples2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Plot to Overlay')),
                                   choices = NULL,
                                   multiple = T,
                                   selected = NULL,
@@ -75,7 +75,7 @@ Analysis2_box_ui3 <- function(id) {
                                   placeholder = "Please select your samples"
                ),
 
-               virtualSelectInput("group_samples2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Group Samples By')),
+               virtualSelectInput("group_samples2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Group Samples By')),
                                   choices = "unique_id",
                                   multiple = T,
                                   selected = NULL,
@@ -84,32 +84,32 @@ Analysis2_box_ui3 <- function(id) {
                                   placeholder = "Please select your groupings"
                ),
 
-               pickerInput("normalize2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Normalization Method')),
+               pickerInput("normalize2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Normalization Method')),
                            choices = c("None", "Highest Peak", "Sum Of All Peaks")),
 
                htmlOutput("Normalization_settings2"),
                fluidRow(
                  column(6,
-                        numericInput("threshold_min2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Min Repeat Size')),
+                        numericInput("threshold_min2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Min Repeat Size')),
                                      value = 10)),
                  column(6,
-                        numericInput("threshold_max2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Max Repeat Size')),
+                        numericInput("threshold_max2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Max Repeat Size')),
                                      value = 500))
                ),
-               materialSwitch("index_normalize2", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Set Index Repeat as Zero')), value = FALSE, status = "primary"),
-               materialSwitch("dot_show2", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Show peaks/traces')), value = TRUE, status = "primary"),
-               materialSwitch("line_show2", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Show Best Fit Line')), value = FALSE, status = "primary"),
+               materialSwitch("index_normalize2", label = h5(HTML('<h5 style = "text-align:justify;color:#000000">Set Index Repeat as Zero')), value = FALSE, status = "primary"),
+               materialSwitch("dot_show2", label = h5(HTML('<h5 style = "text-align:justify;color:#000000">Show peaks/traces')), value = TRUE, status = "primary"),
+               materialSwitch("line_show2", label = h5(HTML('<h5 style = "text-align:justify;color:#000000">Show Best Fit Line')), value = FALSE, status = "primary"),
 
                conditionalPanel(
                  condition = 'input.line_show2 == true',
-                 numericInput("span2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Span')),
+                 numericInput("span2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Span')),
                               value = 0.1, max = 1,
                               step = 0.01),
-                 materialSwitch("CI_show2", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Show Confidence Intervals')), value = FALSE, status = "primary"),
+                 materialSwitch("CI_show2", label = h5(HTML('<h5 style = "text-align:justify;color:#000000">Show Confidence Intervals')), value = FALSE, status = "primary"),
 
                  conditionalPanel(
                    condition = 'input.CI_show2 == true',
-                   numericInput("CI2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Confidence Interval')),
+                   numericInput("CI2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Confidence Interval')),
                                 value = 0.95, max = 1,
                                 step = 0.01)
                  )
@@ -166,7 +166,7 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
   })
 
   output$Normalization_settings2 <- renderUI({
-    h4(HTML('<b><h4 style = "text-align:justify;">Normalization Settings</b>'))
+    h5(HTML('<b><h5 style = "text-align:justify;">Normalization Settings</b>'))
   })
 
   observe({
@@ -208,10 +208,10 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
 
   observe({
     if (!is.null(metrics2_module$peak_list()) && !is.null(input$sample_subset_metrics2)) {
-      updateNumericInput(session, "xlim1_analysis2", value = min(metrics2_module$metrics_table()$modal_peak_signal) - 50)
-      updateNumericInput(session, "xlim2_analysis2", value = max(metrics2_module$metrics_table()$modal_peak_signal) + 50)
+      updateNumericInput(session, "xlim1_analysis2", value = min(metrics2_module$metrics_table()$modal_peak_repeat) - 50)
+      updateNumericInput(session, "xlim2_analysis2", value = max(metrics2_module$metrics_table()$modal_peak_repeat) + 50)
       updateNumericInput(session, "ylim1_analysis2", value = -2)
-      updateNumericInput(session, "ylim2_analysis2", value = max(metrics2_module$metrics_table()$modal_peak_repeat) + 300)
+      updateNumericInput(session, "ylim2_analysis2", value = max(metrics2_module$metrics_table()$modal_peak_signal) + 300)
 
     if (input$index_normalize2 == TRUE) {
       updateNumericInput(session, "xlim1_analysis2", value = -50)
@@ -234,12 +234,12 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
         updateNumericInput(session, "ylim2_analysis2", value = 0.3)
       }
       else if (input$normalize2 == "None") {
-        updateNumericInput(session, "ylim2_analysis2", value = max(metrics2_module$metrics_table()$modal_peak_repeat) + 300)
+        updateNumericInput(session, "ylim2_analysis2", value = max(metrics2_module$metrics_table()$modal_peak_signal) + 300)
       }
     }
     else {
-      updateNumericInput(session, "xlim1_analysis2", value = min(metrics2_module$metrics_table()$modal_peak_signal) - 50)
-      updateNumericInput(session, "xlim2_analysis2", value = max(metrics2_module$metrics_table()$modal_peak_signal) + 50)
+      updateNumericInput(session, "xlim1_analysis2", value = min(metrics2_module$metrics_table()$modal_peak_repeat) - 50)
+      updateNumericInput(session, "xlim2_analysis2", value = max(metrics2_module$metrics_table()$modal_peak_repeat) + 50)
 
       if (input$normalize2 == "Highest Peak") {
         updateNumericInput(session, "ylim1_analysis2", value = -0.3)
@@ -258,7 +258,7 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
         updateNumericInput(session, "ylim2_analysis2", value = 0.3)
       }
       else if (input$normalize2 == "None") {
-        updateNumericInput(session, "ylim2_analysis2", value = max(metrics2_module$metrics_table()$modal_peak_repeat) + 300)
+        updateNumericInput(session, "ylim2_analysis2", value = max(metrics2_module$metrics_table()$modal_peak_signal) + 300)
       }
     }
     }

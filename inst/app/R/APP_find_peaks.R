@@ -1,11 +1,13 @@
 peaks_box_ui1 <- function(id) {
   box(id = "PeaksBoxIntro", title = strong("Find Peaks"), status = "warning", solidHeader = F,
       collapsible = T, collapsed = T, width = 12,
-      h4(includeHTML("data/peaks/peaks_landing_page.html")),
-      br(), br(),
+      h5(includeHTML("data/peaks/peaks_landing_page.html")),
+      img(id="pipe3",src="pipeline3.jpg", width="20%"),
+      br(),
+      br(),
 
       fluidRow(column(3,
-                      valueBox("NEW", actionBttn("PeaksBoxSTART", "START",
+                      valueBox("PROCEED", actionBttn("PeaksBoxSTART", "START",
                                                  style = "jelly",
                                                  color = "primary"), icon = icon("paper-plane"), width = 12, color = "aqua"))
       ))
@@ -15,21 +17,21 @@ peaks_box_ui2 <- function(id) {
   box(id = "PeaksBox1", title = p("Settings", help_button("peaks_param")), status = "warning", solidHeader = F,
       collapsible = T, width = NULL,
 
-      materialSwitch("advancesettings_Peaks", label = h4(HTML('<h4 style = "text-align:justify;color:#000000">Show Advanced Settings')), value = FALSE, status = "primary"),
+      materialSwitch("advancesettings_Peaks", label = h5(HTML('<h5 style = "text-align:justify;color:#000000">Show Advanced Settings')), value = FALSE, status = "primary"),
 
       fluidRow(
         column(12,
-               h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Find Fragments</b>')),
+               h5(HTML('<h5 style = "text-align:justify;color:#000000"><b>Find Fragments</b>')),
                fluidRow(
                  column(6,
-                        numericInput("min_bp_size", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Minimum Repeat Size')),
+                        numericInput("min_bp_size", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Minimum Repeat Size')),
                                      min = 1,
                                      value = 35, step = 1)
                  ),
                  conditionalPanel(
                    condition = 'input.advancesettings_Peaks == true',
                    column(6,
-                          numericInput("max_bp_size", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Maximum Repeat Size')),
+                          numericInput("max_bp_size", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Maximum Repeat Size')),
                                        min = 1,
                                        value = 500, step = 1)
                    )
@@ -37,18 +39,18 @@ peaks_box_ui2 <- function(id) {
                ),
                fluidRow(
                  column(6,
-                        pickerInput("number_of_alleles", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Number of Alleles')),
+                        pickerInput("number_of_alleles", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Number of Alleles')),
                                     choices = c("1", "2"), selected = "1"))
                ),
                conditionalPanel(
                  condition = 'input.advancesettings_Peaks == true',
                  fluidRow(
                    column(6,
-                          numericInput("smoothing_window", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Smoothing Window')),
+                          numericInput("smoothing_window", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Smoothing Window')),
                                        min = 1,
                                        value = 21, step = 1)),
                    column(6,
-                          numericInput("minimum_peak_signal", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Minimum Peak Signal')),
+                          numericInput("minimum_peak_signal", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Minimum Peak Signal')),
                                        min = 1,
                                        value = 20, step = 1))
                  )
@@ -60,15 +62,15 @@ peaks_box_ui2 <- function(id) {
         condition = 'input.advancesettings_Peaks == true',
         fluidRow(
           column(12,
-                 h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Find Alleles</b>')),
+                 h5(HTML('<h5 style = "text-align:justify;color:#000000"><b>Find Alleles</b>')),
                  fluidRow(
                    column(6,
-                          numericInput("peak_region_size_gap_threshold", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Peak Region Size Gap Threshold')),
+                          numericInput("peak_region_size_gap_threshold", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Peak Region Size Gap Threshold')),
                                        min = 1,
                                        value = 6, step = 1)
                    ),
                    column(6,
-                          numericInput("peak_region_signal_threshold_multiplier", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Peak Region Signal Threshold Multiplier')),
+                          numericInput("peak_region_signal_threshold_multiplier", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Peak Region Signal Threshold Multiplier')),
                                        min = 1,
                                        value = 1, step = 1)
                    )
@@ -79,15 +81,15 @@ peaks_box_ui2 <- function(id) {
 
       fluidRow(
         column(12,
-               h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Call Repeats</b>')),
+               h5(HTML('<h5 style = "text-align:justify;color:#000000"><b>Call Repeats</b>')),
                fluidRow(
                  column(6,
-                        numericInput("assay_size_without_repeat", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Assay Size Without Repeat')),
+                        numericInput("assay_size_without_repeat", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Assay Size Without Repeat')),
                                      min = 1,
                                      value = 87, step = 1)
                  ),
                  column(6,
-                        numericInput("repeat_size", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Repeat Size')),
+                        numericInput("repeat_size", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Repeat Size')),
                                      min = 1,
                                      value = 3, step = 1)
                  )
@@ -95,7 +97,7 @@ peaks_box_ui2 <- function(id) {
 
                fluidRow(
                  column(12,
-                        pickerInput("batchcorrectionswitch", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Correction')),
+                        pickerInput("batchcorrectionswitch", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Correction')),
                                     choices = c("none", "batch", "repeat"), selected = "none")
                  )
                ),
@@ -104,7 +106,7 @@ peaks_box_ui2 <- function(id) {
                  column(6,
                         radioGroupButtons(
                           inputId = "force_whole_repeat_units",
-                          label = h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Force Whole Repeat Units')),
+                          label = h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Force Whole Repeat Units')),
                           choices = c("YES",
                                       "NO"),
                           checkIcon = list(
@@ -118,7 +120,7 @@ peaks_box_ui2 <- function(id) {
                  column(6,
                         radioGroupButtons(
                           inputId = "force_repeat_pattern",
-                          label = h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Force repeat pattern')),
+                          label = h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Force repeat pattern')),
                           choices = c("YES",
                                       "NO"),
                           checkIcon = list(
@@ -134,13 +136,13 @@ peaks_box_ui2 <- function(id) {
                  condition = 'input.advancesettings_Peaks == true',
                  fluidRow(
                    column(6,
-                          numericInput("force_repeat_pattern_size_period", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Force repeat pattern size period')),
+                          numericInput("force_repeat_pattern_size_period", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Force repeat pattern size period')),
                                        min = 1,
                                        value = NA_real_, # is set below based on repeat_size
                                        step = 1)
                    ),
                    column(6,
-                          numericInput("force_repeat_pattern_size_window", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Force repeat pattern size window')),
+                          numericInput("force_repeat_pattern_size_window", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Force repeat pattern size window')),
                                        min = 0,
                                        value = 0.5, step = 0.1)
                    )
@@ -153,12 +155,12 @@ peaks_box_ui2 <- function(id) {
 }
 
 peaks_box_ui3 <- function(id) {
-  box(id = "PeaksBox2", title = p("Find Peaks"), status = "warning", solidHeader = F,
+  box(id = "PeaksBox2", title = p("Find Peaks", help_button("peaks_plot")), status = "warning", solidHeader = F,
       collapsible = T, width = NULL,
 
       fluidRow(
         column(2,
-               pickerInput("sample_subset", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Samples')),
+               pickerInput("sample_subset", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Samples')),
                            choices = NULL)),
 
         column(1,
@@ -169,7 +171,7 @@ peaks_box_ui3 <- function(id) {
         column(3,
                radioGroupButtons(
                  inputId = "show_peaks",
-                 label = h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Show Peaks')),
+                 label = h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Show Peaks')),
                  choices = c("YES",
                              "NO"),
                  justified = TRUE,
@@ -177,27 +179,27 @@ peaks_box_ui3 <- function(id) {
                )
         ),
         column(6,
-               sliderInput("HeightPeaks", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Plot Height')),
+               sliderInput("HeightPeaks", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Plot Height')),
                            min = 1, max = 100,
                            value = 20, step = 1)
         )),
       fluidRow(
         column(12,
-               h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Plot Controls</b>')),
+               h5(HTML('<h5 style = "text-align:justify;color:#000000"><b>Plot Controls</b>')),
                fluidRow(
                  column(1,
-                        numericInput("xlim1", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">X min')),
+                        numericInput("xlim1", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">X min')),
                                      value = 0)),
 
                  column(1,
-                        numericInput("xlim2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">X max')),
+                        numericInput("xlim2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">X max')),
                                      value = 250)),
                  column(1,
-                        numericInput("ylim1", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Y min')),
+                        numericInput("ylim1", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Y min')),
                                      value = 0)),
 
                  column(1,
-                        numericInput("ylim2", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Y max')),
+                        numericInput("ylim2", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Y max')),
                                      value = 2000))))),
       htmlOutput("text_no_data"),
       withSpinner(htmlOutput("plot_tracesUI")),
@@ -208,15 +210,15 @@ peaks_box_ui3 <- function(id) {
 }
 
 peaks_box_ui4 <- function(id) {
-  box(id = "PeaksBox3", title = strong("Correction Trace"), status = "warning", solidHeader = F,
+  box(id = "PeaksBox3", title = strong("Correction Trace", help_button("peaks_correction")), status = "warning", solidHeader = F,
       collapsible = T, collapsed = T, width = 12,
 
       fluidRow(
         column(3,
-               pickerInput("sample_subset_Batch", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Batch')),
+               pickerInput("sample_subset_Batch", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Batch')),
                            choices = NULL)),
         column(3,
-               sliderInput("HeightBatch", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Plot Height')),
+               sliderInput("HeightBatch", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Plot Height')),
                            min = 1, max = 100,
                            value = 20, step = 1))
       ),
@@ -225,21 +227,21 @@ peaks_box_ui4 <- function(id) {
 
       fluidRow(
         column(6,
-               h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Before Correction</b>'))),
+               h5(HTML('<h5 style = "text-align:justify;color:#000000"><b>Before Correction</b>'))),
         column(6,
-               h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>After Correction</b>')))
+               h5(HTML('<h5 style = "text-align:justify;color:#000000"><b>After Correction</b>')))
       ),
       withSpinner(htmlOutput("plot_traces_BatchUI"))
   )
 }
 
 peaks_box_ui5 <- function(id) {
-  box(id = "PeaksBox4", title = strong("Repeat Correction Correlation"), status = "warning", solidHeader = F,
+  box(id = "PeaksBox4", title = strong("Repeat Correction Correlation", help_button("peaks_repeat_correction")), status = "warning", solidHeader = F,
       collapsible = T, collapsed = F, width = 12,
 
       fluidRow(
         column(3,
-               pickerInput("sample_subset_Repeat", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select run_id')),
+               pickerInput("sample_subset_Repeat", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Select run_id')),
                            choices = NULL)),
         column(3,
                p(style="text-align: left;margin-top:50px;", actionBttn("Manual_peak", "Manually select Correction Peak", size = "lg")))
@@ -261,6 +263,9 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
   # help files
   help_click("peaks_param", helpfile = "data/peaks/peak_params.html")
+  help_click("peaks_plot", helpfile = "data/peaks/peaks_plot.html")
+  help_click("peaks_repeat_correction", helpfile = "data/peaks/peaks_repeat_correlation.html")
+  help_click("peaks_correction", helpfile = "data/peaks/peaks_correction.html")
 
   reactive_peaks <- reactiveValues()
 
@@ -307,7 +312,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     },
     content = function(file) {
       if (!is.null(upload_data$metadata_table())) {
-        df <-extract_repeat_correction_summary(reactive_peaks$peaks)
+        df <- trace::extract_repeat_correction_summary(reactive_peaks$peaks)
         rownames(df) <- NULL
       write.csv(df, file, row.names = F, col.names = T)
       }
@@ -329,7 +334,13 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
                                                      menuItem("Upload", icon = icon("spinner"), tabName = "Upload"),
                                                      menuItem("Find Ladders", icon = icon("water-ladder"), tabName = "FindLadders", selected = F),
-                                                     menuItem("Find Peaks", icon = icon("mountain"), tabName = "FindPeaks", selected = T)))
+                                                     menuItem("Find Peaks", icon = icon("mountain"), tabName = "FindPeaks", selected = T),
+                                                     menuItem("Documentation", icon = icon("file"), startExpanded = T,
+                                                              menuSubItem("Step 1: Upload", tabName = "Documentation1"),
+                                                              menuSubItem("Step 2: Find Ladders", tabName = "Documentation2"),
+                                                              menuSubItem("Step 3: Find Peaks", tabName = "Documentation3"),
+                                                              menuSubItem("Step 4: Instability Metrics", tabName = "Documentation4"),
+                                                              menuSubItem("Step 5: Analysis", tabName = "Documentation5"))))
 
     if (is.null(upload_data$metadata_table())) {
       shinyjs::hide("PeaksBox3")
@@ -412,7 +423,14 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                                                      menuItem("Upload", icon = icon("spinner"), tabName = "Upload"),
                                                      menuItem("Find Ladders", icon = icon("water-ladder"), tabName = "FindLadders", selected = F),
                                                      menuItem("Find Peaks", icon = icon("mountain"), tabName = "FindPeaks", selected = T,
-                                                              badgeColor = "green", badgeLabel = "new")))
+                                                              badgeColor = "green", badgeLabel = "new"),
+                                                     menuItem("Documentation", icon = icon("file"), startExpanded = T,
+                                                              menuSubItem("Step 1: Upload", tabName = "Documentation1"),
+                                                              menuSubItem("Step 2: Find Ladders", tabName = "Documentation2"),
+                                                              menuSubItem("Step 3: Find Peaks", tabName = "Documentation3"),
+                                                              menuSubItem("Step 4: Instability Metrics", tabName = "Documentation4"),
+                                                              menuSubItem("Step 5: Analysis", tabName = "Documentation5"))
+                                                     ))
   })
 
 
@@ -421,6 +439,8 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
       withProgress(message = 'Finding Peaks ...', style = "old",
                    value = 0, {
                      incProgress(0.1)
+
+                     reactive_peaks$peaks <- NULL
 
                      reactive_peaks$peaks <- find_fragments(ladder_module$ladders(),
                                                             smoothing_window = input$smoothing_window,
@@ -473,12 +493,17 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                                                                       menuItem("Find Ladders", icon = icon("water-ladder"), tabName = "FindLadders", selected = F),
                                                                       menuItem("Find Peaks", icon = icon("mountain"), tabName = "FindPeaks", selected = T),
                                                                       menuItem("Instability Metrics", icon = icon("water-ladder"), tabName = "InstabilityMetrics", selected = F,
-                                                                               badgeColor = "green", badgeLabel = "new")))
+                                                                               badgeColor = "green", badgeLabel = "new"),
+                                                                      menuItem("Documentation", icon = icon("file"), startExpanded = T,
+                                                                               menuSubItem("Step 1: Upload", tabName = "Documentation1"),
+                                                                               menuSubItem("Step 2: Find Ladders", tabName = "Documentation2"),
+                                                                               menuSubItem("Step 3: Find Peaks", tabName = "Documentation3"),
+                                                                               menuSubItem("Step 4: Instability Metrics", tabName = "Documentation4"),
+                                                                               menuSubItem("Step 5: Analysis", tabName = "Documentation5"))))
                    })
     },
     error = function(e) {
       shinyalert("ERROR!", e$message, type = "error", confirmButtonCol = "#337ab7")
-      reactive_peaks$peaks <- NULL
     })
   })
 
@@ -769,7 +794,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     validate(
       need(reactive_peaks$batchcorrectionswitch %in% "repeat", 'Please Re-Run the Analysis First'))
 
-    df <-extract_repeat_correction_summary(reactive_peaks$peaks)
+    df <- trace::extract_repeat_correction_summary(reactive_peaks$peaks)
     rownames(df) <- NULL
 
     ## Colour and values for table colour formatting
@@ -788,19 +813,13 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
       formatStyle(c("abs_avg_residual"), backgroundColor = styleInterval(brks, clrs))
   })
 
-  observeEvent(input$correlation_summary_rows_selected, {
-    df <-extract_repeat_correction_summary(reactive_peaks$peaks)
-    updatePickerInput(session, "sample_subset_Repeat", selected = df[input$correlation_summary_rows_selected, ]$batch_run_id)
-    updatePickerInput(session, "sample_subset_Batch", selected = df[input$correlation_summary_rows_selected, ]$batch_sample_id)
-  })
-
   output$correlation_summary2 <- DT::renderDataTable({
     validate(
       need(!is.null(reactive_peaks$peaks), 'Please Run The Analysis First'))
     validate(
       need(reactive_peaks$batchcorrectionswitch %in% "repeat", 'Please Re-Run The Analysis First'))
 
-    df <-extract_repeat_correction_summary(reactive_peaks$peaks)
+    df <-trace::extract_repeat_correction_summary(reactive_peaks$peaks)
     rownames(df) <- NULL
 
     ## Colour and values for table colour formatting
@@ -898,11 +917,11 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
   })
 
   output$peaks_text <- renderUI({
-    h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Called Peaks Table (check this to see how well the peaks are called)</b>'))
+    h5(HTML('<h5 style = "text-align:justify;color:#000000"><b>Called Peaks Table (check this to see how well the peaks are called)</b>'))
   })
 
   output$correlation_text <- renderUI({
-    h4(HTML('<h4 style = "text-align:justify;color:#000000"><b>Repeat Correction Summary (for plot on the left)</b>'))
+    h5(HTML('<h5 style = "text-align:justify;color:#000000"><b>Repeat Correction Summary (for plot on the left)</b>'))
   })
 
   observeEvent(input$peaks_summary_rows_selected, {
@@ -911,7 +930,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
   output$BatchWarning <- renderUI({
     if (all(((reactive_peaks$sample_traces_size[[1]]$x - input$assay_size_without_repeat)/input$repeat_size) == reactive_peaks$sample_traces_repeats[[1]]$x)) {
-      h4(HTML('<h4 style = "text-align:justify;color:#FF0000"><b>Warning: Correction not performed the before and after plots will look the same. </b>'))
+      h5(HTML('<h5 style = "text-align:justify;color:#FF0000"><b>Warning: Correction not performed the before and after plots will look the same. </b>'))
     }
     else{
       return()
@@ -923,7 +942,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
       title = strong("Manual Peak Correction"),
       fluidRow(
         column(4,
-               pickerInput("sample_subset_Manual", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Samples')),
+               pickerInput("sample_subset_Manual", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Samples')),
                            choices = upload_data$metadata_table()[which(!is.na(upload_data$metadata_table()$batch_sample_modal_repeat)),]$unique_id, selected = upload_data$metadata_table()[which(!is.na(upload_data$metadata_table()$batch_sample_modal_repeat)),]$unique_id[1])),
 
         column(2,
@@ -931,13 +950,13 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                br(),
                actionButton("down_peak_Manual", NULL, icon("arrow-down"), style='text-align: left; margin-top:-20px; font-size:200%')),
         column(6,
-               sliderInput("HeightPeaks_Manual", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Plot Height')),
+               sliderInput("HeightPeaks_Manual", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Plot Height')),
                            min = 1, max = 100,
                            value = 20, step = 1)
         )),
       fluidRow(
         column(6,
-               numericInput("Modal_Peak", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Modal Repeat for correction (can be manually changed)')),
+               numericInput("Modal_Peak", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Modal Repeat for correction (can be manually changed)')),
                             value = NULL)
         ),
         column(6,
@@ -988,7 +1007,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                    force_repeat_pattern_size_window = input$force_repeat_pattern_size_window
       )
 
-      reactive_peaks$peaks[[input$sample_subset_Manual]]$set_allele_peak(unit = "repeats", value = input$Modal_Peak)
+      reactive_peaks$peaks[[input$sample_subset_Manual]]$set_allele_peak(allele = input$number_of_alleles, unit = "repeats", value = input$Modal_Peak)
 
       call_repeats(fragments_list = reactive_peaks$peaks,
                    assay_size_without_repeat = input$assay_size_without_repeat,
@@ -1002,7 +1021,6 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     },
     error = function(e) {
       shinyalert("ERROR!", e$message, type = "error", confirmButtonCol = "#337ab7")
-      reactive_peaks$peaks <- NULL
     })
   })
 

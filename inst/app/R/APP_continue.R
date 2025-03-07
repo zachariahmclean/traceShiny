@@ -13,7 +13,7 @@ continue_server <- function(input, output, session) {
     showModal(modalDialog(
       title = strong("CONTINUE"),
 
-      fileInput("fileinputLOAD", h4(HTML('<h4 style = "text-align:justify;color:#000000; margin-top:-50px;">Load previously saved enviroment (.RData file)')),
+      fileInput("fileinputLOAD", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Load previously saved enviroment (.RData file)')),
                 accept = c(".Rdata"),
                 width = "100%"),
       easyClose = TRUE,
@@ -34,6 +34,8 @@ continue_server <- function(input, output, session) {
                        return(NULL)
                      }
 
+                     library(shinyalert)
+                     library(dashboardthemes)
                      library(trace)
                      library(dplyr)
                      library(assertr)
@@ -43,6 +45,7 @@ continue_server <- function(input, output, session) {
                      library(stringr)
                      library(readxl)
                      library(microseq)
+                     library(purrr)
 
                      removeModal()
 

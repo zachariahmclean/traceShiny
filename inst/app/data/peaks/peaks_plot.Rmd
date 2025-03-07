@@ -1,0 +1,22 @@
+---
+output: html_fragment
+---
+## FIND PEAKS
+In the previous step we processed the raw data, now we need to extract fragment data. That involves finding peaks, finding alleles, and calling repeats. 
+
+![](Peaks_Table.PNG){width=800px}
+
+#### Number of peaks
+Total number of called peaks.
+
+#### Modal repeat
+The repeat size of the modal peak (tallest peak).
+
+#### Modal signal
+The data signal of the modal peak (tallest peak).
+
+#### Allele signal
+The data signal of the allele peak (for called alleles).
+
+#### Allele repeat
+The repeat size of the allele peak (for called alleles).

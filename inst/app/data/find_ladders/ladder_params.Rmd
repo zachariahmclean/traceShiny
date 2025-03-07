@@ -1,21 +1,20 @@
 ---
 output: html_fragment
 ---
-# Settings
+## Settings
 
 ### Ladder Sizes	
-numeric vector: base pair sizes of ladder used in fragment analysis.
+Base pair sizes of ladder used in fragment analysis.
 
 ### Input Ladder Starting Scan Position	
-numeric: indicate the scan number to start looking for ladder peaks. Usually this can be automatically found (when set to NULL) since there's a big spike right at the start. However, if your ladder peaks are taller than the big spike, you will need to set this starting scan number manually.
+Indicate the scan number to start looking for ladder peaks. Usually this can be automatically found (when set to NULL) since there's a big spike right at the start. However, if your ladder peaks are taller than the big spike, you will need to set this starting scan number manually.
 
 ### Interactive ladder fixing
 If the ladders are are not assigned correctly, you can interactively fix them.
 
 ![](ladder_params_figs/ladder_fixing.gif){width=800px}
 
-
-# Advanced Settings
+## Advanced Settings
 
 ### Minimum Peak Signal	
 Minimum height of peak from smoothed signal. Note that the smoothing applied to the signal lowers the value, so you need to select a value lower than what you see on the plot.
