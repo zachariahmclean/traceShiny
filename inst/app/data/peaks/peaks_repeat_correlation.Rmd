@@ -5,7 +5,9 @@ output: html_fragment
 
 ![](Repeat_correction.PNG){width=800px}
 
-Linear model between ??
+The repeat correction algorithm assigns the user supplied repeat length to the modal peak of the sample, then pulls out a set of robust neighboring peaks to help get enough data to build an accurate linear model for the relationship between base-pair size and repeat length. So on this plot, each dot is an individual peak, with the colour indicating each sample, with the y-axis is the repeat length called from the user-supplied value in the metadata and the value assigned to each peak, with the x-axis showing the corresponding base-pair size.
+
+For each of the samples used for repeat correction, the table pn the right pulls out the modal repeat length called by the model (allele_repeat), how far that sample is on average from the linear model in repeat units by finding the average residuals (avg_residual), and the absolute value of the avg_residual (abs_avg_residual).
 
 #### Manual peak correction
 Users may select the correct modal peak in the repeat correction sample in the cases where there the two tallest peaks are at a similar height.

@@ -184,7 +184,13 @@ continue_server <- function(input, output, session) {
                                                                       menuItem("Find Ladders", icon = icon("water-ladder"), tabName = "FindLadders", selected = F),
                                                                       menuItem("Find Peaks", icon = icon("mountain"), tabName = "FindPeaks", selected = F),
                                                                       menuItem("Instability Metrics", icon = icon("water-ladder"), tabName = "InstabilityMetrics", selected = T),
-                                                                      menuItem("Analysis", icon = icon("magnifying-glass-chart"), tabName = "Analysis", selected = F)))
+                                                                      menuItem("Analysis", icon = icon("magnifying-glass-chart"), tabName = "Analysis", selected = F),
+                                                                      menuItem("Documentation", icon = icon("file"), startExpanded = T,
+                                                                               menuSubItem("Step 1: Upload", tabName = "Documentation1"),
+                                                                               menuSubItem("Step 2: Find Ladders", tabName = "Documentation2"),
+                                                                               menuSubItem("Step 3: Find Peaks", tabName = "Documentation3"),
+                                                                               menuSubItem("Step 4: Instability Metrics", tabName = "Documentation4"),
+                                                                               menuSubItem("Step 5: Analysis", tabName = "Documentation5"))))
                      }
                      if (exists("metadata_table_fastq")) {
 
@@ -251,7 +257,13 @@ continue_server <- function(input, output, session) {
                        output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
                                                                         menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = F),
                                                                         menuItem("Instability Metrics", icon = icon("water-ladder"), tabName = "InstabilityMetrics2", selected = T),
-                                                                        menuItem("Analysis", icon = icon("magnifying-glass-chart"), tabName = "Analysis2", selected = F)))
+                                                                        menuItem("Analysis", icon = icon("magnifying-glass-chart"), tabName = "Analysis2", selected = F),
+                                                                        menuItem("Documentation", icon = icon("file"), startExpanded = T,
+                                                                                 menuSubItem("Step 1: Upload", tabName = "Documentation1"),
+                                                                                 menuSubItem("Step 2: Find Ladders", tabName = "Documentation2"),
+                                                                                 menuSubItem("Step 3: Find Peaks", tabName = "Documentation3"),
+                                                                                 menuSubItem("Step 4: Instability Metrics", tabName = "Documentation4"),
+                                                                                 menuSubItem("Step 5: Analysis", tabName = "Documentation5"))))
                      }
 
                    })

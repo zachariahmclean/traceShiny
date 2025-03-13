@@ -19,5 +19,5 @@ Select the data to upload. There are two steps:
 | Data type | Description                                                                                                                                                                                                                           |
 |-------------|-----------------------------------------------------------|
 | FSA              | The raw file from the Genetic Analyzer instrument. Must be .fsa file format.                                                                                                                                                          |
-| EXAMPLE DATA     | Run an in-built example fsa file experiment                                                                                                                                                                                           |
+| EXAMPLE DATA     | Run an in-built example fsa file experiment, which consists a Huntington's disease cell line model with an unstable HTT repeat (refer to [our publication](https://www.nature.com/articles/s41467-024-47485-0)).                                                                                                                                                                                           |
 

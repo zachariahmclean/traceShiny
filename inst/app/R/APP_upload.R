@@ -364,7 +364,13 @@ upload_data_box_server <- function(input, output, session, continue_module) {
     shinyalert("SUCCESS!", "Channels Selected!", type = "success", confirmButtonCol = "#337ab7")
 
     output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
-                                                     menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = T))
+                                                     menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = T),
+                                                     menuItem("Documentation", icon = icon("file"), startExpanded = T,
+                                                              menuSubItem("Step 1: Upload", tabName = "Documentation1"),
+                                                              menuSubItem("Step 2: Find Ladders", tabName = "Documentation2"),
+                                                              menuSubItem("Step 3: Find Peaks", tabName = "Documentation3"),
+                                                              menuSubItem("Step 4: Instability Metrics", tabName = "Documentation4"),
+                                                              menuSubItem("Step 5: Analysis", tabName = "Documentation5")))
     )
   })
 
@@ -396,7 +402,13 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                        shinyjs::hide("LoadBox_FASTQ2")
 
                        output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
-                                                                        menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = T))
+                                                                        menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = T),
+                                                                        menuItem("Documentation", icon = icon("file"), startExpanded = T,
+                                                                                 menuSubItem("Step 1: Upload", tabName = "Documentation1"),
+                                                                                 menuSubItem("Step 2: Find Ladders", tabName = "Documentation2"),
+                                                                                 menuSubItem("Step 3: Find Peaks", tabName = "Documentation3"),
+                                                                                 menuSubItem("Step 4: Instability Metrics", tabName = "Documentation4"),
+                                                                                 menuSubItem("Step 5: Analysis", tabName = "Documentation5")))
                        )
                    })
     },
@@ -444,7 +456,13 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                        shinyjs::hide("NextButtonLoad2")
 
                        output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
-                                                                        menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = T))
+                                                                        menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = T),
+                                                                        menuItem("Documentation", icon = icon("file"), startExpanded = T,
+                                                                                 menuSubItem("Step 1: Upload", tabName = "Documentation1"),
+                                                                                 menuSubItem("Step 2: Find Ladders", tabName = "Documentation2"),
+                                                                                 menuSubItem("Step 3: Find Peaks", tabName = "Documentation3"),
+                                                                                 menuSubItem("Step 4: Instability Metrics", tabName = "Documentation4"),
+                                                                                 menuSubItem("Step 5: Analysis", tabName = "Documentation5")))
                        )
                    })
     },
@@ -663,7 +681,13 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                                output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
                                                                                 menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = T),
                                                                                 menuItem("Find Ladders", icon = icon("water-ladder"), tabName = "FindLadders", selected = F,
-                                                                                         badgeColor = "green", badgeLabel = "new")))
+                                                                                         badgeColor = "green", badgeLabel = "new"),
+                                                                                menuItem("Documentation", icon = icon("file"), startExpanded = T,
+                                                                                         menuSubItem("Step 1: Upload", tabName = "Documentation1"),
+                                                                                         menuSubItem("Step 2: Find Ladders", tabName = "Documentation2"),
+                                                                                         menuSubItem("Step 3: Find Peaks", tabName = "Documentation3"),
+                                                                                         menuSubItem("Step 4: Instability Metrics", tabName = "Documentation4"),
+                                                                                         menuSubItem("Step 5: Analysis", tabName = "Documentation5"))))
 
                              }
                              else {
@@ -681,7 +705,13 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                                output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
                                                                                 menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = T),
                                                                                 menuItem("Find Ladders", icon = icon("water-ladder"), tabName = "FindLadders", selected = F,
-                                                                                         badgeColor = "green", badgeLabel = "new")))
+                                                                                         badgeColor = "green", badgeLabel = "new"),
+                                                                                menuItem("Documentation", icon = icon("file"), startExpanded = T,
+                                                                                         menuSubItem("Step 1: Upload", tabName = "Documentation1"),
+                                                                                         menuSubItem("Step 2: Find Ladders", tabName = "Documentation2"),
+                                                                                         menuSubItem("Step 3: Find Peaks", tabName = "Documentation3"),
+                                                                                         menuSubItem("Step 4: Instability Metrics", tabName = "Documentation4"),
+                                                                                         menuSubItem("Step 5: Analysis", tabName = "Documentation5"))))
                              }
                            }
                            else {
@@ -698,7 +728,13 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                              output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
                                                                               menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = T),
                                                                               menuItem("Find Ladders", icon = icon("water-ladder"), tabName = "FindLadders", selected = F,
-                                                                                       badgeColor = "green", badgeLabel = "new")))
+                                                                                       badgeColor = "green", badgeLabel = "new"),
+                                                                              menuItem("Documentation", icon = icon("file"), startExpanded = T,
+                                                                                       menuSubItem("Step 1: Upload", tabName = "Documentation1"),
+                                                                                       menuSubItem("Step 2: Find Ladders", tabName = "Documentation2"),
+                                                                                       menuSubItem("Step 3: Find Peaks", tabName = "Documentation3"),
+                                                                                       menuSubItem("Step 4: Instability Metrics", tabName = "Documentation4"),
+                                                                                       menuSubItem("Step 5: Analysis", tabName = "Documentation5"))))
                            }
                          }
                          else {
@@ -762,7 +798,13 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                                output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
                                                                                 menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = T),
                                                                                 menuItem("Instability Metrics", icon = icon("table"), tabName = "InstabilityMetrics2", selected = F,
-                                                                                         badgeColor = "green", badgeLabel = "new")))
+                                                                                         badgeColor = "green", badgeLabel = "new"),
+                                                                                menuItem("Documentation", icon = icon("file"), startExpanded = T,
+                                                                                         menuSubItem("Step 1: Upload", tabName = "Documentation1"),
+                                                                                         menuSubItem("Step 2: Find Ladders", tabName = "Documentation2"),
+                                                                                         menuSubItem("Step 3: Find Peaks", tabName = "Documentation3"),
+                                                                                         menuSubItem("Step 4: Instability Metrics", tabName = "Documentation4"),
+                                                                                         menuSubItem("Step 5: Analysis", tabName = "Documentation5"))))
 
                              }
                              else {
@@ -780,7 +822,13 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                                output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
                                                                                 menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = T),
                                                                                 menuItem("Instability Metrics", icon = icon("table"), tabName = "InstabilityMetrics2", selected = F,
-                                                                                         badgeColor = "green", badgeLabel = "new")))
+                                                                                         badgeColor = "green", badgeLabel = "new"),
+                                                                                menuItem("Documentation", icon = icon("file"), startExpanded = T,
+                                                                                         menuSubItem("Step 1: Upload", tabName = "Documentation1"),
+                                                                                         menuSubItem("Step 2: Find Ladders", tabName = "Documentation2"),
+                                                                                         menuSubItem("Step 3: Find Peaks", tabName = "Documentation3"),
+                                                                                         menuSubItem("Step 4: Instability Metrics", tabName = "Documentation4"),
+                                                                                         menuSubItem("Step 5: Analysis", tabName = "Documentation5"))))
                              }
                            }
                            else {
@@ -797,7 +845,13 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                              output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
                                                                               menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = T),
                                                                               menuItem("Instability Metrics", icon = icon("table"), tabName = "InstabilityMetrics2", selected = F,
-                                                                                       badgeColor = "green", badgeLabel = "new")))
+                                                                                       badgeColor = "green", badgeLabel = "new"),
+                                                                              menuItem("Documentation", icon = icon("file"), startExpanded = T,
+                                                                                       menuSubItem("Step 1: Upload", tabName = "Documentation1"),
+                                                                                       menuSubItem("Step 2: Find Ladders", tabName = "Documentation2"),
+                                                                                       menuSubItem("Step 3: Find Peaks", tabName = "Documentation3"),
+                                                                                       menuSubItem("Step 4: Instability Metrics", tabName = "Documentation4"),
+                                                                                       menuSubItem("Step 5: Analysis", tabName = "Documentation5"))))
                            }
                          }
                          else {
@@ -927,14 +981,26 @@ upload_data_box_server <- function(input, output, session, continue_module) {
                        output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
                                                                         menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = T),
                                                                         menuItem("Find Ladders", icon = icon("water-ladder"), tabName = "FindLadders", selected = F,
-                                                                                 badgeColor = "green", badgeLabel = "new")
+                                                                                 badgeColor = "green", badgeLabel = "new"),
+                                                                        menuItem("Documentation", icon = icon("file"), startExpanded = T,
+                                                                                 menuSubItem("Step 1: Upload", tabName = "Documentation1"),
+                                                                                 menuSubItem("Step 2: Find Ladders", tabName = "Documentation2"),
+                                                                                 menuSubItem("Step 3: Find Peaks", tabName = "Documentation3"),
+                                                                                 menuSubItem("Step 4: Instability Metrics", tabName = "Documentation4"),
+                                                                                 menuSubItem("Step 5: Analysis", tabName = "Documentation5"))
                        ))
                      }
                      else {
                        shinyalert("ERROR!", "Ladder size input is not in correct format. Please follow the format shown in the table below.", type = "error", confirmButtonCol = "#337ab7")
 
                        output$dynamic_content <- renderMenu(sidebarMenu(id = "tabs",
-                                                                        menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = T))
+                                                                        menuItem("Upload", icon = icon("spinner"), tabName = "Upload", selected = T),
+                                                                        menuItem("Documentation", icon = icon("file"), startExpanded = T,
+                                                                                 menuSubItem("Step 1: Upload", tabName = "Documentation1"),
+                                                                                 menuSubItem("Step 2: Find Ladders", tabName = "Documentation2"),
+                                                                                 menuSubItem("Step 3: Find Peaks", tabName = "Documentation3"),
+                                                                                 menuSubItem("Step 4: Instability Metrics", tabName = "Documentation4"),
+                                                                                 menuSubItem("Step 5: Analysis", tabName = "Documentation5")))
                        )
                      }
                    })

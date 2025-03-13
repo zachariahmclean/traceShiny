@@ -8,12 +8,13 @@ output: html_fragment
 
 Currently TRACE-shiny accepts only fsa files (raw file from the Genetic Analyzer instrument).
 
-An example data set is available which consists a Huntington's disease cell line model with an unstable HTT repeat (refer to ??).
+An example data set is available which consists a Huntington's disease cell line model with an unstable HTT repeat (refer to [our publication](https://www.nature.com/articles/s41467-024-47485-0)).
 
 ### 2: Select Data Channels
 Data in fsa files are stored in different channels depending on the instrument setup. We show a plot that visualizes the signal in all the channels. You may need to use the drop down menu to visualize the signals in different samples if it is not clear.
 
 ![](upload/fsa_channels_figs/pointing_out_channels.svg)
+
 Pick ladder and sample containing channels
 
 In the drop down below, select the appropriate channels
