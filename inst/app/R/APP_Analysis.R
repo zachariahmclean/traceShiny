@@ -367,7 +367,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
             ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
             scale_color_manual(values= color) +
             labs(colour = paste(input$group_samples, collapse = ":")) +
-            theme_bw()
+            theme_classic()
         }
         else {
           p <- ggplot(trace, aes(x=calculated_repeats, y=Normalised_Signal, colour = plot,
@@ -381,7 +381,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
             ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
             scale_color_manual(values= color) +
             labs(colour = paste(input$group_samples, collapse = ":")) +
-            theme_bw()
+            theme_classic()
         }
       }
       else {
@@ -397,7 +397,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
             ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
             scale_color_manual(values= color) +
             labs(colour = paste(input$group_samples, collapse = ":")) +
-            theme_bw()
+            theme_classic()
         }
         else {
           p <- ggplot(trace, aes(x=calculated_repeats, y=Normalised_Signal, colour = plot,
@@ -410,7 +410,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
             ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
             scale_color_manual(values= color) +
             labs(colour = paste(input$group_samples, collapse = ":")) +
-            theme_bw()
+            theme_classic()
         }
       }
       ggplotly(p, tooltip="text", height = (300 + input$HeightAnalysis*20))
@@ -489,7 +489,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
             ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
             scale_color_manual(values= color) +
             labs(colour = paste(input$group_samples, collapse = ":")) +
-            theme_bw()
+            theme_classic()
         }
         else {
 
@@ -504,7 +504,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
             ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
             scale_color_manual(values= color) +
             labs(colour = paste(input$group_samples, collapse = ":")) +
-            theme_bw()
+            theme_classic()
         }
       }
       else {
@@ -521,7 +521,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
             ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
             scale_color_manual(values= color) +
             labs(colour = paste(input$group_samples, collapse = ":")) +
-            theme_bw()
+            theme_classic()
         }
         else {
           p <- ggplot(trace, aes(x=repeats, y=Normalised_Signal, colour = plot,
@@ -534,7 +534,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
             ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
             scale_color_manual(values= color) +
             labs(colour = paste(input$group_samples, collapse = ":")) +
-            theme_bw()
+            theme_classic()
         }
       }
       ggplotly(p, tooltip="text", height = (300 + input$HeightAnalysis*20))
