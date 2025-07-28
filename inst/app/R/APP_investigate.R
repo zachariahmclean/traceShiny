@@ -8,8 +8,8 @@ metrics_box_ui1 <- function(id) {
 
       fluidRow(column(3,
                       valueBox("PROCEED", actionBttn("MetricsBoxSTART", "START",
-                                                 style = "jelly",
-                                                 color = "primary"), icon = icon("paper-plane"), width = 12, color = "aqua"))
+                                                     style = "jelly",
+                                                     color = "primary"), icon = icon("paper-plane"), width = 12, color = "aqua"))
       ))
 }
 
@@ -224,7 +224,6 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
       paste0(format(Sys.time(), "%Y-%m-%d_%H%M%S"), "_logs", ".zip")
     },
     content = function(file) {
-
       tmpdir <- tempdir()
       setwd(tempdir())
 
@@ -232,61 +231,72 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                        "##Data Upload",
                        "fsa_list <- readRDS('fsa_files.RDS')",
                        "metadata_table <- readRDS('metadata.RDS')",
-                       "Ladder_Fix <- readRDS('Ladder_fix.RDS')", sep = "\n")
+                       "Ladder_Fix <- readRDS('Ladder_fix.RDS')", "\n", sep = "\n")
 
       strLadders <- paste("##Find Ladders", "\n",
-                          paste0("find_ladders(fsa_list, ladder_channel = ", "'", paste(input$LadderChannel), "'", ", ",
-                                 "signal_channel = ", "'", paste(input$SignalChannel), "'", ", ",
-                                 "ladder_sizes = c(", paste(upload_data$laddertable()[which(upload_data$laddertable() == upload_data$laddertable()$Ladder_ID[1]),]$Expected_ladder_peaks), "), ",
-                                 paste0(if(input$spikeswitch == T) "ladder_start_scan = NULL, " else paste0("ladder_start_scan = ", paste(input$spikelocation), ", ")),
-                                 paste0(if(input$minimum_peak_signal_ladder == T) "minimum_peak_signal = NULL, " else paste0("minimum_peak_signal = ", paste(input$minimum_peak_signal_number), ", ")),
-                                 paste0(if(input$scan_subset == T) "scan_subset = NULL, " else paste0("scan_subset = c(", paste(input$scan_subset1), ", ", paste(input$scan_subset2), "), ")),
-                                 "ladder_selection_window = ", paste(input$ladderselectionwindow), ", ",
-                                 "max_combinations = ", paste(input$maxcombinations), ")"))
+                          paste0("config <- load_config()", "\n",
+                                 "config$ladder_channel <- ", "'", input$LadderChannel, "'", "\n",
+                                 "config$signal_channel <- ", "'", input$SignalChannel, "'", "\n",
+                                 "config$ladder_sizes <- ", "c(", upload_data$laddertable()[which(upload_data$laddertable() == input$LadderSizes),]$Expected_ladder_peaks, ")", "\n",
+                                 "config$minimum_ladder_signal <- ", ifelse(input$minimum_peak_signal_ladder == T, NA, input$minimum_peak_signal_number), "\n",
+                                 "config$ladder_assign_left_to_right <- ", input$ladder_assign_left_to_right, "\n",
+                                 "config$min_scan <- ", ifelse(input$scan_subset == T, NA, input$scan_subset1), "\n",
+                                 "config$max_scan <- ", ifelse(input$scan_subset == T, NA, input$scan_subset2), "\n",
+                                 "config$ladder_top_n_branching <- ", input$ladder_top_n_branching, "\n",
+                                 "config$ladder_selection_window <- ", input$ladderselectionwindow, "\n",
+                                 "config$max_combinations <- ", input$maxcombinations, "\n",
+                                 "trace:::find_ladders(fsa_list, config, show_progress_bar = FALSE)", "\n"
+                          ))
 
       strLaddersFix <- paste("##Fix Ladders",
-                             paste("fix_ladders_manual(fsa_list, Ladder_Fix)"), sep = "\n"
+                             paste("trace:::fix_ladders_manual(fsa_list, Ladder_Fix)", "\n"), sep = "\n"
       )
 
       strPeaks <- paste("##Find Peaks", "\n",
-                        paste0("fragments_list <- find_fragments(fsa_list, ",
-                               "smoothing_window = ", paste(input$smoothing_window), ", ",
-                               "minimum_peak_signal = ", paste(input$minimum_peak_signal), ", ",
-                               "min_bp_size = ", paste((input$min_bp_size + input$assay_size_without_repeat)*input$repeat_size), ", ",
-                               "max_bp_size = ", paste((input$max_bp_size + input$assay_size_without_repeat)*input$repeat_size), ")"))
+                        paste0("config$smoothing_window <- ", input$smoothing_window, "\n",
+                               "config$minimum_peak_signal <- ", input$minimum_peak_signal, "\n",
+                               "config$min_bp_size <- ", input$min_bp_size*input$repeat_size + input$assay_size_without_repeat, "\n",
+                               "config$max_bp_size <- ", input$max_bp_size*input$repeat_size + input$assay_size_without_repeat, "\n",
+                               "config$peak_scan_ramp <- ", input$peak_scan_ramp, "\n",
+                               "trace:::find_fragments(fsa_list, config)", "\n"
+                        ))
 
       strAddMeta <- ifelse(is.null(upload_data$metadata_table()),
                            paste0("##No Metadata was uploaded"),
                            paste0("##Add Metadata", "\n",
-                                  "add_metadata(fragments_list, ",
-                                  "metadata_data.frame = metadata_table)")
+                                  "trace:::add_metadata(fsa_list, ",
+                                  "metadata_data.frame = metadata_table)", "\n")
       )
 
       strAlleles <- paste("##Find Alleles", "\n",
-                          paste0("find_alleles(fragments_list, ",
-                                 "number_of_alleles = ", paste(input$number_of_alleles), ", ",
-                                 "peak_region_size_gap_threshold = ", paste(input$peak_region_size_gap_threshold), ", ",
-                                 "peak_region_signal_threshold_multiplier = ", paste(input$peak_region_signal_threshold_multiplier), ")"))
-
-      strRepeats <- paste("##Find Repeats", "\n",
-                          paste0("call_repeats(fragments_list, assay_size_without_repeat = ", paste(input$assay_size_without_repeat), ", ",
-                                 "repeat_size = ", paste(input$repeat_size), ", ",
-                                 "force_repeat_pattern = ", paste(ifelse(input$force_repeat_pattern == "YES", "TRUE", "FALSE")), ", ",
-                                 "force_repeat_pattern_size_window = ", paste(input$force_repeat_pattern_size_window), ", ",
-                                 "force_repeat_pattern_size_period = ", paste(input$force_repeat_pattern_size_period), ", ",
-                                 "force_whole_repeat_units = ", paste(ifelse(input$force_whole_repeat_units == "YES", "TRUE", "FALSE")), ", ",
-                                 "correction = ", "'", paste(input$batchcorrectionswitch), "')"
+                          paste0("config$number_of_alleles <- ", as.numeric(input$number_of_alleles), "\n",
+                                 "config$peak_region_size_gap_threshold <- ", input$peak_region_size_gap_threshold, "\n",
+                                 "config$peak_region_signal_threshold_multiplier <- ", input$peak_region_signal_threshold_multiplier, "\n",
+                                 "trace:::find_alleles(fsa_list, config)", "\n"
                           ))
 
-      strIndex <- ifelse (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control)),
+      strRepeats <- paste("##Find Repeats", "\n",
+                          paste0("config$assay_size_without_repeat <- ", input$assay_size_without_repeat, "\n",
+                                 "config$repeat_size <- ", input$repeat_size, "\n",
+                                 "config$force_whole_repeat_units <- ", ifelse(input$force_whole_repeat_units == "YES", "TRUE", "FALSE"), "\n",
+                                 "config$correction <- ", "'", input$batchcorrectionswitch, "'", "\n",
+                                 "config$force_repeat_pattern <- ", ifelse(input$force_repeat_pattern == "YES", "TRUE", "FALSE"), "\n",
+                                 "config$force_repeat_pattern_size_period <- ", input$force_repeat_pattern_size_period, "\n",
+                                 "config$force_repeat_pattern_size_window <- ", input$force_repeat_pattern_size_window, "\n",
+                                 "trace:::call_repeats(fsa_list, config)", "\n"
+                          ))
+
+      strIndex <- ifelse (!is.null(upload_data$metadata_table()) && any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control)),
                           paste0("##Find Index", "\n",
-                                 "assign_index_peaks(fragments_list, grouped = TRUE)"),
+                                 "config$grouped <- TRUE", "\n",
+                                 "trace:::assign_index_peaks(fragments_list, config)", "\n"),
                           paste0("##Find Index", "\n",
-                                 "assign_index_peaks(fragments_list, grouped = FALSE)")
+                                 "config$grouped <- FALSE", "\n",
+                                 "trace:::assign_index_peaks(fragments_list, config)", "\n")
       )
 
       strMetrics <- paste("##Calculate Instability Metrics", "\n",
-                          paste0("metrics_dataframe <- calculate_instability_metrics(fragments_list, ",
+                          paste0("metrics_dataframe <- calculate_instability_metrics(fsa_list, ",
                                  "peak_threshold = ", paste(input$peak_threshold), ", ",
                                  "window_around_index_peak = c(", paste(input$window_around_index_peak_min), ", ", paste(input$window_around_index_peak_max), "))"))
 
@@ -426,30 +436,48 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
 
   observeEvent(ignoreInit = TRUE, list(input$MetricsBoxSTART, input$group_controls), {
 
+    reactive_metrics$config <- peaks_module$config()
+
     if (is.null(upload_data$metadata_table())) {
-      assign_index_peaks(
+
+      reactive_metrics$config$grouped <- FALSE
+
+      trace:::assign_index_peaks(
         peaks_module$index_list(),
-        grouped = FALSE
+        reactive_metrics$config,
+        index_override_dataframe = reactive_metrics$Index_Table[,c(1,4)]
       )
     }
     else if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
       if (input$group_controls == TRUE) {
-        assign_index_peaks(
+
+        reactive_metrics$config$grouped <- TRUE
+
+        trace:::assign_index_peaks(
           peaks_module$index_list(),
-          grouped = TRUE
+          reactive_metrics$config,
+          index_override_dataframe = reactive_metrics$Index_Table[,c(1,4)]
         )
       }
       else {
-        assign_index_peaks(
+
+        reactive_metrics$config$grouped <- FALSE
+
+        trace:::assign_index_peaks(
           peaks_module$index_list(),
-          grouped = FALSE
+          reactive_metrics$config,
+          index_override_dataframe = reactive_metrics$Index_Table[,c(1,4)]
         )
       }
     }
     else {
-      assign_index_peaks(
+
+      reactive_metrics$config$grouped <- FALSE
+
+      trace:::assign_index_peaks(
         peaks_module$index_list(),
-        grouped = FALSE
+        reactive_metrics$config,
+        index_override_dataframe = reactive_metrics$Index_Table[,c(1,4)]
       )
     }
 
@@ -475,7 +503,7 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                                                               menuSubItem("Step 3: Find Peaks", tabName = "Documentation3"),
                                                               menuSubItem("Step 4: Instability Metrics", tabName = "Documentation4"),
                                                               menuSubItem("Step 5: Analysis", tabName = "Documentation5"))
-                                                     ))
+    ))
 
     if (!is.null(upload_data$metadata_table())) {
       if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
@@ -523,9 +551,9 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
 
     reactive_metrics$Index_Table_original <- reactive_metrics$Index_Table
 
-      updateNumericInput(session, "IndexRepeat1", value = reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset_metrics),]$`Index Repeat`)
+    updateNumericInput(session, "IndexRepeat1", value = reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset_metrics),]$`Index Repeat`)
 
-      updateNumericInput(session, "IndexRepeat2", value = reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset2),]$`Index Repeat`)
+    updateNumericInput(session, "IndexRepeat2", value = reactive_metrics$Index_Table[which(reactive_metrics$Index_Table$`Unique IDs` == input$sample_subset2),]$`Index Repeat`)
   })
 
   observe({
@@ -660,33 +688,47 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                    value = 0, {
                      incProgress(0.1)
 
+                     reactive_metrics$config <- peaks_module$config()
+
                      if (is.null(upload_data$metadata_table())) {
-                       assign_index_peaks(
+
+                       reactive_metrics$config$grouped <- FALSE
+
+                       trace:::assign_index_peaks(
                          peaks_module$index_list(),
-                         grouped = FALSE,
+                         reactive_metrics$config,
                          index_override_dataframe = reactive_metrics$Index_Table[,c(1,4)]
                        )
                      }
                      else if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
                        if (input$group_controls == TRUE) {
-                         assign_index_peaks(
+
+                         reactive_metrics$config$grouped <- TRUE
+
+                         trace:::assign_index_peaks(
                            peaks_module$index_list(),
-                           grouped = TRUE,
+                           reactive_metrics$config,
                            index_override_dataframe = reactive_metrics$Index_Table[,c(1,4)]
                          )
                        }
                        else {
-                         assign_index_peaks(
+
+                         reactive_metrics$config$grouped <- FALSE
+
+                         trace:::assign_index_peaks(
                            peaks_module$index_list(),
-                           grouped = FALSE,
+                           reactive_metrics$config,
                            index_override_dataframe = reactive_metrics$Index_Table[,c(1,4)]
                          )
                        }
                      }
                      else {
-                       assign_index_peaks(
+
+                       reactive_metrics$config$grouped <- FALSE
+
+                       trace:::assign_index_peaks(
                          peaks_module$index_list(),
-                         grouped = FALSE,
+                         reactive_metrics$config,
                          index_override_dataframe = reactive_metrics$Index_Table[,c(1,4)]
                        )
                      }
@@ -883,15 +925,15 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                    yaxis = list(title = "Signal",
                                 range = ylim),
                    shapes = if(!is.na(debounced_IndexRepeat1())) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
-                                                                #vertical line
-                                                                list(type = "line", x0 = debounced_IndexRepeat1(),
-                                                                     x1 = debounced_IndexRepeat1(),
-                                                                     y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")),
-                                                                list(type = "rect",
-                                                                     fillcolor = "red", line = list(color = "red"), opacity = 0.1,
-                                                                     y0 = 0, y1 = input$ylim2_metrics,
-                                                                     x0 = debounced_IndexRepeat1() + input$window_around_index_peak_min,
-                                                                     x1 = input$window_around_index_peak_max + debounced_IndexRepeat1()))
+                                                                      #vertical line
+                                                                      list(type = "line", x0 = debounced_IndexRepeat1(),
+                                                                           x1 = debounced_IndexRepeat1(),
+                                                                           y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")),
+                                                                      list(type = "rect",
+                                                                           fillcolor = "red", line = list(color = "red"), opacity = 0.1,
+                                                                           y0 = 0, y1 = input$ylim2_metrics,
+                                                                           x0 = debounced_IndexRepeat1() + input$window_around_index_peak_min,
+                                                                           x1 = input$window_around_index_peak_max + debounced_IndexRepeat1()))
             )
         }
       }
@@ -908,15 +950,15 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                  yaxis = list(title = "Signal",
                               range = ylim),
                  shapes = if(!is.na(debounced_IndexRepeat1())) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
-                                                              #vertical line
-                                                              list(type = "line", x0 = debounced_IndexRepeat1(),
-                                                                   x1 = debounced_IndexRepeat1(),
-                                                                   y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")),
-                                                              list(type = "rect",
-                                                                   fillcolor = "red", line = list(color = "red"), opacity = 0.1,
-                                                                   y0 = 0, y1 = input$ylim2_metrics,
-                                                                   x0 = debounced_IndexRepeat1() + input$window_around_index_peak_min,
-                                                                   x1 = input$window_around_index_peak_max + debounced_IndexRepeat1()))
+                                                                    #vertical line
+                                                                    list(type = "line", x0 = debounced_IndexRepeat1(),
+                                                                         x1 = debounced_IndexRepeat1(),
+                                                                         y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")),
+                                                                    list(type = "rect",
+                                                                         fillcolor = "red", line = list(color = "red"), opacity = 0.1,
+                                                                         y0 = 0, y1 = input$ylim2_metrics,
+                                                                         x0 = debounced_IndexRepeat1() + input$window_around_index_peak_min,
+                                                                         x1 = input$window_around_index_peak_max + debounced_IndexRepeat1()))
           )
       }
     }
@@ -956,15 +998,15 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                      yaxis = list(title = "Signal",
                                   range = ylim),
                      shapes = if(!is.na(debounced_IndexRepeat2())) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
-                                                                  #vertical line
-                                                                  list(type = "line", x0 = debounced_IndexRepeat2(),
-                                                                       x1 = debounced_IndexRepeat2(),
-                                                                       y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")),
-                                                                  list(type = "rect",
-                                                                       fillcolor = "red", line = list(color = "red"), opacity = 0.1,
-                                                                       y0 = 0, y1 = input$ylim2_metrics,
-                                                                       x0 = debounced_IndexRepeat2() + input$window_around_index_peak_min,
-                                                                       x1 = input$window_around_index_peak_max + debounced_IndexRepeat2()))
+                                                                        #vertical line
+                                                                        list(type = "line", x0 = debounced_IndexRepeat2(),
+                                                                             x1 = debounced_IndexRepeat2(),
+                                                                             y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")),
+                                                                        list(type = "rect",
+                                                                             fillcolor = "red", line = list(color = "red"), opacity = 0.1,
+                                                                             y0 = 0, y1 = input$ylim2_metrics,
+                                                                             x0 = debounced_IndexRepeat2() + input$window_around_index_peak_min,
+                                                                             x1 = input$window_around_index_peak_max + debounced_IndexRepeat2()))
               )
           }
         }
@@ -981,15 +1023,15 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                    yaxis = list("Signal",
                                 range = ylim),
                    shapes = if(!is.na(debounced_IndexRepeat2())) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
-                                                                #vertical line
-                                                                list(type = "line", x0 = debounced_IndexRepeat2(),
-                                                                     x1 = debounced_IndexRepeat2(),
-                                                                     y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")),
-                                                                list(type = "rect",
-                                                                     fillcolor = "red", line = list(color = "red"), opacity = 0.1,
-                                                                     y0 = 0, y1 = input$ylim2_metrics,
-                                                                     x0 = debounced_IndexRepeat2() + input$window_around_index_peak_min,
-                                                                     x1 = input$window_around_index_peak_max + debounced_IndexRepeat2()))
+                                                                      #vertical line
+                                                                      list(type = "line", x0 = debounced_IndexRepeat2(),
+                                                                           x1 = debounced_IndexRepeat2(),
+                                                                           y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")),
+                                                                      list(type = "rect",
+                                                                           fillcolor = "red", line = list(color = "red"), opacity = 0.1,
+                                                                           y0 = 0, y1 = input$ylim2_metrics,
+                                                                           x0 = debounced_IndexRepeat2() + input$window_around_index_peak_min,
+                                                                           x1 = input$window_around_index_peak_max + debounced_IndexRepeat2()))
             )
         }
       }
@@ -1026,15 +1068,15 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                      yaxis = list(title = "Signal",
                                   range = ylim),
                      shapes = if(!is.na(debounced_IndexRepeat1())) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
-                                                                  #vertical line
-                                                                  list(type = "line", x0 = debounced_IndexRepeat1(),
-                                                                       x1 = debounced_IndexRepeat1(),
-                                                                       y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")),
-                                                                  list(type = "rect",
-                                                                       fillcolor = "red", line = list(color = "red"), opacity = 0.1,
-                                                                       y0 = 0, y1 = input$ylim2_metrics,
-                                                                       x0 = debounced_IndexRepeat1() + input$window_around_index_peak_min,
-                                                                       x1 = input$window_around_index_peak_max + debounced_IndexRepeat1()))
+                                                                        #vertical line
+                                                                        list(type = "line", x0 = debounced_IndexRepeat1(),
+                                                                             x1 = debounced_IndexRepeat1(),
+                                                                             y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")),
+                                                                        list(type = "rect",
+                                                                             fillcolor = "red", line = list(color = "red"), opacity = 0.1,
+                                                                             y0 = 0, y1 = input$ylim2_metrics,
+                                                                             x0 = debounced_IndexRepeat1() + input$window_around_index_peak_min,
+                                                                             x1 = input$window_around_index_peak_max + debounced_IndexRepeat1()))
               )
           }
         }
@@ -1051,15 +1093,15 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                    yaxis = list(title = "Signal",
                                 range = ylim),
                    shapes = if(!is.na(debounced_IndexRepeat1())) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
-                                                                #vertical line
-                                                                list(type = "line", x0 = debounced_IndexRepeat1(),
-                                                                     x1 = debounced_IndexRepeat1(),
-                                                                     y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")),
-                                                                list(type = "rect",
-                                                                     fillcolor = "red", line = list(color = "red"), opacity = 0.1,
-                                                                     y0 = 0, y1 = input$ylim2_metrics,
-                                                                     x0 = debounced_IndexRepeat1() + input$window_around_index_peak_min,
-                                                                     x1 = input$window_around_index_peak_max + debounced_IndexRepeat1()))
+                                                                      #vertical line
+                                                                      list(type = "line", x0 = debounced_IndexRepeat1(),
+                                                                           x1 = debounced_IndexRepeat1(),
+                                                                           y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")),
+                                                                      list(type = "rect",
+                                                                           fillcolor = "red", line = list(color = "red"), opacity = 0.1,
+                                                                           y0 = 0, y1 = input$ylim2_metrics,
+                                                                           x0 = debounced_IndexRepeat1() + input$window_around_index_peak_min,
+                                                                           x1 = input$window_around_index_peak_max + debounced_IndexRepeat1()))
             )
         }
       }
@@ -1097,15 +1139,15 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                    yaxis = list(title = "Signal",
                                 range = ylim),
                    shapes = if(!is.na(debounced_IndexRepeat1())) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
-                                                                #vertical line
-                                                                list(type = "line", x0 = debounced_IndexRepeat1(),
-                                                                     x1 = debounced_IndexRepeat1(),
-                                                                     y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")),
-                                                                list(type = "rect",
-                                                                     fillcolor = "red", line = list(color = "red"), opacity = 0.1,
-                                                                     y0 = 0, y1 = input$ylim2_metrics,
-                                                                     x0 = debounced_IndexRepeat1() + input$window_around_index_peak_min,
-                                                                     x1 = input$window_around_index_peak_max + debounced_IndexRepeat1()))
+                                                                      #vertical line
+                                                                      list(type = "line", x0 = debounced_IndexRepeat1(),
+                                                                           x1 = debounced_IndexRepeat1(),
+                                                                           y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")),
+                                                                      list(type = "rect",
+                                                                           fillcolor = "red", line = list(color = "red"), opacity = 0.1,
+                                                                           y0 = 0, y1 = input$ylim2_metrics,
+                                                                           x0 = debounced_IndexRepeat1() + input$window_around_index_peak_min,
+                                                                           x1 = input$window_around_index_peak_max + debounced_IndexRepeat1()))
             )
         }
       }
@@ -1122,15 +1164,15 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                  yaxis = list(title = "Signal",
                               range = ylim),
                  shapes = if(!is.na(debounced_IndexRepeat1())) list(hline(input$peak_threshold*peaks_module$index_list()[[input$sample_subset_metrics]]$.__enclos_env__$private$index_signal),
-                                                              #vertical line
-                                                              list(type = "line", x0 = debounced_IndexRepeat1(),
-                                                                   x1 = debounced_IndexRepeat1(),
-                                                                   y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")),
-                                                              list(type = "rect",
-                                                                   fillcolor = "red", line = list(color = "red"), opacity = 0.1,
-                                                                   y0 = 0, y1 = input$ylim2_metrics,
-                                                                   x0 = debounced_IndexRepeat1() + input$window_around_index_peak_min,
-                                                                   x1 = input$window_around_index_peak_max + debounced_IndexRepeat1()))
+                                                                    #vertical line
+                                                                    list(type = "line", x0 = debounced_IndexRepeat1(),
+                                                                         x1 = debounced_IndexRepeat1(),
+                                                                         y0 = 0, y1 = 1, yref = "paper", line = list(color = "red")),
+                                                                    list(type = "rect",
+                                                                         fillcolor = "red", line = list(color = "red"), opacity = 0.1,
+                                                                         y0 = 0, y1 = input$ylim2_metrics,
+                                                                         x0 = debounced_IndexRepeat1() + input$window_around_index_peak_min,
+                                                                         x1 = input$window_around_index_peak_max + debounced_IndexRepeat1()))
           )
       }
     }
@@ -1378,37 +1420,15 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
       ladders <- ladder_module$ladders()
       scan <- ladder_module$scan()
       size <- ladder_module$size()
-      LadderChannel <- ladder_module$LadderChannel()
-      SignalChannel <- ladder_module$SignalChannel()
-      LadderSizes <- ladder_module$LadderSizes()
       spikeswitch <- ladder_module$spikeswitch()
-      spikelocation <- ladder_module$spikelocation()
-      ladderselectionwindow <- ladder_module$ladderselectionwindow()
-      maxcombinations <- ladder_module$maxcombinations()
-      minimum_peak_signal_ladder <- ladder_module$minimum_peak_signal_ladder()
-      minimum_peak_signal_number <- ladder_module$minimum_peak_signal_number()
       scan_subset <- ladder_module$scan_subset()
-      scan_subset1 <- ladder_module$scan_subset1()
-      scan_subset2 <- ladder_module$scan_subset2()
+      minimum_peak_signal_ladder <- ladder_module$minimum_peak_signal_ladder()
 
       #Peaks
       index_list <- peaks_module$index_list()
-      min_bp_size <- peaks_module$min_bp_size()
-      max_bp_size <- peaks_module$max_bp_size()
-      smoothing_window_peaks <- peaks_module$smoothing_window()
-      minimum_peak_signal <- peaks_module$minimum_peak_signal()
-      number_of_alleles <- peaks_module$number_of_alleles()
-      batchcorrectionswitch <- peaks_module$batchcorrectionswitch()
-      peak_region_size_gap_threshold <- peaks_module$peak_region_size_gap_threshold()
-      peak_region_signal_threshold_multiplier <- peaks_module$peak_region_signal_threshold_multiplier()
-      assay_size_without_repeat <- peaks_module$assay_size_without_repeat()
-      repeat_size <- peaks_module$repeat_size()
-      force_whole_repeat_units <- peaks_module$force_whole_repeat_units()
-      force_repeat_pattern <- peaks_module$force_repeat_pattern()
-      force_repeat_pattern_size_period <- peaks_module$force_repeat_pattern_size_period()
-      force_repeat_pattern_size_window <- peaks_module$force_repeat_pattern_size_window()
       sample_traces_size <- peaks_module$sample_traces_size()
       sample_traces_repeats <- peaks_module$sample_traces_repeats()
+      force_whole_repeat_units <- peaks_module$force_whole_repeat_units()
 
       #Investigate
       instability_metrics <- reactive_metrics$df
@@ -1429,15 +1449,14 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
 
       #Package Version
       Package_version <- sessionInfo()$otherPkgs$traceShiny$Version
-
+      config <- reactive_metrics$config
 
       save("laddertable", "fsa_list", "metadata_table", "DataUpload", "DataUploadMeta", "Ladder_switch",
-           "ladders", "scan", "size", "LadderChannel", "SignalChannel", "LadderSizes", "spikeswitch", "spikelocation", "ladderselectionwindow", "maxcombinations", "minimum_peak_signal_ladder", "minimum_peak_signal_number", "scan_subset", "scan_subset1", "scan_subset2",
-           "index_list", "min_bp_size", "max_bp_size", "smoothing_window_peaks", "minimum_peak_signal", "number_of_alleles", "batchcorrectionswitch", "peak_region_size_gap_threshold",
-           "peak_region_signal_threshold_multiplier", "assay_size_without_repeat", "repeat_size", "force_whole_repeat_units", "force_repeat_pattern",
-           "force_repeat_pattern_size_period", "force_repeat_pattern_size_window", "sample_traces_size", "sample_traces_repeats",
+           "ladders", "scan", "size", "spikeswitch", "minimum_peak_signal_ladder", "scan_subset",
+           "index_list", "sample_traces_size", "sample_traces_repeats", "force_whole_repeat_units",
            "instability_metrics", "peak_threshold", "window_around_index_peak_min", "window_around_index_peak_max", "repeat_range1", "repeat_range2", "repeat_range3", "percentile_range1", "percentile_range2", "percentile_range3",
            "sample_subset2", "sample_subset_metrics", "Package_version", "Index_Table", "Index_Table_original", "group_controls",
+           "config",
            file = file)
     }
   )

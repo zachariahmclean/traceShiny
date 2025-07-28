@@ -31,7 +31,82 @@ Analysis2_box_ui1 <- function(id) {
         )
       ),
 
-      withSpinner(htmlOutput("overlay_plot2UI"))
+      withSpinner(htmlOutput("overlay_plot2UI")),
+
+      fluidRow(
+        column(1,
+               colorSelectorInput(
+                 inputId = "my2color1", label = "Pick a color for trace 1:",
+                 choices = c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888"),
+                 selected = "#88CCEE"
+               )),
+        column(1,
+               colorSelectorInput(
+                 inputId = "my2color2", label = "Pick a color for trace 2:",
+                 choices = c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888"),
+                 selected = "#CC6677"
+               )),
+        column(1,
+               colorSelectorInput(
+                 inputId = "my2color3", label = "Pick a color for trace 3:",
+                 choices = c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888"),
+                 selected = "#DDCC77"
+               )),
+        column(1,
+               colorSelectorInput(
+                 inputId = "my2color4", label = "Pick a color for trace 4:",
+                 choices = c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888"),
+                 selected = "#117733"
+               )),
+        column(1,
+               colorSelectorInput(
+                 inputId = "my2color5", label = "Pick a color for trace 5:",
+                 choices = c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888"),
+                 selected = "#332288"
+               )),
+        column(1,
+               colorSelectorInput(
+                 inputId = "my2color6", label = "Pick a color for trace 6:",
+                 choices = c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888"),
+                 selected = "#AA4499"
+               )),
+        column(1,
+               colorSelectorInput(
+                 inputId = "my2color7", label = "Pick a color for trace 7:",
+                 choices = c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888"),
+                 selected = "#44AA99"
+               )),
+        column(1,
+               colorSelectorInput(
+                 inputId = "my2color8", label = "Pick a color for trace 8:",
+                 choices = c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888"),
+                 selected = "#999933"
+               )),
+        column(1,
+               colorSelectorInput(
+                 inputId = "my2color9", label = "Pick a color for trace 9:",
+                 choices = c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888"),
+                 selected = "#882255"
+               )),
+        column(1,
+               colorSelectorInput(
+                 inputId = "my2color10", label = "Pick a color for trace 10:",
+                 choices = c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888"),
+                 selected = "#661100"
+               )),
+        column(1,
+               colorSelectorInput(
+                 inputId = "my2color11", label = "Pick a color for trace 10:",
+                 choices = c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888"),
+                 selected = "#6699CC"
+               )),
+        column(1,
+               colorSelectorInput(
+                 inputId = "my2color12", label = "Pick a color for trace 10:",
+                 choices = c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888"),
+                 selected = "#888888"
+               )),
+      )
   )
 }
 
@@ -121,13 +196,6 @@ Analysis2_box_ui3 <- function(id) {
 analysis2_server <- function(input, output, session, continue_module, upload_data, ladder_module, peaks_module, metrics_module, analysis_module, metrics2_module) {
 
   reactive_analysis2 <- reactiveValues()
-
-  #Colours
-  set.seed(001)
-  color = grDevices::colors()[grep('gr(a|e)y', grDevices::colors(), invert = T)]
-  color = color[-grep("white", color)]
-  color = c(palette(), sample(color))
-  color = color[-grep("black", color)]
 
   observe({
     updateVirtualSelect("Analysis_samples2", choices = names(metrics2_module$peak_list()))
@@ -270,6 +338,15 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
 
   output$overlay_plot2 <- renderPlotly({
 
+    #Colours
+    set.seed(001)
+    color = grDevices::colors()[grep('gr(a|e)y', grDevices::colors(), invert = T)]
+    color = color[-grep("white", color)]
+    color = c(input$my2color1, input$my2color2, input$my2color3, input$my2color4, input$my2color5, input$my2color6,
+              input$my2color7, input$my2color8, input$my2color9, input$my2color10, input$my2color11, input$my2color12,
+              palette(), sample(color))
+    color = color[-grep("black", color)]
+
     if (is.null(input$Analysis_samples2)) {
       # Return a blank plot if object is missing
       return(plotly::plot_ly())
@@ -346,7 +423,7 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
             ylab(if (input$normalize2 == "None") "Signal" else "Normalised_signal") +
             xlim(c(input$xlim1_analysis2, input$xlim2_analysis2)) +
             ylim(c(input$ylim1_analysis2, input$ylim2_analysis2)) +
-            scale_color_manual(values= color) +
+            scale_fill_manual(values= color) +
             labs(colour = paste(input$group_samples2, collapse = ":")) +
             theme_bw()
         }
@@ -376,7 +453,7 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
             ylab(if (input$normalize2 == "None") "Signal" else "Normalised_signal") +
             xlim(c(input$xlim1_analysis2, input$xlim2_analysis2)) +
             ylim(c(input$ylim1_analysis2, input$ylim2_analysis2)) +
-            scale_color_manual(values= color) +
+            scale_fill_manual(values= color) +
             labs(colour = paste(input$group_samples2, collapse = ":")) +
             theme_bw()
         }
@@ -389,7 +466,7 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
             ylab(if (input$normalize2 == "None") "Signal" else "Normalised_signal") +
             xlim(c(input$xlim1_analysis2, input$xlim2_analysis2)) +
             ylim(c(input$ylim1_analysis2, input$ylim2_analysis2)) +
-            scale_color_manual(values= color) +
+            scale_fill_manual(values= color) +
             labs(colour = paste(input$group_samples2, collapse = ":")) +
             theme_bw()
         }

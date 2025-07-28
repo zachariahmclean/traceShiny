@@ -31,7 +31,82 @@ Analysis_box_ui1 <- function(id) {
         )
       ),
 
-      withSpinner(htmlOutput("overlay_plotUI"))
+      withSpinner(htmlOutput("overlay_plotUI")),
+
+      fluidRow(
+        column(1,
+               colorSelectorInput(
+                 inputId = "mycolor1", label = "Pick a color for trace 1:",
+                 choices = c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888"),
+                 selected = "#88CCEE"
+               )),
+        column(1,
+               colorSelectorInput(
+                 inputId = "mycolor2", label = "Pick a color for trace 2:",
+                 choices = c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888"),
+                 selected = "#CC6677"
+               )),
+        column(1,
+               colorSelectorInput(
+                 inputId = "mycolor3", label = "Pick a color for trace 3:",
+                 choices = c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888"),
+                 selected = "#DDCC77"
+               )),
+        column(1,
+               colorSelectorInput(
+                 inputId = "mycolor4", label = "Pick a color for trace 4:",
+                 choices = c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888"),
+                 selected = "#117733"
+               )),
+        column(1,
+               colorSelectorInput(
+                 inputId = "mycolor5", label = "Pick a color for trace 5:",
+                 choices = c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888"),
+                 selected = "#332288"
+               )),
+        column(1,
+               colorSelectorInput(
+                 inputId = "mycolor6", label = "Pick a color for trace 6:",
+                 choices = c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888"),
+                 selected = "#AA4499"
+               )),
+        column(1,
+               colorSelectorInput(
+                 inputId = "mycolor7", label = "Pick a color for trace 7:",
+                 choices = c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888"),
+                 selected = "#44AA99"
+               )),
+        column(1,
+               colorSelectorInput(
+                 inputId = "mycolor8", label = "Pick a color for trace 8:",
+                 choices = c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888"),
+                 selected = "#999933"
+               )),
+        column(1,
+               colorSelectorInput(
+                 inputId = "mycolor9", label = "Pick a color for trace 9:",
+                 choices = c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888"),
+                 selected = "#882255"
+               )),
+        column(1,
+               colorSelectorInput(
+                 inputId = "mycolor10", label = "Pick a color for trace 10:",
+                 choices = c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888"),
+                 selected = "#661100"
+               )),
+        column(1,
+               colorSelectorInput(
+                 inputId = "mycolor11", label = "Pick a color for trace 10:",
+                 choices = c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888"),
+                 selected = "#6699CC"
+               )),
+        column(1,
+               colorSelectorInput(
+                 inputId = "mycolor12", label = "Pick a color for trace 10:",
+                 choices = c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888"),
+                 selected = "#888888"
+               )),
+      )
   )
 }
 
@@ -132,13 +207,6 @@ analysis_server <- function(input, output, session, continue_module, upload_data
   help_click("Metrics_analysis", helpfile = "data/metrics/metrics_table.html")
 
   reactive_analysis <- reactiveValues()
-
-  #Colours
-  set.seed(001)
-  color = grDevices::colors()[grep('gr(a|e)y', grDevices::colors(), invert = T)]
-  color = color[-grep("white", color)]
-  color = c(palette(), sample(color))
-  color = color[-grep("black", color)]
 
   observe({
     updateVirtualSelect("Analysis_samples", choices = names(upload_data$fsa_list()))
@@ -289,6 +357,15 @@ analysis_server <- function(input, output, session, continue_module, upload_data
   })
 
   output$overlay_plot <- renderPlotly({
+
+    #Colours
+    set.seed(001)
+    color = grDevices::colors()[grep('gr(a|e)y', grDevices::colors(), invert = T)]
+    color = color[-grep("white", color)]
+    color = c(input$mycolor1, input$mycolor2, input$mycolor3, input$mycolor4, input$mycolor5, input$mycolor6,
+              input$mycolor7, input$mycolor8, input$mycolor9, input$mycolor10, input$mycolor11, input$mycolor12,
+              palette(), sample(color))
+    color = color[-grep("black", color)]
 
     if (is.null(input$Analysis_samples)) {
       # Return a blank plot if object is missing

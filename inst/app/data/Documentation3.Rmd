@@ -43,12 +43,18 @@ Signal smoothing window size passed to smoothing algorithm
 #### (advanced) Minimum Peak Signal	
 Minimum height of peak from smoothed trace
 
+#### (advanced) Peak Scan Ramp
+Single numeric value to indicate how many scans (increasing in signal) should be either side of the peak maxima.
+
 ### Find Alleles
 This function finds the main alleles for each fragment by identifying clusters of peaks ("peak regions") with the highest signal intensities. This is based on the idea that PCR amplicons of repeats have clusters of peaks (from somatic mosaicism and PCR artifacts) that help differentiate the main allele of interest from capillary electrophoresis noise/contamination.
 
 The tallest of peaks will be selected as the allele. This means that if your sample has multiple alleles, you'll need to make sure that your data is subsetted to exclude that second allele. For example in a human cell line with a shorter repeat, we recommend using min bp size in find fragments to make sure that the smaller allele is excluded. Otherwise, the smaller taller allele will be set as the allele.
 
 The parameters peak region height threshold multiplier and peak region size gap threshold will only need to be adjusted if peaks are not being found for some reason. They influence the criteria for identifying peak regions, and finding the right balance between them is crucial.
+
+#### Number of Alleles
+Number of alleles to be returned for each fragment. Must either be 1 or 2. Being able to identify two alleles is for cases when you are analyze different human samples with a normal and expanded alleles and you can't do the preferred option of simply ignoring the normal allele in find_fragments() (eg setting the min_bp_size above the normal allele bp size).
 
 #### (advanced) peak region size gap threshold	
 Gap threshold for identifying peak regions. The peak region size gap threshold is a parameter used to determine the maximum allowed gap between peak sizes within a peak region. Adjusting this parameter affects the size range of peaks that can be grouped together in a region. A smaller value makes it more stringent, while a larger value groups peaks with greater size differences, leading to broader peak regions that may encompass wider size ranges.

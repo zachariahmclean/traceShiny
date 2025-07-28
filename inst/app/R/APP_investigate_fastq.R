@@ -245,15 +245,15 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
       strAddMeta <- ifelse(is.null(upload_data$metadata_table_fastq()),
                            paste0("##No Metadata was uploaded"),
                            paste0("##Add Metadata", "\n",
-                                  "add_metadata(repeat_distribution, ",
-                                  "metadata_data.frame = metadata_table_fastq)")
+                                  "trace:::add_metadata(repeat_distribution, ",
+                                  "metadata_data.frame = metadata_table_fastq)", "\n")
       )
 
       strIndex <- ifelse (any(grepl("TRUE", upload_data$metadata_table_fastq()$metrics_baseline_control)),
                           paste0("##Find Index", "\n",
-                                 "assign_index_peaks(repeat_distribution, grouped = TRUE)"),
+                                 "trace:::assign_index_peaks(repeat_distribution, config = load_config(), grouped = TRUE)", "\n"),
                           paste0("##Find Index", "\n",
-                                 "assign_index_peaks(repeat_distribution, grouped = FALSE)")
+                                 "trace:::assign_index_peaks(repeat_distribution, config = load_config(), grouped = FALSE)", "\n")
       )
 
       strMetrics <- paste("##Calculate Instability Metrics", "\n",
@@ -401,7 +401,6 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
 
 
   observeEvent(ignoreInit = TRUE, list(input$Metrics2BoxSTART, input$group_controls2), {
-
     #Transform data
     Instability <- upload_data$fastq()[,c("Repeat Length", "SampleID")]
     Instability <- Instability %>% group_by(`Repeat Length`, SampleID) %>%
@@ -411,7 +410,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
     colnames(Instability) <- c("unique_id", "Repeat Length", "Counts")
     Instability <- as.data.frame(Instability)
 
-    peak_list <- trace::repeat_table_to_repeats(
+    peak_list <- repeat_table_to_repeats(
       Instability,
       repeat_col = "Repeat Length",
       frequency_col = "Counts",
@@ -422,41 +421,42 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
 
       add_metadata(
         fragments_list = peak_list,
-        metadata_data.frame = upload_data$metadata_table_fastq(),
-        unique_id = "unique_id",
-        metrics_baseline_control = "metrics_baseline_control",
-        batch_sample_modal_repeat = "batch_sample_modal_repeat"
+        metadata_data.frame = upload_data$metadata_table_fastq()
       )
     }
 
-    find_alleles(
+    trace:::find_alleles(
       fragments_list = peak_list,
-      number_of_alleles = input$number_of_alleles_fastq
+      config = load_config()
     )
 
     if (is.null(upload_data$metadata_table_fastq())) {
-      assign_index_peaks(
+      trace:::assign_index_peaks(
         peak_list,
+        config = load_config(),
         grouped = FALSE
       )
     }
     else if (any(grepl("TRUE", upload_data$metadata_table_fastq()$metrics_baseline_control))) {
       if (input$group_controls2 == TRUE) {
-        assign_index_peaks(
+        trace:::assign_index_peaks(
           peak_list,
+          config = load_config(),
           grouped = TRUE
         )
       }
       else {
-        assign_index_peaks(
+        trace:::assign_index_peaks(
           peak_list,
+          config = load_config(),
           grouped = FALSE
         )
       }
     }
     else {
-      assign_index_peaks(
+      trace:::assign_index_peaks(
         peak_list,
+        config = load_config(),
         grouped = FALSE
       )
     }
@@ -670,31 +670,35 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
                      incProgress(0.1)
 
                      if (is.null(upload_data$metadata_table_fastq())) {
-                       assign_index_peaks(
+                       trace:::assign_index_peaks(
                          reactive_metrics2$peak_list,
+                         config = load_config(),
                          grouped = FALSE,
                          index_override_dataframe = reactive_metrics2$Index_Table[,c(1,4)]
                        )
                      }
                      else if (any(grepl("TRUE", upload_data$metadata_table_fastq()$metrics_baseline_control))) {
                        if (input$group_controls2 == TRUE) {
-                         assign_index_peaks(
+                         trace:::assign_index_peaks(
                            reactive_metrics2$peak_list,
+                           config = load_config(),
                            grouped = TRUE,
                            index_override_dataframe = reactive_metrics2$Index_Table[,c(1,4)]
                          )
                        }
                        else {
-                         assign_index_peaks(
+                         trace:::assign_index_peaks(
                            reactive_metrics2$peak_list,
+                           config = load_config(),
                            grouped = FALSE,
                            index_override_dataframe = reactive_metrics2$Index_Table[,c(1,4)]
                          )
                        }
                      }
                      else {
-                       assign_index_peaks(
+                       trace:::assign_index_peaks(
                          reactive_metrics2$peak_list,
+                         config = load_config(),
                          grouped = FALSE,
                          index_override_dataframe = reactive_metrics2$Index_Table[,c(1,4)]
                        )

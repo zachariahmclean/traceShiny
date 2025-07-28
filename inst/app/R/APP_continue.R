@@ -3,6 +3,7 @@ continue_server <- function(input, output, session) {
   reactive_continue <- reactiveValues(laddertable = NULL,
                                       fsa_list = NULL,
                                       fastq = NULL,
+                                      config = NULL,
                                       metadata_table = NULL,
                                       metadata_table_fastq = NULL,
                                       ladders = NULL,
@@ -99,35 +100,39 @@ continue_server <- function(input, output, session) {
                      incProgress(6/10, detail = "Setting up ladder settings")
 
                      #Ladders
-                     updatePickerInput(session,"LadderChannel", selected = LadderChannel)
-                     updatePickerInput(session,"SignalChannel", selected = SignalChannel)
-                     updatePickerInput(session,"LadderSizes", selected = LadderSizes)
+                     updatePickerInput(session,"LadderChannel", selected = config$ladder_channel)
+                     updatePickerInput(session,"SignalChannel", selected = config$signal_channel)
+                     updatePickerInput(session,"LadderSizes", selected = config$ladder_sizes)
+                     updateMaterialSwitch(session, "ladder_assign_left_to_right", value = config$ladder_assign_left_to_right)
                      updateMaterialSwitch(session, "spikeswitch", value = spikeswitch)
-                     updateNumericInput(session, "spikelocation", value = spikelocation)
-                     updateNumericInput(session, "ladderselectionwindow", value = ladderselectionwindow)
-                     updateNumericInput(session, "maxcombinations", value = maxcombinations)
+                     updateNumericInput(session, "spikelocation", value = config$ladder_start_scan)
+                     updateNumericInput(session, "ladderselectionwindow", value = config$ladder_selection_window)
+                     updateNumericInput(session, "maxcombinations", value = config$max_combinations)
                      updateMaterialSwitch(session, "minimum_peak_signal_ladder", value = minimum_peak_signal_ladder)
-                     updateNumericInput(session, "minimum_peak_signal_number", value = minimum_peak_signal_number)
+                     updateNumericInput(session, "minimum_peak_signal_number", value = config$minimum_ladder_signal)
                      updateMaterialSwitch(session, "scan_subset", value = scan_subset)
-                     updateNumericInput(session, "scan_subset1", value = scan_subset1)
-                     updateNumericInput(session, "scan_subset2", value = scan_subset2)
+                     updateNumericInput(session, "scan_subset1", value = config$min_scan)
+                     updateNumericInput(session, "scan_subset2", value = config$max_scan)
+                     updateNumericInput(session, "ladder_top_n_branching", value = config$ladder_top_n_branching)
+                     updateNumericInput(session, "ladderselectionwindow", value = config$ladderselectionwindow)
 
                      incProgress(7/10, detail = "Setting up peaks settings")
 
                      #Peaks
-                     updateNumericInput(session, "min_bp_size", value = min_bp_size)
-                     updateNumericInput(session, "max_bp_size", value = max_bp_size)
-                     updateNumericInput(session, "smoothing_window", value = smoothing_window_peaks)
-                     updateNumericInput(session, "minimum_peak_signal", value = minimum_peak_signal)
-                     updatePickerInput(session, "number_of_alleles", selected = number_of_alleles)
-                     updatePickerInput(session, "batchcorrectionswitch", selected = batchcorrectionswitch)
-                     updateNumericInput(session, "peak_region_size_gap_threshold", value = peak_region_size_gap_threshold)
-                     updateNumericInput(session, "peak_region_signal_threshold_multiplier", value = peak_region_signal_threshold_multiplier)
-                     updateNumericInput(session, "assay_size_without_repeat", value = assay_size_without_repeat)
+                     updateNumericInput(session, "min_bp_size", value = config$min_bp_size)
+                     updateNumericInput(session, "max_bp_size", value = config$max_bp_size)
+                     updateNumericInput(session, "smoothing_window", value = config$smoothing_window)
+                     updateNumericInput(session, "minimum_peak_signal", value = config$minimum_peak_signal)
+                     updateNumericInput(session, "peak_scan_ramp ", value = config$peak_scan_ramp )
+                     updatePickerInput(session, "number_of_alleles", selected = config$number_of_alleles)
+                     updatePickerInput(session, "batchcorrectionswitch", selected = config$correction)
+                     updateNumericInput(session, "peak_region_size_gap_threshold", value = config$peak_region_size_gap_threshold)
+                     updateNumericInput(session, "peak_region_signal_threshold_multiplier", value = config$peak_region_signal_threshold_multiplier)
+                     updateNumericInput(session, "assay_size_without_repeat", value = config$assay_size_without_repeat)
                      updateRadioGroupButtons(session, "force_whole_repeat_units", selected = force_whole_repeat_units)
-                     updatePickerInput(session,"force_repeat_pattern", selected = force_repeat_pattern)
-                     updateNumericInput(session, "force_repeat_pattern_size_period", value = force_repeat_pattern_size_period)
-                     updateNumericInput(session, "force_repeat_pattern_size_window", value = force_repeat_pattern_size_window)
+                     updatePickerInput(session,"force_repeat_pattern", selected = config$force_repeat_pattern)
+                     updateNumericInput(session, "force_repeat_pattern_size_period", value = config$force_repeat_pattern_size_period)
+                     updateNumericInput(session, "force_repeat_pattern_size_window", value = config$force_repeat_pattern_size_window)
 
                      incProgress(9/10, detail = "Setting up instability metrics settings")
 
@@ -155,8 +160,8 @@ continue_server <- function(input, output, session) {
                      reactive_continue$size <- size
                      reactive_continue$sample_traces_size <- sample_traces_size
                      reactive_continue$sample_traces_repeats <- sample_traces_repeats
-                     reactive_continue$number_of_alleles <- number_of_alleles
-                     reactive_continue$batchcorrectionswitch <- batchcorrectionswitch
+                     reactive_continue$number_of_alleles <- config$number_of_alleles
+                     reactive_continue$batchcorrectionswitch <- config$correction
                      reactive_continue$sample_subset_metrics <- sample_subset_metrics
                      reactive_continue$sample_subset2 <- sample_subset2
                      reactive_continue$Index_Table <- Index_Table
@@ -274,6 +279,7 @@ continue_server <- function(input, output, session) {
   })
 
   return(list(
+    config = reactive(reactive_continue$config),
     laddertable = reactive(reactive_continue$laddertable),
     fsa_list = reactive(reactive_continue$fsa_list),
     metadata_table = reactive(reactive_continue$metadata_table),

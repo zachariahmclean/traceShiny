@@ -240,11 +240,12 @@ upload_data_box_server <- function(input, output, session, continue_module) {
     reactive$df <- NULL
     reactive$metadata_table_fastq <- NULL
     reactive$df_final <- NULL
+
   })
 
   observeEvent(input$DataUpload, {
     if(input$DataUpload == "Use Example"){
-        reactive$fsa_list <- trace::cell_line_fsa_list
+        reactive$fsa_list <- lapply(trace::cell_line_fsa_list, function(x) x$clone())
 
         reactive$df <- NULL
 

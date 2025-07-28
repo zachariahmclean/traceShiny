@@ -15,6 +15,7 @@ Data in fsa files are stored in different channels depending on the instrument s
 
 ![](upload/fsa_channels_figs/pointing_out_channels.svg)
 
+
 Pick ladder and sample containing channels
 
 In the drop down below, select the appropriate channels

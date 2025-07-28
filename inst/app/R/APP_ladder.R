@@ -67,7 +67,13 @@ ladder_box_ui2 <- function(id) {
           )
         ),
 
+        materialSwitch("ladder_assign_left_to_right", label = h5(HTML('<h5 style = "text-align:justify;color:#000000">Assign Ladder Left to Right')), value = TRUE, status = "primary"),
+
         numericInput("ladderselectionwindow", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Ladder Selection Window')),
+                     min = 1,
+                     value = 5, step = 1),
+
+        numericInput("ladder_top_n_branching", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Ladder Branching')),
                      min = 1,
                      value = 5, step = 1),
 
@@ -161,12 +167,14 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
     reactive_ladder$ladder <- continue_module$ladders()
     ladders$scan <- continue_module$scan()
     ladders$size <- continue_module$size()
+    reactive_ladder$config <- continue_module$config()
   })
 
   observeEvent(ignoreInit = F, list(input$MetadataUpload, input$SelectionButton, input$DataFSA, input$fastq, input$fileinputLOAD), {
     reactive_ladder$ladder <- NULL
     ladders$scan <- NULL
     ladders$size <- NULL
+    reactive_ladder$config <- NULL
   })
 
   #Download
@@ -285,17 +293,25 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
                      ladders$scan <- NULL
                      ladders$size <- NULL
 
-                     reactive_ladder$ladder <- upload_data$fsa_list()
+                     reactive_ladder$ladder <- lapply(upload_data$fsa_list(), function(x) x$clone())
 
-                     trace::find_ladders(reactive_ladder$ladder,
-                                         ladder_channel = input$LadderChannel,
-                                         signal_channel = input$SignalChannel,
-                                         ladder_sizes = as.numeric(strsplit(upload_data$laddertable()[which(upload_data$laddertable() == input$LadderSizes),]$Expected_ladder_peaks, split = ",")[[1]]),
-                                         ladder_start_scan = if(input$spikeswitch == T) NULL else input$spikelocation,
-                                         minimum_peak_signal = if(input$minimum_peak_signal_ladder == T) NULL else input$minimum_peak_signal_number,
-                                         scan_subset = if(input$scan_subset == T) NULL else c(input$scan_subset1, input$scan_subset2),
-                                         ladder_selection_window = input$ladderselectionwindow,
-                                         max_combinations = input$maxcombinations,
+                     reactive_ladder$config <- load_config()
+
+                     reactive_ladder$config$ladder_channel <- input$LadderChannel
+                     reactive_ladder$config$signal_channel <- input$SignalChannel
+                     reactive_ladder$config$ladder_sizes = as.numeric(strsplit(upload_data$laddertable()[which(upload_data$laddertable() == input$LadderSizes),]$Expected_ladder_peaks, split = ",")[[1]])
+                     reactive_ladder$config$ladder_start_scan <- if(input$spikeswitch == T) NA else input$spikelocation
+                     reactive_ladder$config$minimum_ladder_signal <- if(input$minimum_peak_signal_ladder == T) NA else input$minimum_peak_signal_number
+                     reactive_ladder$config$ladder_assign_left_to_right <- input$ladder_assign_left_to_right
+                     reactive_ladder$config$min_scan <- if(input$scan_subset == T) NA else input$scan_subset1
+                     reactive_ladder$config$max_scan <- if(input$scan_subset == T) NA else input$scan_subset2
+                     reactive_ladder$config$ladder_top_n_branching <- input$ladder_top_n_branching
+                     reactive_ladder$config$ladder_selection_window <- input$ladderselectionwindow
+                     reactive_ladder$config$max_combinations <- input$maxcombinations
+
+                     reactive_ladder$scan_subset <- input$scan_subset
+
+                     trace:::find_ladders(reactive_ladder$ladder, reactive_ladder$config,
                                          show_progress_bar = FALSE)
 
                      ladders$scan <- reactive_ladder$ladder[[input$unique_id_selection]]$ladder_df$scan
@@ -608,20 +624,12 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
 
   return(list(
     ladders = reactive(reactive_ladder$ladder),
+    config = reactive(reactive_ladder$config),
+    spikeswitch = reactive(reactive_ladder$spikeswitch),
+    minimum_peak_signal_ladder = reactive(reactive_ladder$minimum_peak_signal_ladder),
+    scan_subset = reactive(reactive_ladder$scan_subset),
     scan = reactive(ladders$scan),
-    size = reactive(ladders$size),
-    LadderChannel = reactive(input$LadderChannel),
-    SignalChannel = reactive(input$SignalChannel),
-    LadderSizes = reactive(input$LadderSizes),
-    spikeswitch = reactive(input$spikeswitch),
-    spikelocation = reactive(input$spikelocation),
-    minimum_peak_signal_ladder = reactive(input$minimum_peak_signal_ladder),
-    minimum_peak_signal_number = reactive(input$minimum_peak_signal_number),
-    scan_subset = reactive(input$scan_subset),
-    scan_subset1 = reactive(input$scan_subset1),
-    scan_subset2 = reactive(input$scan_subset2),
-    ladderselectionwindow = reactive(input$ladderselectionwindow),
-    maxcombinations = reactive(input$maxcombinations)
+    size = reactive(ladders$size)
   ))
 
 }

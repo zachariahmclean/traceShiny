@@ -26,6 +26,11 @@ repeats.</p>
 <h4>(advanced) Minimum Peak Signal</h4>
 <p>Minimum height of peak from smoothed trace</p>
 </div>
+<div id="advanced-peak-scan-ramp" class="section level4">
+<h4>(advanced) Peak Scan Ramp</h4>
+<p>Single numeric value to indicate how many scans (increasing in
+signal) should be either side of the peak maxima.</p>
+</div>
 </div>
 <div id="find-alleles" class="section level3">
 <h3>Find Alleles</h3>
@@ -45,6 +50,15 @@ the smaller taller allele will be set as the allele.</p>
 region size gap threshold will only need to be adjusted if peaks are not
 being found for some reason. They influence the criteria for identifying
 peak regions, and finding the right balance between them is crucial.</p>
+<div id="number-of-alleles" class="section level4">
+<h4>Number of Alleles</h4>
+<p>Number of alleles to be returned for each fragment. Must either be 1
+or 2. Being able to identify two alleles is for cases when you are
+analyze different human samples with a normal and expanded alleles and
+you can’t do the preferred option of simply ignoring the normal allele
+in find_fragments() (eg setting the min_bp_size above the normal allele
+bp size).</p>
+</div>
 <div id="advanced-peak-region-size-gap-threshold" class="section level4">
 <h4>(advanced) peak region size gap threshold</h4>
 <p>Gap threshold for identifying peak regions. The peak region size gap
@@ -88,8 +102,9 @@ PCR product.</p>
 <h4>Repeat Size</h4>
 <p>An integer specifying the repeat size for repeat calling.</p>
 </div>
-<div id="correction" class="section level4">
-<h4>Correction</h4>
+</div>
+<div id="correction" class="section level3">
+<h3>Correction</h3>
 <p>There are two main correction approaches that are somewhat related:
 either ‘batch’ or ‘repeat’. Batch correction is relatively simple and
 just requires you to link samples across batches to correct batch-batch
@@ -125,7 +140,6 @@ used to call the repeat length of the modal repeat for each sample (by
 each batch_run_id). You can then visualize the batch_sample_id across
 runs and the model generated for each run to determine if the repeat
 correction has worked as expected.</p>
-</div>
 <div id="force-whole-repeat-units" class="section level4">
 <h4>Force Whole Repeat Units</h4>
 <p>The <code>force_whole_repeat_units</code> option aims to correct for

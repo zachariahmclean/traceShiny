@@ -8,8 +8,8 @@ peaks_box_ui1 <- function(id) {
 
       fluidRow(column(3,
                       valueBox("PROCEED", actionBttn("PeaksBoxSTART", "START",
-                                                 style = "jelly",
-                                                 color = "primary"), icon = icon("paper-plane"), width = 12, color = "aqua"))
+                                                     style = "jelly",
+                                                     color = "primary"), icon = icon("paper-plane"), width = 12, color = "aqua"))
       ))
 }
 
@@ -37,11 +37,6 @@ peaks_box_ui2 <- function(id) {
                    )
                  )
                ),
-               fluidRow(
-                 column(6,
-                        pickerInput("number_of_alleles", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Number of Alleles')),
-                                    choices = c("1", "2"), selected = "1"))
-               ),
                conditionalPanel(
                  condition = 'input.advancesettings_Peaks == true',
                  fluidRow(
@@ -53,16 +48,28 @@ peaks_box_ui2 <- function(id) {
                           numericInput("minimum_peak_signal", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Minimum Peak Signal')),
                                        min = 1,
                                        value = 20, step = 1))
+                 ),
+                 fluidRow(
+                   column(6,
+                          numericInput("peak_scan_ramp", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Peak Scan Ramp')),
+                                       min = 1,
+                                       value = 5, step = 1))
                  )
                )
         )
       ),
 
-      conditionalPanel(
-        condition = 'input.advancesettings_Peaks == true',
-        fluidRow(
-          column(12,
-                 h5(HTML('<h5 style = "text-align:justify;color:#000000"><b>Find Alleles</b>')),
+      fluidRow(
+        column(12,
+               h5(HTML('<h5 style = "text-align:justify;color:#000000"><b>Find Alleles</b>')),
+
+               fluidRow(
+                 column(6,
+                        pickerInput("number_of_alleles", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Number of Alleles')),
+                                    choices = c("1", "2"), selected = "1"))
+               ),
+               conditionalPanel(
+                 condition = 'input.advancesettings_Peaks == true',
                  fluidRow(
                    column(6,
                           numericInput("peak_region_size_gap_threshold", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Peak Region Size Gap Threshold')),
@@ -75,7 +82,7 @@ peaks_box_ui2 <- function(id) {
                                        value = 1, step = 1)
                    )
                  )
-          )
+               )
         )
       ),
 
@@ -273,19 +280,13 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
   observe({
     if(!is.null(continue_module$index_list())) {
       reactive_peaks$peaks <- continue_module$index_list()
-      reactive_peaks$sample_traces_size <- continue_module$sample_traces_size()
-      reactive_peaks$sample_traces_repeats <- continue_module$sample_traces_repeats()
-      reactive_peaks$batchcorrectionswitch <- continue_module$batchcorrectionswitch()
-      reactive_peaks$number_of_alleles <- continue_module$number_of_alleles()
+      reactive_peaks$config <- continue_module$config()
     }
   })
 
   observeEvent(ignoreInit = F, list(input$MetadataUpload, input$SelectionButton, input$DataFSA, input$fastq, input$fileinputLOAD), {
     reactive_peaks$peaks <- NULL
-    reactive_peaks$sample_traces_size <- NULL
-    reactive_peaks$sample_traces_repeats <- NULL
-    reactive_peaks$batchcorrectionswitch <- NULL
-    reactive_peaks$number_of_alleles <- NULL
+    reactive_peaks$config <- NULL
   })
 
   #Download
@@ -314,7 +315,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
       if (!is.null(upload_data$metadata_table())) {
         df <- trace::extract_repeat_correction_summary(reactive_peaks$peaks)
         rownames(df) <- NULL
-      write.csv(df, file, row.names = F, col.names = T)
+        write.csv(df, file, row.names = F, col.names = T)
       }
     }
   )
@@ -430,7 +431,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                                                               menuSubItem("Step 3: Find Peaks", tabName = "Documentation3"),
                                                               menuSubItem("Step 4: Instability Metrics", tabName = "Documentation4"),
                                                               menuSubItem("Step 5: Analysis", tabName = "Documentation5"))
-                                                     ))
+    ))
   })
 
 
@@ -442,40 +443,43 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
                      reactive_peaks$peaks <- NULL
 
-                     reactive_peaks$peaks <- find_fragments(ladder_module$ladders(),
-                                                            smoothing_window = input$smoothing_window,
-                                                            minimum_peak_signal = input$minimum_peak_signal,
-                                                            min_bp_size = input$min_bp_size*input$repeat_size + input$assay_size_without_repeat,
-                                                            max_bp_size = input$max_bp_size*input$repeat_size + input$assay_size_without_repeat
-                     )
+                     reactive_peaks$peaks <- lapply(ladder_module$ladders(), function(x) x$clone())
+
+                     reactive_peaks$config <- ladder_module$config()
+
+                     reactive_peaks$config$smoothing_window <- input$smoothing_window
+                     reactive_peaks$config$minimum_peak_signal <- input$minimum_peak_signal
+                     reactive_peaks$config$min_bp_size <- input$min_bp_size*input$repeat_size + input$assay_size_without_repeat
+                     reactive_peaks$config$max_bp_size <- input$max_bp_size*input$repeat_size + input$assay_size_without_repeat
+                     reactive_peaks$config$peak_scan_ramp <- input$peak_scan_ramp
+
+                     trace:::find_fragments(reactive_peaks$peaks, reactive_peaks$config)
 
                      if (!is.null(upload_data$metadata_table())) {
 
-                       add_metadata(
+                       trace:::add_metadata(
                          fragments_list = reactive_peaks$peaks,
-                         metadata_data.frame = upload_data$metadata_table(),
-                         unique_id = "unique_id",
-                         metrics_baseline_control = "metrics_baseline_control",
-                         batch_sample_modal_repeat = "batch_sample_modal_repeat"
+                         metadata_data.frame = upload_data$metadata_table()
                        )
                      }
 
-                     find_alleles(reactive_peaks$peaks,
-                                  number_of_alleles = input$number_of_alleles,
-                                  peak_region_size_gap_threshold = input$peak_region_size_gap_threshold,
-                                  peak_region_signal_threshold_multiplier = input$peak_region_signal_threshold_multiplier)
+                     reactive_peaks$config$number_of_alleles <- as.numeric(input$number_of_alleles)
+                     reactive_peaks$config$peak_region_size_gap_threshold <- input$peak_region_size_gap_threshold
+                     reactive_peaks$config$peak_region_signal_threshold_multiplier <- input$peak_region_signal_threshold_multiplier
 
-                     call_repeats(fragments_list = reactive_peaks$peaks,
-                                  assay_size_without_repeat = input$assay_size_without_repeat,
-                                  repeat_size = input$repeat_size,
-                                  force_whole_repeat_units = if(input$force_whole_repeat_units == "YES") TRUE else FALSE,
-                                  correction = input$batchcorrectionswitch,
-                                  force_repeat_pattern = if(input$force_repeat_pattern == "YES") TRUE else FALSE,
-                                  force_repeat_pattern_size_period = input$force_repeat_pattern_size_period,
-                                  force_repeat_pattern_size_window = input$force_repeat_pattern_size_window
-                     )
+                     trace:::find_alleles(reactive_peaks$peaks, reactive_peaks$config)
+
+                     reactive_peaks$config$assay_size_without_repeat <- input$assay_size_without_repeat
+                     reactive_peaks$config$repeat_size <- input$repeat_size
+                     reactive_peaks$config$force_whole_repeat_units <- if(input$force_whole_repeat_units == "YES") TRUE else FALSE
+                     reactive_peaks$config$correction <- input$batchcorrectionswitch
+                     reactive_peaks$config$force_repeat_pattern <- if(input$force_repeat_pattern == "YES") TRUE else FALSE
+                     reactive_peaks$config$force_repeat_pattern_size_period <- input$force_repeat_pattern_size_period
+                     reactive_peaks$config$force_repeat_pattern_size_window <- input$force_repeat_pattern_size_window
 
                      reactive_peaks$batchcorrectionswitch <- input$batchcorrectionswitch
+
+                     trace:::call_repeats(fragments_list = reactive_peaks$peaks, reactive_peaks$config)
 
                      shinyjs::show("NextButtonPeaks")
 
@@ -518,6 +522,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
   observe({
     if (input$force_repeat_pattern == "NO") {
+      updateNumericInput(session, "force_repeat_pattern_size_period", value = input$repeat_size * 0.93)
       shinyjs::hide("force_repeat_pattern_size_period")
       shinyjs::hide("force_repeat_pattern_size_window")
     } else {
@@ -783,7 +788,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     validate(
       need(!is.null(reactive_peaks$peaks), 'Please Run the Analysis First'))
     validate(
-      need(reactive_peaks$batchcorrectionswitch %in% "repeat", 'Please Re-Run the Analysis First'))
+      need(reactive_peaks$batchcorrectionswitch == "repeat", 'Please Re-Run the Analysis First'))
 
     plot_repeat_correction_model(reactive_peaks$peaks, input$sample_subset_Repeat)
   })
@@ -792,9 +797,9 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     validate(
       need(!is.null(reactive_peaks$peaks), 'Please Run the Analysis First'))
     validate(
-      need(reactive_peaks$batchcorrectionswitch %in% "repeat", 'Please Re-Run the Analysis First'))
+      need(reactive_peaks$batchcorrectionswitch == "repeat", 'Please Re-Run the Analysis First'))
 
-    df <- trace::extract_repeat_correction_summary(reactive_peaks$peaks)
+    df <- trace:::extract_repeat_correction_summary(reactive_peaks$peaks)
     rownames(df) <- NULL
 
     ## Colour and values for table colour formatting
@@ -819,7 +824,7 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     validate(
       need(reactive_peaks$batchcorrectionswitch %in% "repeat", 'Please Re-Run The Analysis First'))
 
-    df <-trace::extract_repeat_correction_summary(reactive_peaks$peaks)
+    df <-trace:::extract_repeat_correction_summary(reactive_peaks$peaks)
     rownames(df) <- NULL
 
     ## Colour and values for table colour formatting
@@ -972,52 +977,29 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
   observe({
     if (!is.null(reactive_peaks$peaks) && !is.null(input$sample_subset_Manual)) {
-    updateNumericInput(session, "Modal_Peak", value = reactive_peaks$peaks[[input$sample_subset_Manual]]$get_allele_peak()$allele_repeat)
+      updateNumericInput(session, "Modal_Peak", value = reactive_peaks$peaks[[input$sample_subset_Manual]]$get_allele_peak()$allele_repeat)
     }
   })
 
   observeEvent(input$Manual_peak_start, {
     tryCatch({
 
-      reactive_peaks$peaks <- reactivity_trigger(reactive_peaks$peaks)
+      reactive_peaks$peaks <- lapply(reactive_peaks$peaks, function(x) x$clone())
 
       if (!is.null(upload_data$metadata_table())) {
-
-        add_metadata(
+        trace:::add_metadata(
           fragments_list = reactive_peaks$peaks,
-          metadata_data.frame = upload_data$metadata_table(),
-          unique_id = "unique_id",
-          metrics_baseline_control = "metrics_baseline_control",
-          batch_sample_modal_repeat = "batch_sample_modal_repeat"
+          metadata_data.frame = upload_data$metadata_table()
         )
       }
 
-      find_alleles(reactive_peaks$peaks,
-                   number_of_alleles = input$number_of_alleles,
-                   peak_region_size_gap_threshold = input$peak_region_size_gap_threshold,
-                   peak_region_signal_threshold_multiplier = input$peak_region_signal_threshold_multiplier)
+      trace:::find_alleles(reactive_peaks$peaks, reactive_peaks$config)
 
-      call_repeats(fragments_list = reactive_peaks$peaks,
-                   assay_size_without_repeat = input$assay_size_without_repeat,
-                   repeat_size = input$repeat_size,
-                   force_whole_repeat_units = if(input$force_whole_repeat_units == "YES") TRUE else FALSE,
-                   correction = input$batchcorrectionswitch,
-                   force_repeat_pattern = if(input$force_repeat_pattern == "YES") TRUE else FALSE,
-                   force_repeat_pattern_size_period = input$force_repeat_pattern_size_period,
-                   force_repeat_pattern_size_window = input$force_repeat_pattern_size_window
-      )
+      trace:::call_repeats(reactive_peaks$peaks, reactive_peaks$config)
 
       reactive_peaks$peaks[[input$sample_subset_Manual]]$set_allele_peak(allele = input$number_of_alleles, unit = "repeats", value = input$Modal_Peak)
 
-      call_repeats(fragments_list = reactive_peaks$peaks,
-                   assay_size_without_repeat = input$assay_size_without_repeat,
-                   repeat_size = input$repeat_size,
-                   force_whole_repeat_units = if(input$force_whole_repeat_units == "YES") TRUE else FALSE,
-                   correction = input$batchcorrectionswitch,
-                   force_repeat_pattern = if(input$force_repeat_pattern == "YES") TRUE else FALSE,
-                   force_repeat_pattern_size_period = input$force_repeat_pattern_size_period,
-                   force_repeat_pattern_size_window = input$force_repeat_pattern_size_window
-      )
+      trace:::call_repeats(reactive_peaks$peaks, reactive_peaks$config)
     },
     error = function(e) {
       shinyalert("ERROR!", e$message, type = "error", confirmButtonCol = "#337ab7")
@@ -1093,20 +1075,8 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     index_list = reactive(reactive_peaks$peaks),
     sample_traces_size = reactive(reactive_peaks$sample_traces_size),
     sample_traces_repeats = reactive(reactive_peaks$sample_traces_repeats),
-    min_bp_size = reactive(input$min_bp_size),
-    max_bp_size = reactive(input$max_bp_size),
-    number_of_alleles = reactive(input$number_of_alleles),
-    smoothing_window = reactive(input$smoothing_window),
-    minimum_peak_signal = reactive(input$minimum_peak_signal),
-    batchcorrectionswitch = reactive(input$batchcorrectionswitch),
-    peak_region_size_gap_threshold = reactive(input$peak_region_size_gap_threshold),
-    peak_region_signal_threshold_multiplier = reactive(input$peak_region_signal_threshold_multiplier),
-    assay_size_without_repeat = reactive(input$assay_size_without_repeat),
-    repeat_size = reactive(input$repeat_size),
-    force_whole_repeat_units = reactive(input$force_whole_repeat_units),
-    force_repeat_pattern = reactive(input$force_repeat_pattern),
-    force_repeat_pattern_size_period = reactive(input$force_repeat_pattern_size_period),
-    force_repeat_pattern_size_window = reactive(input$force_repeat_pattern_size_window)
+    force_whole_repeat_units = reactive(reactive_peaks$force_whole_repeat_units),
+    config = reactive(reactive_peaks$config)
   ))
 
 }

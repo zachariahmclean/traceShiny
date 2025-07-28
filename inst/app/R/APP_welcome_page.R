@@ -45,6 +45,8 @@ observeEvent(input$startbuttonintro, {
 
                  incProgress(0.8)
 
+                 file.copy(system.file("extdata/trace_config.yaml", package = "trace"), ".")
+
                  shinyjs::hide("NextButtonLoad", asis = T)
 
                  if(input$LoadBoxIntro$collapsed == TRUE) {
