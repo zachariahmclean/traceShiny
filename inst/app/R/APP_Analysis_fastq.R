@@ -96,13 +96,13 @@ Analysis2_box_ui1 <- function(id) {
                )),
         column(1,
                colorSelectorInput(
-                 inputId = "my2color11", label = "Pick a color for trace 10:",
+                 inputId = "my2color11", label = "Pick a color for trace 11:",
                  choices = c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888"),
                  selected = "#6699CC"
                )),
         column(1,
                colorSelectorInput(
-                 inputId = "my2color12", label = "Pick a color for trace 10:",
+                 inputId = "my2color12", label = "Pick a color for trace 12:",
                  choices = c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888"),
                  selected = "#888888"
                )),
