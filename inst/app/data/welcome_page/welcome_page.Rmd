@@ -4,7 +4,7 @@ output: html_fragment
 
 ### Tandem Repeat Analysis by Capillary Electrophoresis
 
-This web server is designed to help guide users through a pipeline for short tandem repeat instability analysis from fragment analysis data. The inputs are fsa files or peak tables (eg Genemapper software output), and a user supplied metadata data-frame. This is an app version of our R package [trace](https://zachariahmclean.github.io/trace/), that has the following key features with additional interactivity:
+This web server is designed to help guide users through a pipeline for short tandem repeat instability analysis from fragment analysis data. The inputs are fsa files and a user supplied metadata data-frame. This is an app version of our R package [trace](https://zachariahmclean.github.io/trace/), that has the following key features with additional interactivity:
 
 -   Processing fsa files (ladder identification, base pair assignment, peak identification).
 
