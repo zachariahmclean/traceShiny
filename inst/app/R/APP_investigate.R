@@ -613,10 +613,18 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
 
   observe({
     if (!is.null(peaks_module$index_list()) && !is.null(input$sample_subset_metrics)) {
+      if (!is.na(peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat)) {
       updateNumericInput(session, "xlim1_metrics", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat - 50)
       updateNumericInput(session, "xlim2_metrics", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_repeat + 50)
       updateNumericInput(session, "ylim1_metrics", value = -200)
       updateNumericInput(session, "ylim2_metrics", value = peaks_module$index_list()[[input$sample_subset_metrics]]$get_allele_peak()$allele_signal + 300)
+      }
+      else {
+        updateNumericInput(session, "xlim1_metrics", value = 0)
+        updateNumericInput(session, "xlim2_metrics", value = 250)
+        updateNumericInput(session, "ylim1_metrics", value = -200)
+        updateNumericInput(session, "ylim2_metrics", value = 2000)
+      }
     }
   })
 

@@ -269,17 +269,25 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
         updateNumericInput(session, "ylim2_analysis2", value = 0.3)
       }
       else if (input$normalize2 == "None") {
-        updateNumericInput(session, "ylim2_analysis2", value = max(metrics2_module$metrics_table()$modal_peak_repeat) + 300)
+        updateNumericInput(session, "ylim2_analysis2", value = max(metrics2_module$metrics_table()$modal_peak_repeat, na.rm = T) + 300)
       }
     }
   })
 
   observe({
     if (!is.null(metrics2_module$peak_list()) && !is.null(input$sample_subset_metrics2)) {
-      updateNumericInput(session, "xlim1_analysis2", value = min(metrics2_module$metrics_table()$modal_peak_repeat) - 50)
-      updateNumericInput(session, "xlim2_analysis2", value = max(metrics2_module$metrics_table()$modal_peak_repeat) + 50)
+      if (!is.null(metrics2_module$metrics_table()) && any(!is.na(metrics2_module$metrics_table()$modal_peak_repeat))) {
+      updateNumericInput(session, "xlim1_analysis2", value = min(metrics2_module$metrics_table()$modal_peak_repeat, na.rm = T) - 50)
+      updateNumericInput(session, "xlim2_analysis2", value = max(metrics2_module$metrics_table()$modal_peak_repeat, na.rm = T) + 50)
       updateNumericInput(session, "ylim1_analysis2", value = -2)
-      updateNumericInput(session, "ylim2_analysis2", value = max(metrics2_module$metrics_table()$modal_peak_signal) + 300)
+      updateNumericInput(session, "ylim2_analysis2", value = max(metrics2_module$metrics_table()$modal_peak_signal, na.rm = T) + 300)
+      }
+      else {
+        updateNumericInput(session, "xlim1_analysis2", value = 0)
+        updateNumericInput(session, "xlim2_analysis2", value = 250)
+        updateNumericInput(session, "ylim1_analysis2", value = -200)
+        updateNumericInput(session, "ylim2_analysis2", value = 2000)
+      }
 
     if (input$index_normalize2 == TRUE) {
       updateNumericInput(session, "xlim1_analysis2", value = -50)
@@ -302,12 +310,18 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
         updateNumericInput(session, "ylim2_analysis2", value = 0.3)
       }
       else if (input$normalize2 == "None") {
-        updateNumericInput(session, "ylim2_analysis2", value = max(metrics2_module$metrics_table()$modal_peak_signal) + 300)
+        updateNumericInput(session, "ylim2_analysis2", value = max(metrics2_module$metrics_table()$modal_peak_signal, na.rm = T) + 300)
       }
     }
     else {
-      updateNumericInput(session, "xlim1_analysis2", value = min(metrics2_module$metrics_table()$modal_peak_repeat) - 50)
-      updateNumericInput(session, "xlim2_analysis2", value = max(metrics2_module$metrics_table()$modal_peak_repeat) + 50)
+      if (!is.null(metrics2_module$metrics_table()) && any(!is.na(metrics2_module$metrics_table()$modal_peak_repeat))) {
+      updateNumericInput(session, "xlim1_analysis2", value = min(metrics2_module$metrics_table()$modal_peak_repeat, na.rm = T) - 50)
+      updateNumericInput(session, "xlim2_analysis2", value = max(metrics2_module$metrics_table()$modal_peak_repeat, na.rm = T) + 50)
+      }
+      else {
+        updateNumericInput(session, "xlim1_analysis2", value = 0)
+        updateNumericInput(session, "xlim2_analysis2", value = 250)
+      }
 
       if (input$normalize2 == "Highest Peak") {
         updateNumericInput(session, "ylim1_analysis2", value = -0.3)
@@ -326,7 +340,7 @@ analysis2_server <- function(input, output, session, continue_module, upload_dat
         updateNumericInput(session, "ylim2_analysis2", value = 0.3)
       }
       else if (input$normalize2 == "None") {
-        updateNumericInput(session, "ylim2_analysis2", value = max(metrics2_module$metrics_table()$modal_peak_signal) + 300)
+        updateNumericInput(session, "ylim2_analysis2", value = max(metrics2_module$metrics_table()$modal_peak_signal, na.rm = T) + 300)
       }
     }
     }

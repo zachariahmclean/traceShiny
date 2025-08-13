@@ -513,10 +513,18 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
   observe({
     if (!is.null(reactive_peaks$peaks) && !is.null(input$sample_subset)) {
+      if (!is.na(reactive_peaks$peaks[[input$sample_subset]]$get_allele_peak()$allele_repeat)) {
       updateNumericInput(session, "xlim1", value = reactive_peaks$peaks[[input$sample_subset]]$get_allele_peak()$allele_repeat - 50)
       updateNumericInput(session, "xlim2", value = reactive_peaks$peaks[[input$sample_subset]]$get_allele_peak()$allele_repeat + 50)
       updateNumericInput(session, "ylim1", value = -200)
       updateNumericInput(session, "ylim2", value = reactive_peaks$peaks[[input$sample_subset]]$get_allele_peak()$allele_signal + 100)
+      }
+      else {
+        updateNumericInput(session, "xlim1", value = 0)
+        updateNumericInput(session, "xlim2", value = 250)
+        updateNumericInput(session, "ylim1", value = -200)
+        updateNumericInput(session, "ylim2", value = 2000)
+      }
     }
   })
 

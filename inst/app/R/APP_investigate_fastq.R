@@ -590,10 +590,18 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
 
   observe({
     if (!is.null(reactive_metrics2$peak_list) && !is.null(input$sample_subset_metrics2)) {
+      if (!is.na(reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$get_allele_peak()$allele_repeat)) {
       updateNumericInput(session, "xlim1_metrics2", value = reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$get_allele_peak()$allele_repeat - 50)
       updateNumericInput(session, "xlim2_metrics2", value = reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$get_allele_peak()$allele_repeat + 50)
       updateNumericInput(session, "ylim1_metrics2", value = -2)
       updateNumericInput(session, "ylim2_metrics2", value = reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$get_allele_peak()$allele_signal + 300)
+      }
+    }
+    else {
+      updateNumericInput(session, "xlim1_metrics2", value = 0)
+      updateNumericInput(session, "xlim2_metrics2", value = 250)
+      updateNumericInput(session, "ylim1_metrics2", value = -200)
+      updateNumericInput(session, "ylim2_metrics2", value = 2000)
     }
   })
 
