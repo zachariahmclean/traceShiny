@@ -119,8 +119,8 @@ continue_server <- function(input, output, session) {
                      incProgress(7/10, detail = "Setting up peaks settings")
 
                      #Peaks
-                     updateNumericInput(session, "min_bp_size", value = config$min_bp_size)
-                     updateNumericInput(session, "max_bp_size", value = config$max_bp_size)
+                     updateNumericInput(session, "min_bp_size", value = (config$min_bp_size - config$assay_size_without_repeat)/config$repeat_size)
+                     updateNumericInput(session, "max_bp_size", value = (config$max_bp_size - config$assay_size_without_repeat)/config$repeat_size)
                      updateNumericInput(session, "smoothing_window", value = config$smoothing_window)
                      updateNumericInput(session, "minimum_peak_signal", value = config$minimum_peak_signal)
                      updateNumericInput(session, "peak_scan_ramp ", value = config$peak_scan_ramp )
@@ -166,6 +166,7 @@ continue_server <- function(input, output, session) {
                      reactive_continue$sample_subset2 <- sample_subset2
                      reactive_continue$Index_Table <- Index_Table
                      reactive_continue$Index_Table_original <- Index_Table_original
+                     reactive_continue$config <- config
 
                      if (!is.null(index_list) && !is.null(sample_subset_metrics)) {
                        updateNumericInput(session, "IndexRepeat1", value = Index_Table[which(Index_Table$`Unique IDs` == sample_subset_metrics[1]),]$`Index Repeat`)

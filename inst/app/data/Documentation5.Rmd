@@ -8,9 +8,6 @@ traceShiny includes additional plotting features to show and overlay multiple tr
 ![](analysis/overlay.PNG){width=800px}
 
 ### Settings
-
-![](analysis/Settings.PNG){width=400px}
-
 #### Select plots to overlay
 Select one or more plots to overlay
 

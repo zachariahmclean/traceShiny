@@ -27,48 +27,7 @@ Table of R-squared values derived from a linear regression of data signal and si
 #### Ladder Summary Table
 Table of the average and minimum R-squared values of the Ladder R-squared table for each sample.
 
-### Settings
-![](find_ladders/ladder_params_figs/Settings.png){width=20%}
-
-#### Ladder Sizes	
-Base pair sizes of ladder used in fragment analysis.
-
-#### Input Ladder Starting Scan Position	
-Indicate the scan number to start looking for ladder peaks. Usually this can be automatically found (when set to NULL) since there's a big spike right at the start. However, if your ladder peaks are taller than the big spike, you will need to set this starting scan number manually.
-
 #### Interactive ladder fixing
 If the ladders are are not assigned correctly, you can interactively fix them.
 
 ![](find_ladders/ladder_params_figs/ladder_fixing.gif){width=800px}
-
-### Advanced Settings
-
-#### Minimum Peak Signal	
-Minimum height of peak from smoothed signal. Note that the smoothing applied to the signal lowers the value, so you need to select a value lower than what you see on the plot.
-
-#### Scan Subset	
-Filter the ladder and data signal between the selected scans (eg scan_subset = c(3000, 5000)).
-
-#### Ladder Selection Window
-In the ladder assigning algorithm, the we iterate through the scans in blocks and test their linear fit ( We can assume that the ladder is linear over a short distance) This value defines how large that block of peaks should be.
-
-#### Ladder Assign Left to Right
-Single logical for if the ladder should be assigned from the smallest base pair size to largest (TRUE), or if the order should be reversed and assigned from largest to smallest (FALSE), which can be helpful since the end often has cleaner signal than the start.
-
-#### Ladder top n branching
-The ladder assigning algorithm branches as it tests the various combinations. This value defines how many branches should be created. If the correct combination is not found, you could try increasing this value, but it will make it increasingly slower.
-
-#### Ladder Branching r squared threshold
-The branches of the ladder assigning algorithm are pruned by R-squared values above this threshold to discard fits that are not promising. If the correct combination is not found, you could try decreasing this value, but it will make it increasingly slower.
-
-#### Max Combinations	
-What is the maximum number of ladder combinations that should be tested.
-
-#### Smoothing Window	
-Ladder signal smoothing window size passed
-```{r, include=FALSE}
-#TOODO
-#change how custom ladder input works
-
-
-```

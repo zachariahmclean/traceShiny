@@ -170,7 +170,7 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
     reactive_ladder$config <- continue_module$config()
   })
 
-  observeEvent(ignoreInit = F, list(input$MetadataUpload, input$SelectionButton, input$DataFSA, input$fastq, input$fileinputLOAD), {
+  observeEvent(ignoreInit = F, list(input$MetadataUpload, input$SelectionButton, input$DataFSA, input$fastq), {
     reactive_ladder$ladder <- NULL
     ladders$scan <- NULL
     ladders$size <- NULL
