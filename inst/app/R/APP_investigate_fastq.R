@@ -825,7 +825,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
           xlim(xlim) +
           ylim(ylim) +
           {if(!is.na(debounced_IndexRepeat1_2()))
-            list(geom_hline(yintercept = input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$index_signal,
+            list(geom_hline(yintercept = input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$allele_signal,
                      color = "black", size=1),
           geom_vline(xintercept = debounced_IndexRepeat1_2(),
                      color = "red", size=1),
@@ -842,7 +842,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
           xlim(xlim) +
           ylim(ylim) +
           {if(!is.na(debounced_IndexRepeat1_2()))
-            list(geom_hline(yintercept = input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$index_signal,
+            list(geom_hline(yintercept = input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$allele_signal,
                        color = "black", size=1),
               geom_vline(xintercept = debounced_IndexRepeat1_2(),
                          color = "red", size=1),
@@ -865,7 +865,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
             xlim(xlim) +
             ylim(ylim) +
             {if(!is.na(debounced_IndexRepeat1_2()))
-              list(geom_hline(yintercept = if(!is.na(debounced_IndexRepeat2_2())) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset2_2]]$.__enclos_env__$private$index_signal,
+              list(geom_hline(yintercept = if(!is.na(debounced_IndexRepeat2_2())) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset2_2]]$.__enclos_env__$private$allele_signal,
                        color = "black", size=1),
             geom_vline(xintercept = debounced_IndexRepeat2_2(),
                        color = "red", size=1),
@@ -882,7 +882,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
             xlim(xlim) +
             ylim(ylim) +
             {if(!is.na(debounced_IndexRepeat1_2()))
-              list(geom_hline(yintercept = if(!is.na(debounced_IndexRepeat2_2())) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset2_2]]$.__enclos_env__$private$index_signal,
+              list(geom_hline(yintercept = if(!is.na(debounced_IndexRepeat2_2())) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset2_2]]$.__enclos_env__$private$allele_signal,
                        color = "black", size=1),
             geom_vline(xintercept = debounced_IndexRepeat2_2(),
                        color = "red", size=1),
@@ -902,7 +902,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
             xlim(xlim) +
             ylim(ylim) +
             {if(!is.na(debounced_IndexRepeat1_2()))
-              list(geom_hline(yintercept = if(!is.na(debounced_IndexRepeat1_2())) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$index_signal,
+              list(geom_hline(yintercept = if(!is.na(debounced_IndexRepeat1_2())) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$allele_signal,
                        color = "black", size=1),
             geom_vline(xintercept = debounced_IndexRepeat1_2(),
                        color = "red", size=1),
@@ -919,7 +919,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
             xlim(xlim) +
             ylim(ylim) +
             {if(!is.na(debounced_IndexRepeat1_2()))
-              list(geom_hline(yintercept = if(!is.na(debounced_IndexRepeat1_2())) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$index_signal,
+              list(geom_hline(yintercept = if(!is.na(debounced_IndexRepeat1_2())) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$allele_signal,
                        color = "black", size=1),
             geom_vline(xintercept = debounced_IndexRepeat1_2(),
                        color = "red", size=1),
@@ -940,7 +940,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
             xlim(xlim) +
             ylim(ylim) +
             {if(!is.na(debounced_IndexRepeat1_2()))
-            list(geom_hline(yintercept = if(!is.na(debounced_IndexRepeat1_2())) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$index_signal,
+            list(geom_hline(yintercept = if(!is.na(debounced_IndexRepeat1_2())) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$allele_signal,
                        color = "black", size=1),
             geom_vline(xintercept = debounced_IndexRepeat1_2(),
                        color = "red", size=1),
@@ -957,7 +957,7 @@ metrics2_server <- function(input, output, session, continue_module, upload_data
             xlim(xlim) +
             ylim(ylim) +
             {if(!is.na(debounced_IndexRepeat1_2()))
-              list(geom_hline(yintercept = if(!is.na(debounced_IndexRepeat1_2())) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$index_signal,
+              list(geom_hline(yintercept = if(!is.na(debounced_IndexRepeat1_2())) input$peak_threshold2*reactive_metrics2$peak_list[[input$sample_subset_metrics2]]$.__enclos_env__$private$allele_signal,
                        color = "black", size=1),
             geom_vline(xintercept = debounced_IndexRepeat1_2(),
                        color = "red", size=1),
