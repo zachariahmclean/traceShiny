@@ -18,13 +18,19 @@ Analysis_box_ui1 <- function(id) {
                numericInput("ylim2_analysis", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Y max')),
                             value = 2000)),
 
-        column(4,
+        column(2,
                sliderInput("opacity", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Opacity')),
                            min = 0, max = 1,
                            value = 0.6, step = 0.1)
         ),
 
-        column(4,
+        column(3,
+               sliderInput("FontAnalysis", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Font Size')),
+                           min = 1, max = 30,
+                           value = 12, step = 1)
+        ),
+
+        column(3,
                sliderInput("HeightAnalysis", h5(HTML('<h5 style = "text-align:justify;color:#000000; margin-top:-50px;">Select Plot Height')),
                            min = 1, max = 100,
                            value = 20, step = 1)
@@ -125,14 +131,6 @@ Analysis_box_ui2 <- function(id) {
         withSpinner(DT::dataTableOutput("metrics_table_analysis", width = "100%", height = "400"))
       )
 }
-
-# Analysis_box_ui2_2 <- function(id) {
-#   box(id = "AnalysisBox2_2", title = p("Span Modelling"), status = "warning", solidHeader = F,
-#       collapsible = T, width = NULL,
-#
-#       withSpinner(DT::dataTableOutput("span_model", width = "100%", height = "400"))
-#   )
-# }
 
 Analysis_box_ui3 <- function(id) {
   box(id = "AnalysisBox3", title = p("Settings", help_button("settings")), status = "warning", solidHeader = F,
@@ -458,7 +456,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
             ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
             scale_color_manual(values= color) +
             labs(colour = paste(input$group_samples, collapse = ":")) +
-            theme_classic()
+            theme_classic(base_size = input$FontAnalysis)
         }
         else {
           p <- ggplot(trace, aes(x=calculated_repeats, y=Normalised_Signal, colour = plot,
@@ -472,7 +470,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
             ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
             scale_color_manual(values= color) +
             labs(colour = paste(input$group_samples, collapse = ":")) +
-            theme_classic()
+            theme_classic(base_size = input$FontAnalysis)
         }
       }
       else {
@@ -488,7 +486,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
             ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
             scale_color_manual(values= color) +
             labs(colour = paste(input$group_samples, collapse = ":")) +
-            theme_classic()
+            theme_classic(base_size = input$FontAnalysis)
         }
         else {
           p <- ggplot(trace, aes(x=calculated_repeats, y=Normalised_Signal, colour = plot,
@@ -501,7 +499,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
             ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
             scale_color_manual(values= color) +
             labs(colour = paste(input$group_samples, collapse = ":")) +
-            theme_classic()
+            theme_classic(base_size = input$FontAnalysis)
         }
       }
       ggplotly(p, tooltip="text", height = (300 + input$HeightAnalysis*20))
@@ -580,7 +578,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
             ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
             scale_color_manual(values= color) +
             labs(colour = paste(input$group_samples, collapse = ":")) +
-            theme_classic()
+            theme_classic(base_size = input$FontAnalysis)
         }
         else {
 
@@ -595,7 +593,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
             ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
             scale_color_manual(values= color) +
             labs(colour = paste(input$group_samples, collapse = ":")) +
-            theme_classic()
+            theme_classic(base_size = input$FontAnalysis)
         }
       }
       else {
@@ -612,7 +610,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
             ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
             scale_color_manual(values= color) +
             labs(colour = paste(input$group_samples, collapse = ":")) +
-            theme_classic()
+            theme_classic(base_size = input$FontAnalysis)
         }
         else {
           p <- ggplot(trace, aes(x=repeats, y=Normalised_Signal, colour = plot,
@@ -625,7 +623,7 @@ analysis_server <- function(input, output, session, continue_module, upload_data
             ylim(c(input$ylim1_analysis, input$ylim2_analysis)) +
             scale_color_manual(values= color) +
             labs(colour = paste(input$group_samples, collapse = ":")) +
-            theme_classic()
+            theme_classic(base_size = input$FontAnalysis)
         }
       }
       ggplotly(p, tooltip="text", height = (300 + input$HeightAnalysis*20))

@@ -76,12 +76,34 @@ debounce <- function(expr, millis, env = parent.frame(), quoted = FALSE,
   }, ignoreNULL = FALSE)
 }
 
+ladder_fit_cor <- function(fragments){
+  ladder_df <- fragments$ladder_df[order(fragments$ladder_df$size),]
+  ladder_df <- ladder_df[which(!is.na(ladder_df$size)), ]
+
+  # Function to calculate the fitting constants for each group of three neighboring points
+  cor_list <- vector("list", length = nrow(ladder_df) - 2)
+
+  for (i in seq_along(cor_list)) {
+    xi <- ladder_df$scan[i:(i + 2)]
+    yi <- ladder_df$size[i:(i + 2)]
+    cor_list[[i]] <- list(
+      rsq = stats::cor(yi, xi)^2,
+      size_ranges = yi
+    )
+  }
+
+  return(cor_list)
+}
+
 ladder_rsq_warning_helper <- function(
-    framents_trace,
+    fragments,
     rsq_threshold) {
-  rsq <- sapply(framents_trace$local_southern_mod, function(x) suppressWarnings(summary(x$mod)$r.squared))
+
+  cor_list <- ladder_fit_cor(fragments)
+  rsq <- sapply(cor_list, function(x) x$rsq)
+
   if (any(rsq < rsq_threshold)) {
-    size_ranges <- sapply(framents_trace$local_southern_mod, function(x) x$mod$model$yi)
+    size_ranges <- sapply(cor_list, function(x) x$size_ranges)
     size_ranges <- size_ranges[, which(rsq < rsq_threshold), drop = FALSE]
     size_ranges_vector <- vector("numeric", ncol(size_ranges))
     for (j in seq_along(size_ranges_vector)) {
@@ -90,7 +112,7 @@ ladder_rsq_warning_helper <- function(
     warning(
       call. = FALSE,
       paste(
-        framents_trace$unique_id
+         fragments$unique_id
       )
     )
   }

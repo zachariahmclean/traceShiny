@@ -317,6 +317,10 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
                      ladders$scan <- reactive_ladder$ladder[[input$unique_id_selection]]$ladder_df$scan
                      ladders$size <- reactive_ladder$ladder[[input$unique_id_selection]]$ladder_df$size
 
+                     if (is.null(ladders$scan) || is.null(ladders$size)) {
+                       shinyalert("ERROR!", "Ladders not fitted, please turn off the use default ladder scan position and try again.", type = "error", confirmButtonCol = "#337ab7")
+                     }
+
                      shinyjs::show("NextButtonLadder")
 
                      if(input$PeaksBoxIntro$collapsed == TRUE) {
