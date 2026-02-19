@@ -453,7 +453,11 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                      reactive_peaks$config$max_bp_size <- input$max_bp_size*input$repeat_size + input$assay_size_without_repeat
                      reactive_peaks$config$peak_scan_ramp <- input$peak_scan_ramp
 
-                     trace:::find_fragments(reactive_peaks$peaks, reactive_peaks$config)
+                     messages <- trace:::find_fragments(reactive_peaks$peaks, reactive_peaks$config)
+
+                     if (!is.na(messages$error_message)) {
+                       shinyalert("ERROR!", messages$error_message, type = "error", confirmButtonCol = "#337ab7")
+                     }
 
                      if (!is.null(upload_data$metadata_table())) {
 
@@ -467,7 +471,11 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
                      reactive_peaks$config$peak_region_size_gap_threshold <- input$peak_region_size_gap_threshold
                      reactive_peaks$config$peak_region_signal_threshold_multiplier <- input$peak_region_signal_threshold_multiplier
 
-                     trace:::find_alleles(reactive_peaks$peaks, reactive_peaks$config)
+                     messages2 <- trace:::find_alleles(reactive_peaks$peaks, reactive_peaks$config)
+
+                     if (!is.na(messages2$error_message)) {
+                       shinyalert("ERROR!", messages2$error_message, type = "error", confirmButtonCol = "#337ab7")
+                     }
 
                      reactive_peaks$config$assay_size_without_repeat <- input$assay_size_without_repeat
                      reactive_peaks$config$repeat_size <- input$repeat_size
@@ -479,7 +487,13 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
                      reactive_peaks$batchcorrectionswitch <- input$batchcorrectionswitch
 
-                     trace:::call_repeats(fragments_list = reactive_peaks$peaks, reactive_peaks$config)
+                     messages3 <- trace:::call_repeats(fragments_list = reactive_peaks$peaks, reactive_peaks$config)
+
+                     if (!is.na(messages3$error_message)) {
+                       shinyalert("ERROR!", messages3$error_message, type = "error", confirmButtonCol = "#337ab7")
+                     } else {
+                       shinyalert("Success!", "Peaks found, alleles found and repeats called!", type = "success", confirmButtonCol = "#337ab7")
+                     }
 
                      shinyjs::show("NextButtonPeaks")
 
@@ -1001,13 +1015,27 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
         )
       }
 
-      trace:::find_alleles(reactive_peaks$peaks, reactive_peaks$config)
+      messages <- trace:::find_alleles(reactive_peaks$peaks, reactive_peaks$config)
 
-      trace:::call_repeats(reactive_peaks$peaks, reactive_peaks$config)
+      if (!is.na(messages$error_message)) {
+        shinyalert("ERROR!", messages$error_message, type = "error", confirmButtonCol = "#337ab7")
+      }
+
+      messages2 <- trace:::call_repeats(reactive_peaks$peaks, reactive_peaks$config)
+
+      if (!is.na(messages2$error_message)) {
+        shinyalert("ERROR!", messages2$error_message, type = "error", confirmButtonCol = "#337ab7")
+      }
 
       reactive_peaks$peaks[[input$sample_subset_Manual]]$set_allele_peak(allele = input$number_of_alleles, unit = "repeats", value = input$Modal_Peak)
 
-      trace:::call_repeats(reactive_peaks$peaks, reactive_peaks$config)
+      messages3 <- trace:::call_repeats(reactive_peaks$peaks, reactive_peaks$config)
+
+      if (!is.na(messages3$error_message)) {
+        shinyalert("ERROR!", messages3$error_message, type = "error", confirmButtonCol = "#337ab7")
+      } else {
+        shinyalert("Success!", "Peaks found, alleles found and repeats called!", type = "success", confirmButtonCol = "#337ab7")
+      }
     },
     error = function(e) {
       shinyalert("ERROR!", e$message, type = "error", confirmButtonCol = "#337ab7")

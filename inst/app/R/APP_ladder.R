@@ -311,15 +311,17 @@ ladder_server <- function(input, output, session, upload_data, continue_module) 
 
                      reactive_ladder$scan_subset <- input$scan_subset
 
-                     trace:::find_ladders(reactive_ladder$ladder, reactive_ladder$config,
+                     messages <- trace:::find_ladders(reactive_ladder$ladder, reactive_ladder$config,
                                          show_progress_bar = FALSE)
+
+                     if (!is.na(messages$error_message)) {
+                       shinyalert("ERROR!", messages$error_message, type = "error", confirmButtonCol = "#337ab7")
+                     } else {
+                       shinyalert("Success!", "Ladders Fitted!", type = "success", confirmButtonCol = "#337ab7")
+                     }
 
                      ladders$scan <- reactive_ladder$ladder[[input$unique_id_selection]]$ladder_df$scan
                      ladders$size <- reactive_ladder$ladder[[input$unique_id_selection]]$ladder_df$size
-
-                     if (is.null(ladders$scan) || is.null(ladders$size)) {
-                       shinyalert("ERROR!", "Ladders not fitted, please turn off the use default ladder scan position and try again.", type = "error", confirmButtonCol = "#337ab7")
-                     }
 
                      shinyjs::show("NextButtonLadder")
 

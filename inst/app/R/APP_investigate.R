@@ -442,43 +442,58 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
 
       reactive_metrics$config$grouped <- FALSE
 
-      trace:::assign_index_peaks(
+      messages <- trace:::assign_index_peaks(
         peaks_module$index_list(),
         reactive_metrics$config,
         index_override_dataframe = reactive_metrics$Index_Table[,c(1,4)]
       )
+
+      if (!is.na(messages$error_message)) {
+        shinyalert("ERROR!", messages$error_message, type = "error", confirmButtonCol = "#337ab7")
+      }
     }
     else if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
       if (input$group_controls == TRUE) {
 
         reactive_metrics$config$grouped <- TRUE
 
-        trace:::assign_index_peaks(
+        messages <- trace:::assign_index_peaks(
           peaks_module$index_list(),
           reactive_metrics$config,
           index_override_dataframe = reactive_metrics$Index_Table[,c(1,4)]
         )
+
+        if (!is.na(messages$error_message)) {
+          shinyalert("ERROR!", messages$error_message, type = "error", confirmButtonCol = "#337ab7")
+        }
       }
       else {
 
         reactive_metrics$config$grouped <- FALSE
 
-        trace:::assign_index_peaks(
+        messages <- trace:::assign_index_peaks(
           peaks_module$index_list(),
           reactive_metrics$config,
           index_override_dataframe = reactive_metrics$Index_Table[,c(1,4)]
         )
+        if (!is.na(messages$error_message)) {
+          shinyalert("ERROR!", messages$error_message, type = "error", confirmButtonCol = "#337ab7")
+        }
       }
     }
     else {
 
       reactive_metrics$config$grouped <- FALSE
 
-      trace:::assign_index_peaks(
+      messages <- trace:::assign_index_peaks(
         peaks_module$index_list(),
         reactive_metrics$config,
         index_override_dataframe = reactive_metrics$Index_Table[,c(1,4)]
       )
+
+      if (!is.na(messages$error_message)) {
+        shinyalert("ERROR!", messages$error_message, type = "error", confirmButtonCol = "#337ab7")
+      }
     }
 
     shinyjs::hide("NextButtonPeaks")
@@ -702,43 +717,59 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
 
                        reactive_metrics$config$grouped <- FALSE
 
-                       trace:::assign_index_peaks(
+                       messages <- trace:::assign_index_peaks(
                          peaks_module$index_list(),
                          reactive_metrics$config,
                          index_override_dataframe = reactive_metrics$Index_Table[,c(1,4)]
                        )
+
+                       if (!is.na(messages$error_message)) {
+                         shinyalert("ERROR!", messages$error_message, type = "error", confirmButtonCol = "#337ab7")
+                       }
                      }
                      else if (any(grepl("TRUE", upload_data$metadata_table()$metrics_baseline_control))) {
                        if (input$group_controls == TRUE) {
 
                          reactive_metrics$config$grouped <- TRUE
 
-                         trace:::assign_index_peaks(
+                         messages <- trace:::assign_index_peaks(
                            peaks_module$index_list(),
                            reactive_metrics$config,
                            index_override_dataframe = reactive_metrics$Index_Table[,c(1,4)]
                          )
+
+                         if (!is.na(messages$error_message)) {
+                           shinyalert("ERROR!", messages$error_message, type = "error", confirmButtonCol = "#337ab7")
+                         }
                        }
                        else {
 
                          reactive_metrics$config$grouped <- FALSE
 
-                         trace:::assign_index_peaks(
+                         messages <- trace:::assign_index_peaks(
                            peaks_module$index_list(),
                            reactive_metrics$config,
                            index_override_dataframe = reactive_metrics$Index_Table[,c(1,4)]
                          )
+
+                         if (!is.na(messages$error_message)) {
+                           shinyalert("ERROR!", messages$error_message, type = "error", confirmButtonCol = "#337ab7")
+                         }
                        }
                      }
                      else {
 
                        reactive_metrics$config$grouped <- FALSE
 
-                       trace:::assign_index_peaks(
+                       messages <- trace:::assign_index_peaks(
                          peaks_module$index_list(),
                          reactive_metrics$config,
                          index_override_dataframe = reactive_metrics$Index_Table[,c(1,4)]
                        )
+
+                       if (!is.na(messages$error_message)) {
+                         shinyalert("ERROR!", messages$error_message, type = "error", confirmButtonCol = "#337ab7")
+                       }
                      }
 
                      reactive_metrics$df <- calculate_instability_metrics(
@@ -748,6 +779,10 @@ metrics_server <- function(input, output, session, continue_module, upload_data,
                        percentile_range = seq(input$percentile_range1, input$percentile_range2, input$percentile_range3),
                        repeat_range = seq(input$repeat_range1 , input$repeat_range2, input$repeat_range3)
                      )
+
+                     if (!is.null(reactive_metrics$df)) {
+                       shinyalert("SUCCESS!", "Instability Metrics Computed!", type = "success", confirmButtonCol = "#337ab7")
+                     }
 
                      shinyjs::show("NextButtonMetrics")
 
