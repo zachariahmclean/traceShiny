@@ -212,7 +212,10 @@ peaks_box_ui3 <- function(id) {
       withSpinner(htmlOutput("plot_tracesUI")),
       htmlOutput("peaks_text"),
       p(style="text-align: right;", downloadButton("peaks_text_download")),
-      dataTableOutput("peaks_summary")
+      dataTableOutput("peaks_summary"),
+      htmlOutput("peaks_text2"),
+      p(style="text-align: right;", downloadButton("peaks_text_download2")),
+      dataTableOutput("peaks_height")
   )
 }
 
@@ -304,6 +307,17 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
       rownames(df) <- NULL
       write.csv(df, file, row.names = F, col.names = T)
+    }
+  )
+
+  output$peaks_text_download2 <- shiny::downloadHandler(
+    filename = function() {
+      paste0(format(Sys.time(), "%Y-%m-%d_%H%M%S"), "_Peak_Height.csv")
+    },
+    content = function(file) {
+      df <- trace::extract_trace_table(reactive_peaks$peaks)
+
+      write.csv(df[,c(1,4,7)], file, row.names = F, col.names = T)
     }
   )
 
@@ -669,12 +683,18 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
       shinyjs::hide("peaks_text")
       shinyjs::hide("peaks_text_download")
       shinyjs::hide("peaks_summary")
+      shinyjs::hide("peaks_text2")
+      shinyjs::hide("peaks_text_download2")
+      shinyjs::hide("peaks_height")
     }
     else {
       shinyjs::hide("text_no_data")
       shinyjs::show("peaks_text")
       shinyjs::show("peaks_text_download")
       shinyjs::show("peaks_summary")
+      shinyjs::show("peaks_text2")
+      shinyjs::show("peaks_text_download2")
+      shinyjs::show("peaks_height")
     }
   })
 
@@ -919,6 +939,23 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     })
   })
 
+  output$peaks_height <- DT::renderDataTable({
+    validate(
+      need(!is.null(reactive_peaks$peaks), 'Please Run The Analysis First'))
+
+    df <- trace::extract_trace_table(reactive_peaks$peaks)
+
+    datatable(df[df$unique_id == input$sample_subset, c(1,4,7)],
+              options = list(scrollX = TRUE,
+                             scrollY = TRUE,
+                             server = TRUE,
+                             paging = TRUE,
+                             pageLength = 15
+              ),
+              selection = 'single',
+              rownames = FALSE)
+  })
+
   output$peaks_summary <- DT::renderDataTable({
     validate(
       need(!is.null(reactive_peaks$peaks), 'Please Run The Analysis First'))
@@ -945,6 +982,10 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
 
   output$peaks_text <- renderUI({
     h5(HTML('<h5 style = "text-align:justify;color:#000000"><b>Called Peaks Table (check this to see how well the peaks are called)</b>'))
+  })
+
+  output$peaks_text2 <- renderUI({
+    h5(HTML('<h5 style = "text-align:justify;color:#000000"><b>Peaks Heights </b>'))
   })
 
   output$correlation_text <- renderUI({
