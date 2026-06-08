@@ -315,9 +315,25 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
       paste0(format(Sys.time(), "%Y-%m-%d_%H%M%S"), "_Peak_Height.csv")
     },
     content = function(file) {
-      df <- trace::extract_trace_table(reactive_peaks$peaks)
+      fragments <- reactive_peaks$peaks[[input$sample_subset]]
+      xlim = c(input$xlim1, input$xlim2)
+      ylim = c(input$ylim1, input$ylim2)
 
-      write.csv(df[,c(1,4,7)], file, row.names = F, col.names = T)
+      peak_table <- fragments$repeat_table_df
+      peak_table$x <- peak_table$repeats
+
+      if (!is.null(xlim)) {
+        peak_table <- peak_table[which(peak_table$x < xlim[2] & peak_table$x > xlim[1]), ]
+      }
+
+      peak_table <- peak_table[,c(1,3,6)]
+      colnames(peak_table) <- c("unique_id", "signal_height", "repeat")
+
+      if(input$force_whole_repeat_units == "YES") {
+      peak_table$`repeat` <- round(peak_table$`repeat`)
+      }
+
+      write.csv(peak_table, file, row.names = F, col.names = T)
     }
   )
 
@@ -943,9 +959,25 @@ peaks_server <- function(input, output, session, continue_module, upload_data, l
     validate(
       need(!is.null(reactive_peaks$peaks), 'Please Run The Analysis First'))
 
-    df <- trace::extract_trace_table(reactive_peaks$peaks)
+    fragments <- reactive_peaks$peaks[[input$sample_subset]]
+    xlim = c(input$xlim1, input$xlim2)
+    ylim = c(input$ylim1, input$ylim2)
 
-    datatable(df[df$unique_id == input$sample_subset, c(1,4,7)],
+    peak_table <- fragments$repeat_table_df
+    peak_table$x <- peak_table$repeats
+
+    if (!is.null(xlim)) {
+      peak_table <- peak_table[which(peak_table$x < xlim[2] & peak_table$x > xlim[1]), ]
+    }
+
+    peak_table <- peak_table[,c(1,3,6)]
+    colnames(peak_table) <- c("unique_id", "signal_height", "repeat")
+
+    if(input$force_whole_repeat_units == "YES") {
+      peak_table$`repeat` <- round(peak_table$`repeat`)
+    }
+
+    datatable(peak_table,
               options = list(scrollX = TRUE,
                              scrollY = TRUE,
                              server = TRUE,
